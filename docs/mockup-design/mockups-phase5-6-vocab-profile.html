@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aura Coach AI — Phase 5-6: Vocab Hub, Profile, History</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700;800&family=Nunito:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --cream: #FFF8F0; --clay-white: #FEFCF9; --clay-beige: #F5EDE3;
+      --clay-border: #E8DFD3; --clay-shadow: #D4C9BB;
+      --warm-dark: #2D3047; --warm-muted: #6B6D7B; --warm-light: #9B9DAB;
+      --teal: #7ECEC5; --purple: #A78BCA; --gold: #E8C77B;
+      --success: #7BC6A0; --error: #D98A8A;
+      --shadow-clay: 3px 3px 0px #D4C9BB;
+      --shadow-card: 0 2px 8px rgba(45,48,71,0.04);
+      --r-sm: 8px; --r-md: 12px; --r-lg: 20px; --r-xl: 28px; --r-full: 9999px;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html, body { font-family:'Inter',sans-serif; background:#EEEAE5; min-height:100vh; }
+
+    .page-header { text-align:center; padding:48px 20px 32px; }
+    .page-header h1 { font-family:'Fredoka',sans-serif; font-size:32px; font-weight:800; color:var(--warm-dark); }
+    .page-header p { color:var(--warm-muted); font-size:14px; margin-top:6px; }
+
+    .section-title { text-align:center; padding:40px 20px 20px; }
+    .section-title h2 { font-family:'Nunito',sans-serif; font-size:22px; font-weight:700; color:var(--warm-dark); }
+    .section-title p { font-size:13px; color:var(--warm-muted); margin-top:4px; }
+
+    .screens-row { display:flex; gap:32px; padding:0 40px 60px; overflow-x:auto; scroll-snap-type:x mandatory; }
+    .screens-row::-webkit-scrollbar { height:6px; }
+    .screens-row::-webkit-scrollbar-thumb { background:var(--clay-shadow); border-radius:3px; }
+
+    .phone { flex-shrink:0; width:375px; height:812px; background:var(--cream); border-radius:44px; border:3px solid var(--clay-border); box-shadow:0 8px 32px rgba(45,48,71,0.08); overflow:hidden; display:flex; flex-direction:column; }
+    .phone-status { height:44px; display:flex; align-items:center; justify-content:space-between; padding:0 24px; font-size:12px; color:var(--warm-muted); font-weight:600; flex-shrink:0; }
+    .phone-content { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+    .phone-home-bar { height:28px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .phone-home-bar div { width:134px; height:5px; background:var(--clay-border); border-radius:3px; }
+    .phone-label { text-align:center; margin-top:12px; font-size:11px; font-weight:700; color:var(--teal); text-transform:uppercase; letter-spacing:0.1em; background:rgba(126,206,197,0.1); padding:4px 14px; border-radius:var(--r-full); display:inline-block; }
+    .phone-wrapper { display:flex; flex-direction:column; align-items:center; }
+
+    .app-bar { flex-shrink:0; display:flex; align-items:center; padding:0 12px; height:48px; border-bottom:2px solid var(--clay-border); background:var(--cream); gap:8px; }
+    .app-bar .back { width:36px; height:36px; display:flex; align-items:center; justify-content:center; font-size:16px; color:var(--warm-dark); }
+    .app-bar .title { flex:1; font-size:16px; font-weight:600; font-family:'Nunito',sans-serif; }
+    .app-bar .actions span { width:36px; height:36px; display:flex; align-items:center; justify-content:center; font-size:14px; }
+
+    .tabs { display:flex; border-bottom:2px solid var(--clay-border); overflow-x:auto; padding:0 8px; flex-shrink:0; }
+    .tab { padding:8px 10px; font-size:11px; font-weight:400; color:var(--warm-light); white-space:nowrap; text-transform:uppercase; letter-spacing:0.05em; border-bottom:2px solid transparent; }
+    .tab.active { font-weight:700; color:var(--teal); border-bottom-color:var(--teal); }
+
+    .card { background:var(--clay-white); border:2px solid var(--clay-border); border-radius:var(--r-lg); box-shadow:var(--shadow-card); overflow:hidden; }
+    .badge { font-size:11px; font-weight:700; padding:4px 12px; border-radius:var(--r-full); text-transform:uppercase; letter-spacing:0.05em; display:inline-block; }
+    .chip { display:inline-flex; padding:6px 14px; border-radius:var(--r-full); font-size:12px; font-weight:600; }
+    .chip.active { color:#fff; }
+
+    .bottom-nav { flex-shrink:0; background:var(--clay-white); border-top:2px solid var(--clay-border); display:flex; justify-content:space-around; align-items:center; padding:8px 0 4px; height:60px; }
+    .nav-item { display:flex; flex-direction:column; align-items:center; gap:3px; }
+    .nav-item img { width:24px; height:24px; object-fit:contain; opacity:0.45; }
+    .nav-item.active img { opacity:1; transform:scale(1.15); }
+    .nav-item span { font-size:10px; font-weight:500; color:var(--warm-light); }
+    .nav-item.active span { color:var(--teal); font-weight:700; }
+
+    .progress-bar { height:6px; background:var(--clay-beige); border-radius:3px; overflow:hidden; }
+    .progress-bar .fill { height:100%; border-radius:3px; }
+
+    @keyframes float3d { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-8px); } }
+    .float3d { animation:float3d 3s ease-in-out infinite; }
+  </style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Phase 5-6 — Vocab Hub, My Learning Library, Profile &amp; History</h1>
+  <p>Word Analysis, Mind Map, Flashcards, Practice · My Learning Library (5 screens) · Profile, History</p>
+</div>
+
+<!-- ═══ VOCAB HUB: Word Analysis ═══ -->
+<div class="section-title"><h2>Vocab Hub — Word Analysis</h2><p>Phonetics, Morphology, Contextual Usage, Word Family, Synonyms/Antonyms</p></div>
+<div class="screens-row">
+
+<!-- Word Analysis -->
+<div class="phone-wrapper">
+<div class="phone">
+  <div class="phone-status"><span>9:41</span><span>●●●● WiFi 100%</span></div>
+  <div class="phone-content">
+    <div class="app-bar"><div class="back">←</div><div class="title" style="color:var(--purple);">Vocab Hub</div></div>
+    <div class="tabs"><div class="tab active">Analysis</div><div class="tab">Mind Map</div><div class="tab">Saved</div><div class="tab">Practice</div><div class="tab">Cards</div></div>
+    <div style="flex:1;padding:10px 14px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;background:var(--cream);">
+      <!-- Search -->
+      <div style="display:flex;gap:8px;">
+        <div style="flex:1;display:flex;align-items:center;gap:8px;background:var(--clay-beige);border:2px solid var(--clay-border);border-radius:var(--r-full);padding:12px 18px;"><span style="color:var(--warm-light);font-size:14px;">Enter a word...</span></div>
+        <div style="padding:10px 16px;border-radius:var(--r-lg);background:var(--teal);color:#fff;font-size:13px;font-weight:700;box-shadow:var(--shadow-clay);display:flex;align-items:center;">Analyze</div>
+      </div>
+
+      <!-- Word header -->
+      <div class="card" style="padding:16px;">
+        <div style="font-size:28px;font-weight:800;color:var(--warm-dark);font-family:'Nunito',sans-serif;">clumsy</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:2px;">
+          <span style="font-size:12px;font-family:monospace;color:var(--warm-muted);">/ˈklʌmzi/</span>
+          <span style="font-size:11px;color:var(--teal);">🔊</span>
+        </div>
+        <div style="display:inline-block;background:rgba(123,198,160,0.1);border:1.5px solid rgba(123,198,160,0.3);border-radius:var(--r-sm);padding:3px 10px;margin-top:6px;">
+          <span style="font-size:12px;color:var(--success);font-weight:600;">vụng về</span>
+        </div>
+      </div>
+
+      <!-- Morphological -->
+      <div class="card" style="padding:16px;">
+        <div style="font-size:11px;font-weight:700;color:var(--warm-dark);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.08em;">Morphological Breakdown</div>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+          <div style="background:rgba(167,139,202,0.1);border:1.5px solid rgba(167,139,202,0.3);border-radius:var(--r-sm);padding:6px 10px;">
+            <div style="font-size:13px;font-weight:700;color:var(--purple);">clumse</div>
+            <div style="font-size:9px;color:var(--warm-muted);">numb or stiff with cold</div>
+            <div style="font-size:8px;color:var(--warm-light);font-style:italic;">Middle English / Scandinavian</div>
+          </div>
+          <span style="font-size:16px;color:var(--warm-light);">+</span>
+          <div style="background:rgba(126,206,197,0.1);border:1.5px solid rgba(126,206,197,0.3);border-radius:var(--r-sm);padding:6px 10px;">
+            <div style="font-size:13px;font-weight:700;color:var(--teal);">-y</div>
+            <div style="font-size:9px;color:var(--warm-muted);">characterized by</div>
+          </div>
+          <span style="font-size:16px;color:var(--warm-light);">=</span>
+          <div style="background:rgba(232,199,123,0.1);border:1.5px solid rgba(232,199,123,0.3);border-radius:var(--r-sm);padding:6px 10px;">
+            <div style="font-size:13px;font-weight:700;color:#9A7B3D;">clumsy</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contextual usage -->
+      <div class="card" style="padding:16px;">
+        <div style="font-size:11px;font-weight:700;color:var(--warm-dark);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.08em;">Contextual Usage</div>
+        <div style="margin-bottom:8px;">
+          <span class="badge" style="color:var(--success);background:rgba(123,198,160,0.1);border:1.5px solid rgba(123,198,160,0.3);">Positive Context</span>
+          <p style="font-size:12px;color:var(--warm-dark);margin-top:4px;line-height:1.5;">His clumsy attempt at a joke actually made everyone laugh.</p>
+          <p style="font-size:11px;color:var(--warm-muted);font-style:italic;margin-top:2px;">Nỗ lực pha trò vụng về thực sự đã khiến mọi người bật cười.</p>
+        </div>
+        <div style="margin-bottom:8px;">
+          <span class="badge" style="color:var(--error);background:rgba(217,138,138,0.1);border:1.5px solid rgba(217,138,138,0.3);">Negative Context</span>
+          <p style="font-size:12px;color:var(--warm-dark);margin-top:4px;line-height:1.5;">She felt clumsy and embarrassed after tripping in front of the crowd.</p>
+          <p style="font-size:11px;color:var(--warm-muted);font-style:italic;margin-top:2px;">Cô cảm thấy vụng về và xấu hổ sau khi vấp ngã.</p>
+        </div>
+        <div style="font-size:11px;font-weight:700;color:var(--warm-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em;">Common Collocations</div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;">
+          <span style="font-size:10px;background:var(--clay-beige);border:1.5px solid var(--clay-border);padding:4px 10px;border-radius:var(--r-full);color:var(--warm-dark);font-weight:500;">clumsy hands</span>
+          <span style="font-size:10px;background:var(--clay-beige);border:1.5px solid var(--clay-border);padding:4px 10px;border-radius:var(--r-full);color:var(--warm-dark);font-weight:500;">clumsy mistake</span>
+          <span style="font-size:10px;background:var(--clay-beige);border:1.5px solid var(--clay-border);padding:4px 10px;border-radius:var(--r-full);color:var(--warm-dark);font-weight:500;">clumsy movement</span>
+        </div>
+      </div>
+
+      <!-- Word Family -->
+      <div class="card" style="padding:16px;">
+        <div style="font-size:11px;font-weight:700;color:var(--warm-dark);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.08em;">Word Family</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+          <div style="background:var(--clay-beige);border:1.5px solid var(--clay-border);border-radius:var(--r-sm);padding:8px;text-align:center;"><div style="font-size:9px;color:var(--purple);font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">adjective</div><div style="font-size:13px;color:var(--warm-dark);font-weight:600;">clumsy</div></div>
+          <div style="background:var(--clay-beige);border:1.5px solid var(--clay-border);border-radius:var(--r-sm);padding:8px;text-align:center;"><div style="font-size:9px;color:var(--teal);font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">adverb</div><div style="font-size:13px;color:var(--warm-dark);font-weight:600;">clumsily</div></div>
+          <div style="background:var(--clay-beige);border:1.5px solid var(--clay-border);border-radius:var(--r-sm);padding:8px;text-align:center;"><div style="font-size:9px;color:#9A7B3D;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">noun</div><div style="font-size:13px;color:var(--warm-dark);font-weight:600;">clumsiness</div></div>
+          <div style="background:var(--clay-beige);border:1.5px solid var(--clay-border);border-radius:var(--r-sm);padding:8px;text-align:center;"><div style="font-size:9px;color:var(--warm-light);font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">verb</div><div style="font-size:13px;color:var(--warm-light);font-weight:600;">—</div></div>
+        </div>
+      </div>
+
+      <!-- Synonyms / Antonyms -->
+      <div class="card" style="padding:16px;">
+        <div style="display:flex;gap:12px;">
+          <div style="flex:1;"><div style="font-size:11px;font-weight:700;color:var(--success);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Synonyms</div><p style="font-size:12px;color:var(--warm-dark);line-height:1.8;">• awkward<br>• inept<br>• uncoordinated</p></div>
+          <div style="width:1px;background:var(--clay-border);"></div>
+          <div style="flex:1;"><div style="font-size:11px;font-weight:700;color:var(--error);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Antonyms</div><p style="font-size:12px;color:var(--warm-dark);line-height:1.8;">• graceful<br>• nimble<br>• deft</p></div>
+        </div>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item active"><img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_84,h_84,c_fill,q_85/v1774765585/aura-coach-assets/navigation-bar/home-icon_f164a9.webp" alt="Home"><span>Home</span></div>
+      <div class="nav-item"><div style="font-size:20px;opacity:0.45;">👤</div><span>Profile</span></div>
+      <div class="nav-item"><img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_84,h_84,c_fill,q_85/v1774780351/aura-coach-assets/navigation-bar/setting-icon_42d237_cac3a9.webp" alt="Settings"><span>Settings</span></div>
+    </div>
+  </div>
+  <div class="phone-home-bar"><div></div></div>
+</div>
+<div class="phone-label">/vocab-hub (analysis)</div>
+</div>
+
+<!-- Mind Map -->
+<div class="phone-wrapper">
+<div class="phone">
+  <div class="phone-status"><span>9:41</span><span>●●●● WiFi 100%</span></div>
+  <div class="phone-content">
+    <div class="app-bar"><div class="back">←</div><div class="title" style="color:var(--purple);">Mind Map: Technology</div><div class="actions"><span style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:14px;">📤</span></div></div>
+    <div style="flex:1;padding:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--cream);">
+      <!-- Horizontal L→R mind map -->
+      <svg width="320" height="300" viewBox="0 0 320 300">
+        <!-- Central node -->
+        <rect x="20" y="125" width="100" height="40" rx="12" fill="#7ECEC5"/>
+        <text x="70" y="150" text-anchor="middle" fill="white" font-size="13" font-weight="700" font-family="Nunito">Technology</text>
+        <!-- Lines -->
+        <line x1="120" y1="135" x2="180" y2="60" stroke="#E8DFD3" stroke-width="2"/>
+        <line x1="120" y1="145" x2="180" y2="145" stroke="#E8DFD3" stroke-width="2"/>
+        <line x1="120" y1="155" x2="180" y2="230" stroke="#E8DFD3" stroke-width="2"/>
+        <!-- Level 1 nodes -->
+        <rect x="180" y="40" width="90" height="36" rx="8" fill="#FEFCF9" stroke="#E8DFD3" stroke-width="1.5"/>
+        <text x="225" y="62" text-anchor="middle" fill="#2D3047" font-size="11" font-weight="600" font-family="Nunito">Hardware</text>
+        <rect x="180" y="127" width="90" height="36" rx="8" fill="#FEFCF9" stroke="#E8DFD3" stroke-width="1.5"/>
+        <text x="225" y="149" text-anchor="middle" fill="#2D3047" font-size="11" font-weight="600" font-family="Nunito">Software</text>
+        <rect x="180" y="212" width="90" height="36" rx="8" fill="#FEFCF9" stroke="#E8DFD3" stroke-width="1.5"/>
+        <text x="225" y="234" text-anchor="middle" fill="#2D3047" font-size="11" font-weight="600" font-family="Nunito">AI & Data</text>
+        <!-- Level 2 -->
+        <line x1="270" y1="48" x2="290" y2="25" stroke="#E8DFD3" stroke-width="1"/>
+        <line x1="270" y1="58" x2="290" y2="70" stroke="#E8DFD3" stroke-width="1"/>
+        <text x="295" y="28" fill="#A78BCA" font-size="9" font-weight="600" font-family="Inter">CPU, GPU</text>
+        <text x="295" y="73" fill="#A78BCA" font-size="9" font-weight="600" font-family="Inter">RAM, SSD</text>
+        <line x1="270" y1="138" x2="290" y2="120" stroke="#E8DFD3" stroke-width="1"/>
+        <line x1="270" y1="148" x2="290" y2="160" stroke="#E8DFD3" stroke-width="1"/>
+        <text x="295" y="123" fill="#7ECEC5" font-size="9" font-weight="600" font-family="Inter">Apps, OS</text>
+        <text x="295" y="163" fill="#7ECEC5" font-size="9" font-weight="600" font-family="Inter">Cloud, SaaS</text>
+        <line x1="270" y1="225" x2="290" y2="210" stroke="#E8DFD3" stroke-width="1"/>
+        <line x1="270" y1="235" x2="290" y2="250" stroke="#E8DFD3" stroke-width="1"/>
+        <text x="295" y="213" fill="#E8C77B" font-size="9" font-weight="600" font-family="Inter">ML, NLP</text>
+        <text x="295" y="253" fill="#E8C77B" font-size="9" font-weight="600" font-family="Inter">Big Data</text>
+      </svg>
+      <p style="font-size:11px;color:var(--warm-light);margin-top:8px;">Pinch to zoom · Drag to pan</p>
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item active"><img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_84,h_84,c_fill,q_85/v1774765585/aura-coach-assets/navigation-bar/home-icon_f164a9.webp" alt="Home"><span>Home</span></div>
+      <div class="nav-item"><div style="font-size:20px;opacity:0.45;">👤</div><span>Profile</span></div>
+      <div class="nav-item"><img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_84,h_84,c_fill,q_85/v1774780351/aura-coach-assets/navigation-bar/setting-icon_42d237_cac3a9.webp" alt="Settings"><span>Settings</span></div>
+    </div>
+  </div>
+  <div class="phone-home-bar"><div></div></div>
+</div>
+<div class="phone-label">/vocab-hub/mind-map</div>
+</div>
+
+<!-- Flashcards -->
+<div class="phone-wrapper">
+<div class="phone">
+  <div class="phone-status"><span>9:41</span><span>●●●● WiFi 100%</span></div>
+  <div class="phone-content">
+    <div class="app-bar"><div class="back">←</div><div class="title" style="color:var(--purple);">Flashcards (2/12)</div></div>
+    <div style="flex:1;padding:16px;display:flex;flex-direction:column;gap:16px;align-items:center;justify-content:center;background:var(--cream);">
+      <div class="card" style="width:100%;min-height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:8px;padding:24px;box-shadow:var(--shadow-clay);">
+        <span class="badge" style="color:var(--purple);background:rgba(167,139,202,0.1);border:1.5px solid rgba(167,139,202,0.3);">Vocabulary</span>
+        <div style="font-size:28px;font-weight:800;color:var(--warm-dark);margin-top:8px;font-family:'Nunito',sans-serif;">leverage</div>
+        <div style="font-size:12px;color:var(--warm-light);margin-top:4px;">Mastery: 45%</div>
+        <div class="progress-bar" style="width:120px;margin-top:4px;"><div class="fill" style="width:45%;background:var(--gold);"></div></div>
+        <div style="font-size:11px;color:var(--warm-muted);margin-top:12px;font-style:italic;">Tap to flip →</div>
+      </div>
+      <div style="font-size:12px;color:var(--warm-muted);">Rate how well you knew it:</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;width:100%;">
+        <div style="padding:10px;border-radius:var(--r-lg);background:rgba(217,138,138,0.1);color:var(--error);font-size:13px;font-weight:700;text-align:center;">Again</div>
+        <div style="padding:10px;border-radius:var(--r-lg);background:rgba(232,199,123,0.1);color:#9A7B3D;font-size:13px;font-weight:700;text-align:center;">Hard</div>
+        <div style="padding:10px;border-radius:var(--r-lg);background:rgba(126,206,197,0.1);color:var(--teal);font-size:13px;font-weight:700;text-align:center;">Good</div>
+        <div style="padding:10px;border-radius:var(--r-lg);background:rgba(123,198,160,0.1);color:var(--success);font-size:13px;font-weight:700;text-align:center;">Easy</div>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item active"><img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_84,h_84,c_fill,q_85/v1774765585/aura-coach-assets/navigation-bar/home-icon_f164a9.webp" alt="Home"><span>Home</span></div>
+      <div class="nav-item"><div style="font-size:20px;opacity:0.45;">👤</div><span>Profile</span></div>
+      <div class="nav-item"><img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_84,h_84,c_fill,q_85/v1774780351/aura-coach-assets/navigation-bar/setting-icon_42d237_cac3a9.webp" alt="Settings"><span>Settings</span></div>
+    </div>
+  </div>
+  <div class="phone-home-bar"><div></div></div>
+</div>
+<div class="phone-label">/vocab-hub/flashcards</div>
+</div>
+
+<!-- Practice -->
+<div class="phone-wrapper">
+<div class="phone">
+  <div class="phone-status"><span>9:41</span><span>●●●● WiFi 100%</span></div>
+  <div class="phone-content">
+    <div class="app-bar"><div class="back">←</div><div class="title" style="color:var(--purple);">Practice (Q3/10)</div></div>
+    <div style="flex:1;padding:16px;display:flex;flex-direction:column;gap:12px;background:var(--cream);">
+      <div class="card" style="padding:16px;">
+        <span class="badge" style="color:var(--teal);background:rgba(126,206,197,0.1);border:1.5px solid rgba(126,206,197,0.3);">Fill in the blank</span>
+        <div style="font-size:16px;font-weight:600;color:var(--warm-dark);margin-top:10px;line-height:1.5;">She _____ working here for 3 years.</div>
+        <div style="margin-top:12px;display:flex;align-items:center;gap:8px;background:var(--clay-beige);border:2px solid var(--clay-border);border-radius:var(--r-full);padding:14px 18px;">
+          <span style="color:var(--warm-light);font-size:16px;">Type your answer...</span>
+        </div>
+        <div style="margin-top:12px;width:100%;padding:12px;border-radius:var(--r-lg);background:var(--teal);color:#fff;font-size:14px;font-weight:700;text-align:center;box-shadow:var(--shadow-clay);">Check Answer ✓</div>
+      </div>
+      <div class="card" style="padding:14px;border-left:4px solid var(--success);">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;"><span style="color:var(--success);">✓</span><span style="font-size:14px;font-weight:700;color:var(--success);">Correct!</span></div>
+        <p style="font-size:12px;color:var(--warm-muted);">"has been" — Present perfect continuous.</p>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item active"><img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_84,h_84,c_fill,q_85/v1774765585/aura-coach-assets/navigation-bar/home-icon_f164a9.webp" alt="Home"><span>Home</span></div>
+      <div class="nav-item"><div style="font-size:20px;opacity:0.45;">👤</div><span>Profile</span></div>
+      <div class="nav-item"><img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_84,h_84,c_fill,q_85/v1774780351/aura-coach-assets/navigation-bar/setting-icon_42d237_cac3a9.webp" alt="Settings"><span>Settings</span></div>
+    </div>
+  </div>
+  <div class="phone-home-bar"><div></div></div>
+</div>
+<div class="phone-label">/vocab-hub/practice</div>
+</div>
+
+</div><!-- end vocab-hub screens-row -->
+
+<!-- ═══ MY LEARNING LIBRARY (Redesigned) ═══ -->
+<div class="section-title"><h2>My Learning Library</h2><p>Word Storage, Detail View, Save Flow, Empty State, Spaced Repetition Practice</p></div>
+<div class="screens-row">
+
+<!-- SCREEN 1: Library List — Category Tabs + Word Cards -->
+<div class="phone-wrapper">
+<div class="phone">
+  <div class="phone-status"><span>9:41</span><span>●●●● WiFi 100%</span></div>
+  <div class="phone-content">
+    <!-- App Bar -->
+    <div class="app-bar">
+      <div class="back">←</div>
+      <div class="title" style="color:var(--teal);font-family:'Fredoka',sans-serif;font-weight:700;">My Learning Library</div>
+      <div class="actions" style="display:flex;gap:4px;">
+        <span style="font-size:13px;color:var(--warm-muted);">🔄</span>
+        <span style="font-size:13px;color:var(--warm-muted);">⚙️</span>
+      </div>
+    </div>
+
+    <div style="flex:1;overflow-y:auto;background:var(--cream);">
+      <!-- Search Bar -->
+      <div style="padding:10px 14px 0;">
+        <div style="display:flex;align-items:center;gap:10px;background:var(--clay-white);border:2px solid var(--clay-border);border-radius:var(--r-full);padding:10px 16px;box-shadow:var(--shadow-card);">
+          <span style="font-size:14px;color:var(--warm-light);">🔍</span>
+          <span style="flex:1;font-size:14px;color:var(--warm-light);">Search saved words or phrases...</span>
+          <span style="font-size:11px;color:var(--warm-light);background:var(--clay-beige);padding:2px 8px;border-radius:var(--r-sm);font-weight:600;">42</span>
+        </div>
+      </div>
+
+      <!-- Tag Filters -->
+      <div style="padding:10px 14px 0;display:flex;gap:6px;overflow-x:auto;">
+        <span style="display:inline-flex;padding:6px 16px;border-radius:var(--r-full);font-size:12px;font-weight:700;background:var(--teal);color:#fff;box-shadow:2px 2px 0px rgba(126,206,197,0.3);">All</span>
+        <span style="display:inline-flex;padding:6px 14px;border-radius:var(--r-full);font-size:12px;font-weight:600;background:var(--clay-white);color:var(--warm-muted);border:1.5px solid var(--clay-border);">Uncategorized</span>
+        <span style="display:inline-flex;padding:6px 14px;border-radius:var(--r-full);font-size:12px;font-weight:600;background:var(--clay-white);color:var(--warm-muted);border:1.5px solid var(--clay-border);">Roleplay</span>
+        <span style="display:inline-flex;padding:6px 14px;border-radius:var(--r-full);font-size:12px;font-weight:600;background:var(--clay-white);color:var(--warm-muted);border:1.5px solid var(--clay-border);">Story</span>
+      </div>
+
+      <!-- Category Tabs (horizontal scroll) -->
+      <div style="display:flex;gap:0;overflow-x:auto;border-bottom:2px solid var(--clay-border);margin-top:8px;padding:0 8px;">
+        <div style="padding:8px 12px;font-size:11px;font-weight:700;color:var(--teal);border-bottom:2.5px solid var(--teal);white-space:nowrap;text-transform:uppercase;letter-spacing:0.05em;">All</div>
+        <div style="padding:8px 12px;font-size:11px;font-weight:500;color:var(--warm-light);white-space:nowrap;text-transform:uppercase;letter-spacing:0.05em;">Noun</div>
+        <div style="padding:8px 12px;font-size:11px;font-weight:500;color:var(--warm-light);white-space:nowrap;text-transform:uppercase;letter-spacing:0.05em;">Verb</div>
+        <div style="padding:8px 12px;font-size:11px;font-weight:500;color:var(--warm-light);white-space:nowrap;text-transform:uppercase;letter-spacing:0.05em;">Adjective</div>
+        <div style="padding:8px 12px;font-size:11px;font-weight:500;color:var(--warm-light);white-space:nowrap;text-transform:uppercase;letter-spacing:0.05em;">Adverb</div>
+        <div style="padding:8px 12px;font-size:11px;font-weight:500;color:var(--warm-light);white-space:nowrap;text-transform:uppercase;letter-spacing:0.05em;">Phrasal Verb</div>
+        <div style="padding:8px 12px;font-size:11px;font-weight:500;color:var(--warm-light);white-space:nowrap;text-transform:uppercase;letter-spacing:0.05em;">Idiom</div>
+        <div style="padding:8px 12px;font-size:11px;font-weight:500;color:var(--warm-light);white-space:nowrap;text-transform:uppercase;letter-spacing:0.05em;">Expression</div>
+        <div style="padding:8px 12px;font-size:11px;font-weight:500;color:var(--warm-light);white-space:nowrap;text-transform:uppercase;letter-spacing:0.05em;">Other</div>
+      </div>
+
+      <!-- Summary stats bar -->
+      <div style="display:flex;gap:8px;padding:10px 14px;">
+        <div style="flex:1;background:rgba(126,206,197,0.08);border:1.5px solid rgba(126,206,197,0.2);border-radius:var(--r-md);padding:8px 10px;text-align:center;">
+          <div style="font-size:16px;font-weight:800;color:var(--teal);font-family:'Nunito',sans-serif;">42</div>
+          <div style="font-size:9px;color:var(--warm-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Total</div>
+        </div>
+        <div style="flex:1;background:rgba(232,199,123,0.08);border:1.5px solid rgba(232,199,123,0.2);border-radius:var(--r-md);padding:8px 10px;text-align:center;">
+          <div style="font-size:16px;font-weight:800;color:#9A7B3D;font-family:'Nunito',sans-serif;">8</div>
+          <div style="font-size:9px;color:var(--warm-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Due Review</div>
+        </div>
+        <div style="flex:1;background:rgba(123,198,160,0.08);border:1.5px solid rgba(123,198,160,0.2);border-radius:var(--r-md);padding:8px 10px;text-align:center;">
+          <div style="font-size:16px;font-weight:800;color:var(--success);font-family:'Nunito',sans-serif;">27</div>
+          <div style="font-size:9px;color:var(--warm-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Mastered</div>
+        </div>
+      </div>
+
+      <!-- Word Card 1: DUE FOR REVIEW -->
+      <div style="padding:0 14px 10px;">
+        <div class="card" style="box-shadow:0 6px 20px rgba(45,48,71,0.10), 3px 3px 0px #D4C9BB;overflow:visible;">
+          <div style="display:flex;gap:12px;padding:14px 14px 10px;">
+            <!-- Illustration with review badge -->
+            <div style="position:relative;flex-shrink:0;">
+              <div style="width:72px;height:72px;border-radius:var(--r-lg);background:linear-gradient(135deg,rgba(126,206,197,0.15) 0%,rgba(167,139,202,0.1) 100%);border:2px solid var(--clay-border);display:flex;align-items:center;justify-content:center;overflow:hidden;">
+                <div style="width:52px;height:52px;border-radius:50%;background:rgba(126,206,197,0.2);display:flex;align-items:center;justify-content:center;">
+                  <span style="font-size:28px;">📝</span>
+                </div>
+              </div>
+              <div style="position:absolute;top:-6px;left:-4px;background:var(--gold);color:#fff;font-size:8px;font-weight:800;padding:3px 8px;border-radius:var(--r-full);text-transform:uppercase;letter-spacing:0.06em;box-shadow:1px 1px 0px rgba(232,199,123,0.4);white-space:nowrap;">Due for Review</div>
+            </div>
+            <!-- Word info -->
+            <div style="flex:1;min-width:0;">
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span style="font-size:20px;font-weight:800;color:var(--warm-dark);font-family:'Nunito',sans-serif;">clumsy</span>
+                <span style="font-size:13px;color:var(--teal);cursor:pointer;">🔊</span>
+              </div>
+              <div style="font-size:12px;color:var(--teal);font-weight:700;margin-top:1px;">Adjective (Tính từ)</div>
+              <div style="margin-top:6px;">
+                <div style="font-size:10px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px;">Explanation:</div>
+                <div style="font-size:12px;color:var(--warm-dark);line-height:1.5;border-left:3px solid var(--teal);padding-left:10px;background:rgba(126,206,197,0.04);padding:6px 10px;border-radius:0 var(--r-sm) var(--r-sm) 0;">Vụng về, lóng ngóng, thiếu khéo léo trong cử chỉ hoặc hành động.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Example sentences -->
+          <div style="padding:0 14px;display:flex;flex-direction:column;gap:6px;">
+            <div style="background:var(--clay-beige);border:1.5px solid var(--clay-border);border-radius:var(--r-md);padding:10px 12px;">
+              <div style="display:flex;align-items:flex-start;gap:6px;">
+                <span style="font-size:10px;font-weight:800;color:var(--teal);background:rgba(126,206,197,0.12);padding:2px 6px;border-radius:4px;flex-shrink:0;">1</span>
+                <div>
+                  <div style="font-size:12px;color:var(--warm-dark);line-height:1.4;font-style:italic;">"I was so clumsy that I dropped my phone in the water."</div>
+                  <div style="font-size:11px;color:var(--warm-muted);line-height:1.4;margin-top:3px;">"Tôi đã quá vụng về đến mức làm rơi điện thoại xuống nước."</div>
+                </div>
+              </div>
+            </div>
+            <div style="background:var(--clay-beige);border:1.5px solid var(--clay-border);border-radius:var(--r-md);padding:10px 12px;">
+              <div style="display:flex;align-items:flex-start;gap:6px;">
+                <span style="font-size:10px;font-weight:800;color:var(--teal);background:rgba(126,206,197,0.12);padding:2px 6px;border-radius:4px;flex-shrink:0;">2</span>
+                <div>
+                  <div style="font-size:12px;color:var(--warm-dark);line-height:1.4;font-style:italic;">"She made a clumsy attempt to apologize."</div>
+                  <div style="font-size:11px;color:var(--warm-muted);line-height:1.4;margin-top:3px;">"Cô ấy đã có một nỗ lực vụng về để xin lỗi."</div>
+                </div>
+              </div>
+            </div>
+            <div style="background:var(--clay-beige);border:1.5px solid var(--clay-border);border-radius:var(--r-md);padding:10px 12px;">
+              <div style="display:flex;align-items:flex-start;gap:6px;">
+                <span style="font-size:10px;font-weight:800;color:var(--teal);background:rgba(126,206,197,0.12);padding:2px 6px;border-radius:4px;flex-shrink:0;">3</span>
+                <div>
+                  <div style="font-size:12px;color:var(--warm-dark);line-height:1.4;font-style:italic;">"The clumsy waiter spilled coffee on my shirt."</div>
+                  <div style="font-size:11px;color:var(--warm-muted);line-height:1.4;margin-top:3px;">"Người phục vụ vụng về đã đổ cà phê lên áo tôi."</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action buttons -->
+          <div style="display:flex;gap:10px;padding:12px 14px;border-top:1.5px solid var(--clay-border);margin-top:10px;">
+            <div style="display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:var(--r-lg);border:2px solid var(--clay-border);background:var(--clay-white);cursor:pointer;">
+              <span style="font-size:13px;color:var(--error);">🗑️</span>
+              <span style="font-size:12px;font-weight:700;color:var(--error);">Delete</span>
+            </div>
+            <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:8px 14px;border-radius:var(--r-lg);background:var(--teal);color:#fff;box-shadow:3px 3px 0px rgba(126,206,197,0.3);cursor:pointer;">
+              <span style="font-size:13px;">▶</span>
+              <span style="font-size:13px;font-weight:700;">Practice</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Word Card 2: Mastered (collapsed preview) -->
+      <div style="padding:0 14px 10px;">
+        <div class="card" style="box-shadow:var(--shadow-card);">
+          <div style="display:flex;gap:12px;padding:14px;">
+            <div style="position:relative;flex-shrink:0;">
+              <div style="width:56px;height:56px;border-radius:var(--r-lg);background:linear-gradient(135deg,rgba(123,198,160,0.15) 0%,rgba(126,206,197,0.1) 100%);border:2px solid var(--clay-border);display:flex;align-items:center;justify-content:center;">
+                <span style="font-size:24px;">🌟</span>
+              </div>
+              <div style="position:absolute;top:-5px;left:-4px;background:var(--success);color:#fff;font-size:7px;font-weight:800;padding:2px 7px;border-radius:var(--r-full);text-transform:uppercase;letter-spacing:0.05em;">Mastered</div>
+            </div>
+            <div style="flex:1;min-width:0;">
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <div>
+                  <span style="font-size:16px;font-weight:800;color:var(--warm-dark);font-family:'Nunito',sans-serif;">resilient</span>
+                  <span style="font-size:12px;color:var(--teal);margin-left:4px;">🔊</span>
+                </div>
+                <span style="font-size:14px;color:var(--warm-muted);transform:rotate(90deg);display:inline-block;">›</span>
+              </div>
+              <div style="font-size:11px;color:var(--teal);font-weight:600;">Adjective (Tính từ)</div>
+              <div style="font-size:11px;color:var(--warm-muted);margin-top:3px;line-height:1.4;">Kiên cường, có khả năng phục hồi nhanh.</div>
+              <div style="display:flex;align-items:center;gap:4px;margin-top:4px;">
+                <div class="progress-bar" style="width:80px;"><div class="fill" style="width:100%;background:var(--success);"></div></div>
+                <span style="font-size:10px;color:var(--success);font-weight:700;">100%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Word Card 3: Learning (collapsed preview) -->
+      <div style="padding:0 14px 10px;">
+        <div class="card" style="box-shadow:var(--shadow-card);">
+          <div style="display:flex;gap:12px;padding:14px;">
+            <div style="position:relative;flex-shrink:0;">
+              <div style="width:56px;height:56px;border-radius:var(--r-lg);background:linear-gradient(135deg,rgba(167,139,202,0.12) 0%,rgba(232,199,123,0.08) 100%);border:2px solid var(--clay-border);display:flex;align-items:center;justify-content:center;">
+                <span style="font-size:24px;">💡</span>
+              </div>
+              <div style="position:absolute;top:-5px;left:-4px;background:var(--purple);color:#fff;font-size:7px;font-weight:800;padding:2px 7px;border-radius:var(--r-full);text-transform:uppercase;letter-spacing:0.05em;">Learning</div>
+            </div>
+            <div style="flex:1;min-width:0;">
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <div>
+                  <span style="font-size:16px;font-weight:800;color:var(--warm-dark);font-family:'Nunito',sans-serif;">procrastinate</span>
+                  <span style="font-size:12px;color:var(--teal);margin-left:4px;">🔊</span>
+                </div>
+                <span style="font-size:14px;color:var(--warm-muted);transform:rotate(90deg);display:inline-block;">›</span>
+              </div>
+              <div style="font-size:11px;color:var(--purple);font-weight:600;">Verb (Động từ)</div>
+              <div style="font-size:11px;color:var(--warm-muted);margin-top:3px;line-height:1.4;">Trì hoãn, chần chừ không muốn làm việc.</div>
+              <div style="display:flex;align-items:center;gap:4px;margin-top:4px;">
+                <div class="progress-bar" style="width:80px;"><div class="fill" style="width:55%;background:var(--purple);"></div></div>
+                <span style="font-size:10px;color:var(--purple);font-weight:700;">55%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-nav">
+      <div class="nav-item"><img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_84,h_84,c_fill,q_85/v1774765585/aura-coach-assets/navigation-bar/home-icon_f164a9.webp" alt="Home"><span>Home</span></div>
+      <div class="nav-item active"><div style="font-size:20px;">👤</div><span style="color:var(--teal);font-weight:700;">Profile</span></div>
+      <div class="nav-item"><img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_84,h_84,c_fill,q_85/v1774780351/aura-coach-assets/navigation-bar/setting-icon_42d237_cac3a9.webp" alt="Settings"><span>Settings</span></div>
+    </div>
+  </div>
+  <div class="phone-home-bar"><div></div></div>
+</div>
+<div class="phone-label">/my-library</div>
+</div>
+
+<!-- SCREEN 2: Word Detail — Full Expanded Card -->
+<div class="phone-wrapper">
+<div class="phone">
+  <div class="phone-status"><span>9:41</span><span>●●●● WiFi 100%</span></div>
+  <div class="phone-content">
+    <div class="app-bar">
+      <div class="back">←</div>
+      <div class="title" style="color:var(--warm-dark);font-family:'Nunito',sans-serif;">Word Detail</div>
+      <div class="actions" style="display:flex;gap:4px;">
+        <span style="font-size:13px;color:var(--warm-muted);">✏️</span>
+        <span style="font-size:13px;color:var(--error);">🗑️</span>
+      </div>
+    </div>
+
+    <div style="flex:1;overflow-y:auto;background:var(--cream);padding:14px;display:flex;flex-direction:column;gap:12px;">
+      <!-- Hero illustration + word -->
+      <div class="card" style="box-shadow:0 6px 20px rgba(45,48,71,0.10), 3px 3px 0px #D4C9BB;overflow:visible;">
+        <div style="position:relative;">
+          <!-- Illustration area -->
+          <div style="height:140px;background:linear-gradient(135deg,rgba(126,206,197,0.12) 0%,rgba(167,139,202,0.08) 50%,rgba(232,199,123,0.06) 100%);display:flex;align-items:center;justify-content:center;border-bottom:2px solid var(--clay-border);">
+            <div style="width:90px;height:90px;border-radius:50%;background:rgba(126,206,197,0.18);border:3px solid rgba(126,206,197,0.3);display:flex;align-items:center;justify-content:center;">
+              <span style="font-size:48px;">📝</span>
+            </div>
+          </div>
+          <!-- Due badge -->
+          <div style="position:absolute;top:10px;left:10px;background:var(--gold);color:#fff;font-size:10px;font-weight:800;padding:5px 12px;border-radius:var(--r-full);text-transform:uppercase;letter-spacing:0.06em;box-shadow:2px 2px 0px rgba(232,199,123,0.3);">Due for Review</div>
+          <!-- Context badge -->
+          <div style="position:absolute;top:10px;right:10px;background:rgba(167,139,202,0.12);color:var(--purple);font-size:10px;font-weight:700;padding:4px 10px;border-radius:var(--r-full);border:1.5px solid rgba(167,139,202,0.25);">From: Roleplay</div>
+        </div>
+
+        <!-- Word header -->
+        <div style="padding:16px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:26px;font-weight:800;color:var(--warm-dark);font-family:'Fredoka',sans-serif;">clumsy</span>
+            <span style="font-size:16px;color:var(--teal);cursor:pointer;">🔊</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+            <span style="font-size:12px;font-family:monospace;color:var(--warm-muted);">/ˈklʌmzi/</span>
+            <span style="font-size:13px;font-weight:700;color:var(--teal);">Adjective (Tính từ)</span>
+          </div>
+
+          <!-- Mastery progress -->
+          <div style="display:flex;align-items:center;gap:8px;margin-top:10px;">
+            <div class="progress-bar" style="flex:1;height:8px;"><div class="fill" style="width:45%;background:linear-gradient(90deg,var(--gold),#E8C77B);border-radius:4px;"></div></div>
+            <span style="font-size:12px;font-weight:800;color:#9A7B3D;">45%</span>
+          </div>
+          <div style="font-size:10px;color:var(--warm-muted);margin-top:3px;">Next review: Tomorrow · Reviewed 3 times</div>
+        </div>
+      </div>
+
+      <!-- Explanation -->
+      <div class="card" style="padding:14px;">
+        <div style="font-size:11px;font-weight:800;color:var(--teal);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">Explanation</div>
+        <div style="font-size:14px;color:var(--warm-dark);line-height:1.6;border-left:4px solid var(--teal);padding-left:12px;background:rgba(126,206,197,0.04);padding:10px 12px;border-radius:0 var(--r-md) var(--r-md) 0;">
+          Vụng về, lóng ngóng, thiếu khéo léo trong cử chỉ hoặc hành động. Thường dùng để mô tả người hay làm rơi đồ hoặc thiếu sự uyển chuyển.
+        </div>
+      </div>
+
+      <!-- Context of use -->
+      <div class="card" style="padding:14px;">
+        <div style="font-size:11px;font-weight:800;color:var(--purple);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">Context of Use</div>
+        <div style="font-size:13px;color:var(--warm-dark);line-height:1.5;padding:8px 12px;background:rgba(167,139,202,0.06);border:1.5px solid rgba(167,139,202,0.15);border-radius:var(--r-md);">
+          Saved during <span style="font-weight:700;color:var(--purple);">"Office Apology"</span> roleplay. Used when describing someone who accidentally knocked over a vase.
+        </div>
+      </div>
+
+      <!-- Example Sentences -->
+      <div class="card" style="padding:14px;">
+        <div style="font-size:11px;font-weight:800;color:var(--teal);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">Example Sentences</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="background:var(--clay-beige);border:1.5px solid var(--clay-border);border-radius:var(--r-md);padding:12px;">
+            <div style="display:flex;align-items:flex-start;gap:8px;">
+              <span style="font-size:11px;font-weight:800;color:#fff;background:var(--teal);width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">1</span>
+              <div>
+                <div style="font-size:13px;color:var(--warm-dark);line-height:1.5;font-style:italic;">"I was so clumsy that I dropped my phone in the water."</div>
+                <div style="font-size:12px;color:var(--warm-muted);line-height:1.4;margin-top:4px;">"Tôi đã quá vụng về đến mức làm rơi điện thoại xuống nước."</div>
+              </div>
+            </div>
+          </div>
+          <div style="background:var(--clay-beige);border:1.5px solid var(--clay-border);border-radius:var(--r-md);padding:12px;">
+            <div style="display:flex;align-items:flex-start;gap:8px;">
+              <span style="font-size:11px;font-weight:800;color:#fff;background:var(--teal);width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">2</span>
+              <div>
+                <div style="font-size:13px;color:var(--warm-dark);line-height:1.5;font-style:italic;">"She made a clumsy attempt to apologize for the mistake."</div>
+                <div style="font-size:12px;color:var(--warm-muted);line-height:1.4;margin-top:4px;">"Cô ấy đã có một nỗ lực vụng về để xin lỗi vì sai lầm."</div>
+              </div>
+            </div>
+          </div>
+          <div style="background:var(--clay-beige);border:1.5px solid var(--clay-border);border-radius:var(--r-md);padding:12px;">
+            <div style="display:flex;align-items:flex-start;gap:8px;">
+              <span style="font-size:11px;font-weight:800;color:#fff;background:var(--teal);width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">3</span>
+              <div>
+                <div style="font-size:13px;color:var(--warm-dark);line-height:1.5;font-style:italic;">"The clumsy waiter spilled coffee on my new shirt."</div>
+                <div style="font-size:12px;color:var(--warm-muted);line-height:1.4;margin-top:4px;">"Người phục vụ vụng về đã đổ cà phê lên chiếc áo mới của tôi."</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action buttons (sticky-feel) -->
+      <div style="display:flex;gap:10px;">
+        <div style="display:flex;align-items:center;gap:6px;padding:12px 18px;border-radius:var(--r-lg);border:2px solid var(--clay-border);background:var(--clay-white);box-shadow:var(--shadow-card);cursor:pointer;">
+          <span style="font-size:14px;color:var(--error);">🗑️</span>
+          <span style="font-size:13px;font-weight:700;color:var(--error);">Delete</span>
+        </div>
+        <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border-radius:var(--r-lg);background:var(--teal);color:#fff;font-size:14px;font-weight:700;box-shadow:3px 3px 0px rgba(126,206,197,0.3);cursor:pointer;font-family:'Nunito',sans-serif;">
+          <span>▶</span> Practice Now
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-nav">
+      <div class="nav-item"><img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_84,h_84,c_fill,q_85/v1774765585/aura-coach-assets/navigation-bar/home-icon_f164a9.webp" alt="Home"><span>Home</span></div>
+      <div class="nav-item active"><div style="font-size:20px;">👤</div><span style="color:var(--teal);font-weight:700;">Profile</span></div>
+      <div class="nav-item"><img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_84,h_84,c_fill,q_85/v1774780351/aura-coach-assets/navigation-bar/setting-icon_42d237_cac3a9.webp" alt="Settings"><span>Settings</span></div>
+    </div>
+  </div>
+  <div class="phone-home-bar"><div></div></div>
+</div>
+<div class="phone-label">/my-library/word/:id</div>
+</div>
+
+<!-- SCREEN 3: Save Word Bottom Sheet (from Chat) -->
+<div class="phone-wrapper">
+<div class="phone">
+  <div class="phone-status"><span>9:41</span><span>●●●● WiFi 100%</span></div>
+  <div class="phone-content">
+    <!-- Dimmed chat background -->
+    <div style="flex:1;background:rgba(45,48,71,0.35);display:flex;flex-direction:column;justify-content:flex-end;">
+      <!-- Bottom Sheet -->
+      <div style="background:var(--cream);border-radius:var(--r-xl) var(--r-xl) 0 0;border-top:3px solid var(--clay-border);padding:0;box-shadow:0 -8px 32px rgba(45,48,71,0.15);">
+        <!-- Handle -->
+        <div style="text-align:center;padding:10px 0 6px;"><div style="width:40px;height:4px;background:var(--clay-border);border-radius:2px;margin:0 auto;"></div></div>
+
+        <!-- Header -->
+        <div style="padding:0 20px 14px;border-bottom:2px solid var(--clay-border);">
+          <div style="font-size:18px;font-weight:800;color:var(--warm-dark);font-family:'Fredoka',sans-serif;">Save to Library</div>
+          <div style="font-size:12px;color:var(--warm-muted);margin-top:2px;">Add this word to your learning collection</div>
+        </div>
+
+        <!-- Word preview -->
+        <div style="padding:14px 20px;">
+          <div style="display:flex;gap:12px;align-items:center;background:var(--clay-white);border:2px solid var(--clay-border);border-radius:var(--r-lg);padding:14px;box-shadow:var(--shadow-card);">
+            <div style="width:52px;height:52px;border-radius:var(--r-md);background:linear-gradient(135deg,rgba(126,206,197,0.15),rgba(167,139,202,0.1));border:2px solid var(--clay-border);display:flex;align-items:center;justify-content:center;">
+              <span style="font-size:26px;">📝</span>
+            </div>
+            <div>
+              <div style="font-size:18px;font-weight:800;color:var(--warm-dark);font-family:'Nunito',sans-serif;">clumsy</div>
+              <div style="font-size:12px;color:var(--teal);font-weight:600;">/ˈklʌmzi/ · Adjective</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Category selector -->
+        <div style="padding:0 20px 12px;">
+          <div style="font-size:11px;font-weight:700;color:var(--warm-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">Category</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <span style="padding:6px 14px;border-radius:var(--r-full);font-size:12px;font-weight:700;background:var(--teal);color:#fff;">Adjective</span>
+            <span style="padding:6px 14px;border-radius:var(--r-full);font-size:12px;font-weight:600;background:var(--clay-beige);color:var(--warm-muted);border:1.5px solid var(--clay-border);">Noun</span>
+            <span style="padding:6px 14px;border-radius:var(--r-full);font-size:12px;font-weight:600;background:var(--clay-beige);color:var(--warm-muted);border:1.5px solid var(--clay-border);">Verb</span>
+            <span style="padding:6px 14px;border-radius:var(--r-full);font-size:12px;font-weight:600;background:var(--clay-beige);color:var(--warm-muted);border:1.5px solid var(--clay-border);">Phrasal Verb</span>
+            <span style="padding:6px 14px;border-radius:var(--r-full);font-size:12px;font-weight:600;background:var(--clay-beige);color:var(--warm-muted);border:1.5px solid var(--clay-border);">Idiom</span>
+          </div>
+        </div>
+
+        <!-- Tag (source) -->
+        <div style="padding:0 20px 12px;">
+          <div style="font-size:11px;font-weight:700;color:var(--warm-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">Source Tag</div>
+          <div style="display:flex;align-items:center;gap:8px;background:var(--clay-beige);border:1.5px solid var(--clay-border);border-radius:var(--r-md);padding:10px 14px;">
+            <span style="font-size:12px;color:var(--purple);font-weight:600;">Roleplay: Office Apology</span>
+          </div>
+        </div>
+
+        <!-- Save button -->
+        <div style="padding:8px 20px 24px;">
+          <div style="width:100%;padding:14px;border-radius:var(--r-lg);background:var(--teal);color:#fff;font-size:15px;font-weight:700;text-align:center;box-shadow:3px 3px 0px rgba(126,206,197,0.3);font-family:'Nunito',sans-serif;">Save to Library</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="phone-home-bar"><div></div></div>
+</div>
+<div class="phone-label">Save Word Sheet</div>
+</div>
+
+<!-- SCREEN 4: Library Empty State -->
+<div class="phone-wrapper">
+<div class="phone">
+  <div class="phone-status"><span>9:41</span><span>●●●● WiFi 100%</span></div>
+  <div class="phone-content">
+    <div class="app-bar">
+      <div class="back">←</div>
+      <div class="title" style="color:var(--teal);font-family:'Fredoka',sans-serif;font-weight:700;">My Learning Library</div>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;background:var(--cream);text-align:center;">
+      <!-- Empty illustration -->
+      <div style="width:120px;height:120px;border-radius:50%;background:linear-gradient(135deg,rgba(126,206,197,0.1) 0%,rgba(167,139,202,0.08) 100%);border:3px solid var(--clay-border);display:flex;align-items:center;justify-content:center;margin-bottom:20px;box-shadow:var(--shadow-card);" class="float3d">
+        <span style="font-size:56px;">📚</span>
+      </div>
+      <div style="font-size:20px;font-weight:800;color:var(--warm-dark);font-family:'Fredoka',sans-serif;">Your Library is Empty</div>
+      <div style="font-size:14px;color:var(--warm-muted);margin-top:8px;line-height:1.5;">Start learning and save words or phrases during roleplay, stories, or translation sessions.</div>
+      <div style="margin-top:6px;font-size:12px;color:var(--warm-light);line-height:1.5;">Tap the <span style="background:rgba(126,206,197,0.15);color:var(--teal);font-weight:700;padding:2px 8px;border-radius:4px;">+ Save</span> button in any chat to add words here.</div>
+
+      <!-- CTA -->
+      <div style="margin-top:28px;padding:14px 28px;border-radius:var(--r-lg);background:var(--teal);color:#fff;font-size:15px;font-weight:700;box-shadow:3px 3px 0px rgba(126,206,197,0.3);font-family:'Nunito',sans-serif;cursor:pointer;">Start a Lesson</div>
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item"><img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_84,h_84,c_fill,q_85/v1774765585/aura-coach-assets/navigation-bar/home-icon_f164a9.webp" alt="Home"><span>Home</span></div>
+      <div class="nav-item active"><div style="font-size:20px;">👤</div><span style="color:var(--teal);font-weight:700;">Profile</span></div>
+      <div class="nav-item"><img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_84,h_84,c_fill,q_85/v1774780351/aura-coach-assets/navigation-bar/setting-icon_42d237_cac3a9.webp" alt="Settings"><span>Settings</span></div>
+    </div>
+  </div>
+  <div class="phone-home-bar"><div></div></div>
+</div>
+<div class="phone-label">Empty State</div>
+</div>
+
+<!-- SCREEN 5: Library Practice (Spaced Repetition Flashcard) -->
+<div class="phone-wrapper">
+<div class="phone">
+  <div class="phone-status"><span>9:41</span><span>●●●● WiFi 100%</span></div>
+  <div class="phone-content">
+    <div class="app-bar">
+      <div class="back">←</div>
+      <div class="title" style="color:var(--warm-dark);font-family:'Nunito',sans-serif;">Practice · 3 of 8</div>
+      <div class="actions"><span style="font-size:12px;color:var(--warm-muted);background:var(--clay-beige);padding:4px 10px;border-radius:var(--r-full);font-weight:700;">3/8</span></div>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;background:var(--cream);overflow:hidden;">
+      <!-- Progress -->
+      <div style="padding:10px 14px 0;">
+        <div class="progress-bar" style="height:6px;"><div class="fill" style="width:37.5%;background:linear-gradient(90deg,var(--teal),var(--purple));border-radius:3px;"></div></div>
+      </div>
+
+      <!-- Flashcard -->
+      <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:20px;">
+        <div class="card" style="width:100%;box-shadow:0 6px 20px rgba(45,48,71,0.10), 3px 3px 0px #D4C9BB;padding:0;">
+          <!-- Card front/back -->
+          <div style="text-align:center;padding:28px 20px;">
+            <div style="width:70px;height:70px;border-radius:50%;background:linear-gradient(135deg,rgba(126,206,197,0.15),rgba(167,139,202,0.1));border:3px solid var(--clay-border);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
+              <span style="font-size:36px;">📝</span>
+            </div>
+            <div style="font-size:13px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">What does this word mean?</div>
+            <div style="font-size:28px;font-weight:800;color:var(--warm-dark);font-family:'Fredoka',sans-serif;">clumsy</div>
+            <div style="font-size:13px;color:var(--warm-muted);font-family:monospace;margin-top:2px;">/ˈklʌmzi/ · Adjective</div>
+          </div>
+
+          <!-- Divider -->
+          <div style="border-top:2px dashed var(--clay-border);margin:0 20px;"></div>
+
+          <!-- Hint / revealed answer -->
+          <div style="padding:20px;text-align:center;">
+            <div style="font-size:11px;font-weight:700;color:var(--warm-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">Tap to reveal answer</div>
+            <div style="font-size:16px;color:var(--clay-border);line-height:1.5;font-weight:600;">• • • • • • •</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SM-2 Rating buttons -->
+      <div style="padding:0 14px 14px;">
+        <div style="font-size:10px;font-weight:700;color:var(--warm-muted);text-align:center;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">How well did you know this?</div>
+        <div style="display:flex;gap:6px;">
+          <div style="flex:1;text-align:center;padding:10px 6px;border-radius:var(--r-lg);background:rgba(217,138,138,0.1);border:2px solid rgba(217,138,138,0.3);cursor:pointer;">
+            <div style="font-size:16px;">😣</div>
+            <div style="font-size:10px;font-weight:700;color:var(--error);margin-top:2px;">Again</div>
+          </div>
+          <div style="flex:1;text-align:center;padding:10px 6px;border-radius:var(--r-lg);background:rgba(232,199,123,0.1);border:2px solid rgba(232,199,123,0.3);cursor:pointer;">
+            <div style="font-size:16px;">😐</div>
+            <div style="font-size:10px;font-weight:700;color:#9A7B3D;margin-top:2px;">Hard</div>
+          </div>
+          <div style="flex:1;text-align:center;padding:10px 6px;border-radius:var(--r-lg);background:rgba(126,206,197,0.1);border:2px solid rgba(126,206,197,0.3);cursor:pointer;">
+            <div style="font-size:16px;">😊</div>
+            <div style="font-size:10px;font-weight:700;color:var(--teal);margin-top:2px;">Good</div>
+          </div>
+          <div style="flex:1;text-align:center;padding:10px 6px;border-radius:var(--r-lg);background:rgba(123,198,160,0.1);border:2px solid rgba(123,198,160,0.3);cursor:pointer;">
+            <div style="font-size:16px;">🤩</div>
+            <div style="font-size:10px;font-weight:700;color:var(--success);margin-top:2px;">Easy</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="phone-home-bar"><div></div></div>
+</div>
+<div class="phone-label">Practice Flashcard</div>
+</div>
+
+</div><!-- end my-learning-library screens-row -->
+
+<!-- ═══ PROFILE & HISTORY ═══ -->
+<div class="section-title"><h2>Profile &amp; History</h2><p>User Profile, Learning Statistics, Session History</p></div>
+<div class="screens-row">
+
+<!-- Profile (Full Screen) -->
+<div class="phone-wrapper">
+<div class="phone">
+  <div class="phone-status"><span>9:41</span><span>●●●● WiFi 100%</span></div>
+  <div class="phone-content">
+    <div style="flex:1;overflow-y:auto;background:var(--cream);">
+      <!-- Profile header -->
+      <div style="text-align:center;padding:24px 24px 20px;background:linear-gradient(180deg,rgba(126,206,197,0.08) 0%,var(--cream) 100%);">
+        <div style="width:80px;height:80px;border-radius:50%;overflow:hidden;border:3px solid var(--teal);box-shadow:var(--shadow-clay);margin:0 auto 12px;">
+          <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_240,h_240,c_fill,q_90/v1774780247/aura-coach-assets/avatars/fox-avatar_677f5f.webp" style="width:100%;height:100%;object-fit:cover;">
+        </div>
+        <div style="font-size:22px;font-weight:800;color:var(--warm-dark);font-family:'Nunito',sans-serif;">Luu</div>
+        <span class="badge" style="margin-top:6px;color:var(--warm-muted);background:var(--clay-beige);border:1.5px solid var(--clay-border);">Free Tier</span>
+        <div style="font-size:12px;color:var(--warm-muted);margin-top:8px;">Intermediate (B1/B2) · Joined Mar 2026</div>
+      </div>
+
+      <!-- Stats row -->
+      <div style="display:flex;gap:8px;padding:0 16px;margin-bottom:16px;">
+        <div class="card" style="flex:1;padding:12px;text-align:center;">
+          <div style="font-size:22px;font-weight:800;color:var(--teal);font-family:'Nunito',sans-serif;">7</div>
+          <div style="font-size:11px;color:var(--warm-muted);margin-top:2px;">Day Streak</div>
+        </div>
+        <div class="card" style="flex:1;padding:12px;text-align:center;">
+          <div style="font-size:22px;font-weight:800;color:var(--purple);font-family:'Nunito',sans-serif;">42</div>
+          <div style="font-size:11px;color:var(--warm-muted);margin-top:2px;">Words Saved</div>
+        </div>
+        <div class="card" style="flex:1;padding:12px;text-align:center;">
+          <div style="font-size:22px;font-weight:800;color:var(--gold);font-family:'Nunito',sans-serif;">156</div>
+          <div style="font-size:11px;color:var(--warm-muted);margin-top:2px;">Sessions</div>
+        </div>
+      </div>
+
+      <!-- Daily usage -->
+      <div style="padding:0 16px;margin-bottom:16px;">
+        <div class="card" style="padding:16px;">
+          <div style="font-size:14px;font-weight:700;color:var(--warm-dark);margin-bottom:10px;">Daily Usage</div>
+          <div style="margin-bottom:8px;">
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;"><span style="color:var(--warm-muted);">Roleplay</span><span style="color:var(--teal);font-weight:600;">3/5</span></div>
+            <div class="progress-bar"><div class="fill" style="width:60%;background:var(--teal);"></div></div>
+          </div>
+          <div style="margin-bottom:8px;">
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;"><span style="color:var(--warm-muted);">Stories</span><span style="color:var(--purple);font-weight:600;">1/3</span></div>
+            <div class="progress-bar"><div class="fill" style="width:33%;background:var(--purple);"></div></div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;"><span style="color:var(--warm-muted);">Translator</span><span style="color:#9A7B3D;font-weight:600;">4/10</span></div>
+            <div class="progress-bar"><div class="fill" style="width:40%;background:var(--gold);"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Achievements -->
+      <div style="padding:0 16px;margin-bottom:16px;">
+        <div style="font-size:14px;font-weight:700;color:var(--warm-dark);margin-bottom:8px;">Achievements</div>
+        <div style="display:flex;gap:8px;">
+          <div class="card" style="flex:1;padding:12px;text-align:center;"><div style="font-size:24px;">🔥</div><div style="font-size:10px;color:var(--warm-muted);margin-top:4px;">7-Day Streak</div></div>
+          <div class="card" style="flex:1;padding:12px;text-align:center;"><div style="font-size:24px;">📚</div><div style="font-size:10px;color:var(--warm-muted);margin-top:4px;">Word Master</div></div>
+          <div class="card" style="flex:1;padding:12px;text-align:center;"><div style="font-size:24px;opacity:0.3;">🏆</div><div style="font-size:10px;color:var(--warm-light);margin-top:4px;">???</div></div>
+        </div>
+      </div>
+
+      <!-- Upgrade CTA -->
+      <div style="padding:0 16px 16px;">
+        <div style="width:100%;padding:14px;border-radius:var(--r-lg);background:var(--teal);color:#fff;font-size:16px;font-weight:700;text-align:center;box-shadow:var(--shadow-clay);font-family:'Nunito',sans-serif;">⭐ Upgrade to Pro</div>
+      </div>
+    </div>
+
+    <div class="bottom-nav">
+      <div class="nav-item"><img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_84,h_84,c_fill,q_85/v1774765585/aura-coach-assets/navigation-bar/home-icon_f164a9.webp" alt="Home"><span>Home</span></div>
+      <div class="nav-item active"><div style="font-size:20px;">👤</div><span style="color:var(--teal);font-weight:700;">Profile</span></div>
+      <div class="nav-item"><img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_84,h_84,c_fill,q_85/v1774780351/aura-coach-assets/navigation-bar/setting-icon_42d237_cac3a9.webp" alt="Settings"><span>Settings</span></div>
+    </div>
+  </div>
+  <div class="phone-home-bar"><div></div></div>
+</div>
+<div class="phone-label">/profile</div>
+</div>
+
+<!-- History -->
+<div class="phone-wrapper">
+<div class="phone">
+  <div class="phone-status"><span>9:41</span><span>●●●● WiFi 100%</span></div>
+  <div class="phone-content">
+    <div class="app-bar"><div class="back">←</div><div class="title">History</div></div>
+    <div style="flex:1;padding:10px 14px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;background:var(--cream);">
+      <!-- Filter chips -->
+      <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;">
+        <span class="chip active" style="background:var(--teal);">All</span>
+        <span class="chip" style="background:var(--clay-beige);color:var(--warm-muted);border:1.5px solid var(--clay-border);">Roleplay</span>
+        <span class="chip" style="background:var(--clay-beige);color:var(--warm-muted);border:1.5px solid var(--clay-border);">Story</span>
+        <span class="chip" style="background:var(--clay-beige);color:var(--warm-muted);border:1.5px solid var(--clay-border);">Translator</span>
+      </div>
+      <!-- Items -->
+      <div style="display:flex;">
+        <div style="width:4px;background:var(--teal);border-radius:4px 0 0 4px;"></div>
+        <div class="card" style="flex:1;padding:14px;border-radius:0 var(--r-lg) var(--r-lg) 0;border-left:none;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <span style="font-size:14px;font-weight:700;color:var(--warm-dark);">Office Apology</span>
+            <span class="badge" style="color:var(--teal);background:rgba(126,206,197,0.1);border:1.5px solid rgba(126,206,197,0.3);">Roleplay</span>
+          </div>
+          <div style="display:flex;gap:12px;font-size:12px;color:var(--warm-muted);">
+            <span>📅 28/03/2026</span><span>💬 14 messages</span>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;">
+        <div style="width:4px;background:var(--purple);border-radius:4px 0 0 4px;"></div>
+        <div class="card" style="flex:1;padding:14px;border-radius:0 var(--r-lg) var(--r-lg) 0;border-left:none;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <span style="font-size:14px;font-weight:700;color:var(--warm-dark);">At the Airport</span>
+            <span class="badge" style="color:var(--purple);background:rgba(167,139,202,0.1);border:1.5px solid rgba(167,139,202,0.3);">Story</span>
+          </div>
+          <div style="display:flex;gap:12px;font-size:12px;color:var(--warm-muted);">
+            <span>📅 27/03/2026</span><span>💬 22 messages</span>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;">
+        <div style="width:4px;background:var(--gold);border-radius:4px 0 0 4px;"></div>
+        <div class="card" style="flex:1;padding:14px;border-radius:0 var(--r-lg) var(--r-lg) 0;border-left:none;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <span style="font-size:14px;font-weight:700;color:var(--warm-dark);">Email to Manager</span>
+            <span class="badge" style="color:#9A7B3D;background:rgba(232,199,123,0.1);border:1.5px solid rgba(232,199,123,0.3);">Translator</span>
+          </div>
+          <div style="display:flex;gap:12px;font-size:12px;color:var(--warm-muted);">
+            <span>📅 27/03/2026</span><span>💬 3 messages</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="phone-home-bar"><div></div></div>
+</div>
+<div class="phone-label">/history</div>
+</div>
+
+</div><!-- end screens-row -->
+
+</body>
+</html>

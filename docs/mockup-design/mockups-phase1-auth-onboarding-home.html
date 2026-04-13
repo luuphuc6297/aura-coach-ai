@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aura Coach AI — Phase 1: Auth + Onboarding + Home</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700;800&family=Nunito:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --cream: #FFF8F0;
+      --clay-white: #FEFCF9;
+      --clay-beige: #F5EDE3;
+      --clay-border: #E8DFD3;
+      --clay-shadow: #D4C9BB;
+      --warm-dark: #2D3047;
+      --warm-muted: #6B6D7B;
+      --warm-light: #9B9DAB;
+      --teal: #7ECEC5;
+      --purple: #A78BCA;
+      --gold: #E8C77B;
+      --success: #7BC6A0;
+      --error: #D98A8A;
+      --shadow-clay: 3px 3px 0px #D4C9BB;
+      --shadow-card: 0 2px 8px rgba(45,48,71,0.04);
+      --shadow-soft: 0 4px 12px rgba(45,48,71,0.06);
+      --r-sm: 8px; --r-md: 12px; --r-lg: 20px; --r-xl: 28px; --r-full: 9999px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { font-family: 'Inter', sans-serif; background: #EEEAE5; min-height: 100vh; }
+
+    .page-header { text-align: center; padding: 48px 20px 32px; }
+    .page-header h1 { font-family: 'Fredoka', sans-serif; font-size: 32px; font-weight: 800; color: var(--warm-dark); }
+    .page-header p { color: var(--warm-muted); font-size: 14px; margin-top: 6px; }
+
+    .screens-row {
+      display: flex; gap: 32px; padding: 0 40px 60px;
+      overflow-x: auto; scroll-snap-type: x mandatory;
+    }
+    .screens-row::-webkit-scrollbar { height: 6px; }
+    .screens-row::-webkit-scrollbar-thumb { background: var(--clay-shadow); border-radius: 3px; }
+
+    /* ═══ PHONE FRAME ═══ */
+    .phone {
+      flex-shrink: 0; scroll-snap-align: center;
+      width: 375px; height: 812px;
+      background: var(--cream); border-radius: 44px;
+      border: 3px solid var(--clay-border);
+      box-shadow: 0 8px 32px rgba(45,48,71,0.08), 0 2px 8px rgba(45,48,71,0.04);
+      overflow: hidden; display: flex; flex-direction: column;
+      position: relative;
+    }
+    .phone-status {
+      height: 44px; display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; font-size: 12px; color: var(--warm-muted); font-weight: 600;
+      flex-shrink: 0; z-index: 10;
+    }
+    .phone-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+    .phone-home-bar {
+      height: 28px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .phone-home-bar div { width: 134px; height: 5px; background: var(--clay-border); border-radius: 3px; }
+
+    .phone-label {
+      text-align: center; margin-top: 12px;
+      font-size: 11px; font-weight: 700; color: var(--teal);
+      text-transform: uppercase; letter-spacing: 0.1em;
+      background: rgba(126,206,197,0.1); padding: 4px 14px;
+      border-radius: var(--r-full); display: inline-block;
+    }
+    .phone-wrapper { display: flex; flex-direction: column; align-items: center; }
+
+    /* ═══ ANIMATIONS ═══ */
+    @keyframes float3d {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(126,206,197,0.3); }
+      50% { box-shadow: 0 0 0 12px rgba(126,206,197,0); }
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .float3d { animation: float3d 3s ease-in-out infinite; }
+    .pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+
+    /* ═══ PROGRESS DOTS ═══ */
+    .progress-dots { display: flex; gap: 8px; justify-content: center; padding: 16px 0 8px; }
+    .progress-dots .dot {
+      width: 8px; height: 8px; border-radius: 50%; background: var(--clay-border); transition: all 0.3s ease;
+    }
+    .progress-dots .dot.active { width: 24px; border-radius: 4px; background: var(--teal); }
+    .progress-dots .dot.done { background: var(--teal); }
+
+    /* ═══ SECTION SEPARATOR ═══ */
+    .section-sep {
+      width: 60px; height: 4px; border-radius: 2px; margin: 40px auto;
+      background: linear-gradient(90deg, var(--teal), var(--purple));
+    }
+
+    /* ═══ BOTTOM CTA AREA ═══ */
+    .cta-area {
+      flex-shrink: 0; padding: 16px 24px 8px;
+      background: var(--cream);
+    }
+    .cta-btn {
+      width: 100%; padding: 16px; border-radius: var(--r-lg);
+      font-family: 'Nunito', sans-serif; font-size: 17px; font-weight: 800;
+      text-align: center; cursor: pointer; border: none;
+      transition: all 0.2s ease;
+    }
+    .cta-btn.primary { background: var(--teal); color: #fff; box-shadow: var(--shadow-clay); }
+    .cta-btn.secondary { background: transparent; color: var(--warm-muted); font-size: 15px; font-weight: 600; }
+
+    /* ═══ OPTION CARD (single column) ═══ */
+    .option-card {
+      display: flex; align-items: center; gap: 16px;
+      padding: 16px 20px; border-radius: var(--r-lg);
+      background: var(--clay-white); border: 2px solid var(--clay-border);
+      box-shadow: var(--shadow-card); cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .option-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-soft); }
+    .option-card.selected {
+      border-color: var(--teal); background: rgba(126,206,197,0.08);
+      box-shadow: var(--shadow-clay);
+    }
+    .option-card .check {
+      width: 24px; height: 24px; border-radius: 50%;
+      border: 2px solid var(--clay-border); flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s ease; margin-left: auto;
+    }
+    .option-card.selected .check {
+      background: var(--teal); border-color: var(--teal); color: #fff; font-size: 12px;
+    }
+
+    /* ═══ TOPIC CHIP (vertical wrapped) ═══ */
+    .topic-chip {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 16px; border-radius: var(--r-full);
+      background: var(--clay-white); border: 2px solid var(--clay-border);
+      white-space: nowrap; cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .topic-chip.selected {
+      border-color: var(--teal); background: rgba(126,206,197,0.1);
+      box-shadow: 2px 2px 0px var(--clay-shadow);
+    }
+    .topic-chip img { width: 24px; height: 24px; object-fit: contain; }
+    .topic-chip span { font-size: 13px; font-weight: 600; color: var(--warm-dark); }
+    .topic-chip.selected span { color: var(--teal); }
+
+    /* ═══ MODE CARD (full height swipe) ═══ */
+    .mode-card {
+      flex-shrink: 0; width: 100%; height: 100%;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 32px 28px; gap: 16px; text-align: center;
+      scroll-snap-align: start;
+    }
+    .mode-icon-wrap {
+      width: 140px; height: 140px; border-radius: 40px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .mode-icon-wrap img { width: 100px; height: 100px; object-fit: contain; filter: drop-shadow(0 4px 8px rgba(45,48,71,0.1)); }
+
+    /* ═══ AVATAR PICKER ═══ */
+    .avatar-item {
+      width: 64px; height: 64px; border-radius: 50%;
+      overflow: hidden; border: 3px solid var(--clay-border);
+      cursor: pointer; transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+      flex-shrink: 0;
+    }
+    .avatar-item.selected {
+      border-color: var(--teal); transform: scale(1.15);
+      box-shadow: 0 0 0 3px rgba(126,206,197,0.25), var(--shadow-clay);
+    }
+    .avatar-item img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* ═══ BOTTOM NAV ═══ */
+    .bottom-nav {
+      flex-shrink: 0; background: var(--clay-white);
+      border-top: 2px solid var(--clay-border);
+      display: flex; justify-content: space-around; align-items: center;
+      padding: 8px 0 4px; height: 60px;
+    }
+    .nav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; }
+    .nav-item img { width: 24px; height: 24px; object-fit: contain; opacity: 0.45; transition: all 0.2s; }
+    .nav-item.active img { opacity: 1; transform: scale(1.15); }
+    .nav-item span { font-size: 10px; font-weight: 500; color: var(--warm-light); }
+    .nav-item.active span { color: var(--teal); font-weight: 700; }
+    .nav-item .indicator { width: 20px; height: 3px; border-radius: 2px; background: transparent; }
+    .nav-item.active .indicator { background: var(--teal); }
+
+    /* ═══ AUTH BUTTONS ═══ */
+    .auth-btn {
+      width: 100%; display: flex; align-items: center; justify-content: center; gap: 12px;
+      padding: 16px; border-radius: var(--r-lg); font-size: 16px; font-weight: 700;
+      font-family: 'Inter', sans-serif; cursor: pointer; border: none;
+      transition: all 0.2s ease;
+    }
+    .auth-btn.google { background: var(--teal); color: #fff; box-shadow: var(--shadow-clay); }
+    .auth-btn.apple { background: var(--warm-dark); color: #fff; box-shadow: 3px 3px 0px rgba(45,48,71,0.3); }
+    .auth-btn.guest { background: transparent; border: 2px solid var(--clay-border); color: var(--warm-muted); }
+    .auth-btn svg, .auth-btn img { width: 20px; height: 20px; }
+
+    /* ═══ Swipe indicator dots ═══ */
+    .swipe-dots { display: flex; gap: 6px; justify-content: center; }
+    .swipe-dots .s-dot { width: 8px; height: 8px; border-radius: 50%; transition: all 0.3s; }
+    .swipe-dots .s-dot.active { width: 20px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Phase 1 — Auth, Onboarding &amp; Home</h1>
+  <p>ELSA/Duolingo-inspired flow • One question per screen • Clay Design System</p>
+</div>
+
+<div class="screens-row">
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SCREEN 1: SPLASH                                       -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="phone-wrapper">
+<div class="phone">
+  <div class="phone-status"><span>9:41</span><span>●●●● WiFi 100%</span></div>
+  <div class="phone-content" style="align-items:center; justify-content:center;">
+    <div style="position:relative;width:180px;height:180px;display:flex;align-items:center;justify-content:center;">
+      <!-- Glow ring behind orb -->
+      <div style="position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,rgba(126,206,197,0.15) 0%,transparent 70%);animation:pulse-glow 2s ease-in-out infinite;"></div>
+      <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_360,h_360,c_fill,q_90/v1774779556/aura-coach-assets/aura-orbs-icons_1ff981_b7df4e.webp"
+           alt="Aura Orb" style="width:160px;height:160px;object-fit:contain;position:relative;z-index:1;" class="float3d">
+    </div>
+  </div>
+  <div class="phone-home-bar"><div></div></div>
+</div>
+<div class="phone-label">/ (splash)</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SCREEN 2: AUTH                                         -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="phone-wrapper">
+<div class="phone">
+  <div class="phone-status"><span>9:41</span><span>●●●● WiFi 100%</span></div>
+  <div class="phone-content" style="justify-content:flex-end;">
+    <!-- Logo area — Aura Orb is already embedded as the "O" in AURA COACH -->
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:0 32px;">
+      <div style="display:flex;align-items:center;font-family:'Fredoka',sans-serif;font-size:38px;font-weight:800;letter-spacing:0.04em;line-height:1;">
+        <span style="color:var(--teal);">AURA</span>
+      </div>
+      <div style="display:flex;align-items:center;font-family:'Fredoka',sans-serif;font-size:38px;font-weight:800;letter-spacing:0.04em;line-height:1;">
+        <span style="color:var(--teal);">C</span>
+        <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_360,h_360,c_fill,q_90/v1774779556/aura-coach-assets/aura-orbs-icons_1ff981_b7df4e.webp" alt="O" style="width:56px;height:56px;margin:0 -2px;object-fit:contain;vertical-align:middle;" class="float3d">
+        <span style="color:var(--teal);">ACH</span>
+        <span style="color:var(--warm-dark);margin-left:4px;">.AI</span>
+      </div>
+      <p style="font-size:16px;color:var(--warm-muted);text-align:center;line-height:1.6;margin-top:8px;">
+        Your personal AI English coach.<br>Learn naturally, speak confidently.
+      </p>
+    </div>
+    <!-- Auth buttons at bottom -->
+    <div style="padding:0 24px 8px;display:flex;flex-direction:column;gap:12px;">
+      <button class="auth-btn google">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18A10.96 10.96 0 001 12c0 1.77.42 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+        Continue with Google
+      </button>
+      <button class="auth-btn apple">
+        <svg viewBox="0 0 24 24" fill="white"><path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+        Continue with Apple
+      </button>
+      <button class="auth-btn guest">
+        <span style="font-size:18px;">👤</span>
+        Try as Guest
+      </button>
+      <p style="text-align:center;font-size:11px;color:var(--warm-light);line-height:1.5;padding:4px 12px;">
+        By continuing you agree to our Terms of Service and Privacy Policy
+      </p>
+    </div>
+  </div>
+  <div class="phone-home-bar"><div></div></div>
+</div>
+<div class="phone-label">/auth</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SCREEN 3: ONBOARDING STEP 1 — NAME + AVATAR            -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="phone-wrapper">
+<div class="phone">
+  <div class="phone-status"><span>9:41</span><span>●●●● WiFi 100%</span></div>
+  <div class="phone-content">
+    <!-- Progress -->
+    <div class="progress-dots">
+      <div class="dot active"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    </div>
+
+    <!-- Content -->
+    <div style="flex:1;display:flex;flex-direction:column;padding:8px 28px 0;overflow-y:auto;">
+      <!-- Large illustration -->
+      <div style="text-align:center;padding:16px 0 24px;">
+        <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_360,h_360,c_fill,q_90/v1774779556/aura-coach-assets/aura-orbs-icons_1ff981_b7df4e.webp"
+             alt="Aura Orb" style="width:100px;height:100px;object-fit:contain;" class="float3d">
+      </div>
+
+      <!-- Headline -->
+      <h2 style="font-family:'Nunito',sans-serif;font-size:26px;font-weight:800;color:var(--warm-dark);line-height:1.2;">
+        What should we call you?
+      </h2>
+      <p style="font-size:15px;color:var(--warm-muted);margin-top:8px;line-height:1.5;">
+        Pick a name and choose your avatar
+      </p>
+
+      <!-- Name input -->
+      <div style="margin-top:24px;">
+        <div style="display:flex;align-items:center;gap:12px;background:var(--clay-beige);border:2px solid var(--teal);border-radius:var(--r-lg);padding:16px 20px;">
+          <span style="font-size:18px;">✏️</span>
+          <span style="font-size:16px;color:var(--warm-dark);font-weight:500;">Luu</span>
+          <span style="width:2px;height:20px;background:var(--teal);border-radius:1px;animation:pulse-glow 1s infinite;"></span>
+        </div>
+      </div>
+
+      <!-- Avatar selection -->
+      <p style="font-size:12px;font-weight:700;color:var(--warm-light);text-transform:uppercase;letter-spacing:0.1em;margin-top:28px;margin-bottom:12px;">Choose your buddy</p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+        <div class="avatar-item">
+          <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_240,h_240,c_fill,q_90/v1774780151/aura-coach-assets/avatars/cat-avatar_83a6ce_d702ea.webp" alt="Cat">
+        </div>
+        <div class="avatar-item">
+          <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_240,h_240,c_fill,q_90/v1774766456/aura-coach-assets/avatars/rabbit-avatar_004e97.webp" alt="Rabbit">
+        </div>
+        <div class="avatar-item selected">
+          <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_240,h_240,c_fill,q_90/v1774766444/aura-coach-assets/avatars/penguin-avatar_c3d46f.webp" alt="Penguin">
+        </div>
+        <div class="avatar-item">
+          <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_240,h_240,c_fill,q_90/v1774780247/aura-coach-assets/avatars/fox-avatar_677f5f.webp" alt="Fox">
+        </div>
+        <div class="avatar-item">
+          <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_240,h_240,c_fill,q_90/v1774765533/aura-coach-assets/avatars/owl-avatar_ddeb3c.webp" alt="Owl">
+        </div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta-area">
+      <button class="cta-btn primary">Continue</button>
+    </div>
+  </div>
+  <div class="phone-home-bar"><div></div></div>
+</div>
+<div class="phone-label">/onboarding (step 1)</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SCREEN 4: ONBOARDING STEP 2 — ENGLISH LEVEL            -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="phone-wrapper">
+<div class="phone">
+  <div class="phone-status"><span>9:41</span><span>●●●● WiFi 100%</span></div>
+  <div class="phone-content">
+    <div class="progress-dots">
+      <div class="dot done"></div><div class="dot active"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    </div>
+
+    <div style="flex:1;display:flex;flex-direction:column;padding:8px 28px 0;overflow-y:auto;">
+      <h2 style="font-family:'Nunito',sans-serif;font-size:26px;font-weight:800;color:var(--warm-dark);line-height:1.2;">
+        What's your English level?
+      </h2>
+      <p style="font-size:15px;color:var(--warm-muted);margin-top:8px;line-height:1.5;">
+        We'll personalize lessons just for you
+      </p>
+
+      <div style="display:flex;flex-direction:column;gap:12px;margin-top:28px;">
+        <!-- Beginner -->
+        <div class="option-card">
+          <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_192,h_192,c_fill,q_90/v1774765488/aura-coach-assets/level-icons/beginner-level_8b946e.webp"
+               alt="Beginner" style="width:72px;height:72px;object-fit:contain;filter:drop-shadow(0 3px 6px rgba(45,48,71,0.12));">
+          <div style="flex:1;">
+            <div style="font-size:17px;font-weight:700;color:var(--warm-dark);font-family:'Nunito',sans-serif;">Beginner</div>
+            <div style="font-size:12px;color:var(--success);font-weight:700;margin-top:2px;">A1 / A2</div>
+            <div style="font-size:13px;color:var(--warm-muted);margin-top:4px;line-height:1.4;">Basic phrases & simple sentences</div>
+          </div>
+          <div class="check"></div>
+        </div>
+
+        <!-- Intermediate (selected) -->
+        <div class="option-card selected">
+          <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_192,h_192,c_fill,q_90/v1774765510/aura-coach-assets/level-icons/intermediate-level_332f3d.webp"
+               alt="Intermediate" style="width:72px;height:72px;object-fit:contain;filter:drop-shadow(0 3px 6px rgba(45,48,71,0.12));">
+          <div style="flex:1;">
+            <div style="font-size:17px;font-weight:700;color:var(--warm-dark);font-family:'Nunito',sans-serif;">Intermediate</div>
+            <div style="font-size:12px;color:var(--gold);font-weight:700;margin-top:2px;">B1 / B2</div>
+            <div style="font-size:13px;color:var(--warm-muted);margin-top:4px;line-height:1.4;">Everyday conversations & complex topics</div>
+          </div>
+          <div class="check">✓</div>
+        </div>
+
+        <!-- Advanced -->
+        <div class="option-card">
+          <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_192,h_192,c_fill,q_90/v1774766290/aura-coach-assets/level-icons/advanced-level_75b99f.webp"
+               alt="Advanced" style="width:72px;height:72px;object-fit:contain;filter:drop-shadow(0 3px 6px rgba(45,48,71,0.12));">
+          <div style="flex:1;">
+            <div style="font-size:17px;font-weight:700;color:var(--warm-dark);font-family:'Nunito',sans-serif;">Advanced</div>
+            <div style="font-size:12px;color:var(--error);font-weight:700;margin-top:2px;">C1 / C2</div>
+            <div style="font-size:13px;color:var(--warm-muted);margin-top:4px;line-height:1.4;">Complex discussions & near-native fluency</div>
+          </div>
+          <div class="check"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cta-area">
+      <button class="cta-btn primary">Continue</button>
+      <button class="cta-btn secondary">← Back</button>
+    </div>
+  </div>
+  <div class="phone-home-bar"><div></div></div>
+</div>
+<div class="phone-label">/onboarding (step 2)</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SCREEN 5: ONBOARDING STEP 3 — LEARNING GOALS           -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="phone-wrapper">
+<div class="phone">
+  <div class="phone-status"><span>9:41</span><span>●●●● WiFi 100%</span></div>
+  <div class="phone-content">
+    <div class="progress-dots">
+      <div class="dot done"></div><div class="dot done"></div><div class="dot active"></div><div class="dot"></div><div class="dot"></div>
+    </div>
+
+    <div style="flex:1;display:flex;flex-direction:column;padding:8px 28px 0;overflow-y:auto;">
+      <h2 style="font-family:'Nunito',sans-serif;font-size:26px;font-weight:800;color:var(--warm-dark);line-height:1.2;">
+        What are your goals?
+      </h2>
+      <p style="font-size:15px;color:var(--warm-muted);margin-top:8px;line-height:1.5;">
+        Select all that apply
+      </p>
+
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:24px;">
+        <div class="option-card selected" style="padding:14px 20px;">
+          <span style="font-size:24px;">💼</span>
+          <div style="flex:1;">
+            <div style="font-size:16px;font-weight:700;color:var(--warm-dark);">Career growth</div>
+            <div style="font-size:13px;color:var(--warm-muted);margin-top:2px;">Speak confidently at work</div>
+          </div>
+          <div class="check" style="background:var(--teal);border-color:var(--teal);color:#fff;font-size:12px;">✓</div>
+        </div>
+
+        <div class="option-card" style="padding:14px 20px;">
+          <span style="font-size:24px;">✈️</span>
+          <div style="flex:1;">
+            <div style="font-size:16px;font-weight:700;color:var(--warm-dark);">Travel abroad</div>
+            <div style="font-size:13px;color:var(--warm-muted);margin-top:2px;">Navigate new countries easily</div>
+          </div>
+          <div class="check"></div>
+        </div>
+
+        <div class="option-card selected" style="padding:14px 20px;">
+          <span style="font-size:24px;">🎓</span>
+          <div style="flex:1;">
+            <div style="font-size:16px;font-weight:700;color:var(--warm-dark);">Exam preparation</div>
+            <div style="font-size:13px;color:var(--warm-muted);margin-top:2px;">IELTS, TOEFL, Cambridge</div>
+          </div>
+          <div class="check" style="background:var(--teal);border-color:var(--teal);color:#fff;font-size:12px;">✓</div>
+        </div>
+
+        <div class="option-card" style="padding:14px 20px;">
+          <span style="font-size:24px;">🌍</span>
+          <div style="flex:1;">
+            <div style="font-size:16px;font-weight:700;color:var(--warm-dark);">Daily communication</div>
+            <div style="font-size:13px;color:var(--warm-muted);margin-top:2px;">Chat with friends & online</div>
+          </div>
+          <div class="check"></div>
+        </div>
+
+        <div class="option-card" style="padding:14px 20px;">
+          <span style="font-size:24px;">🧠</span>
+          <div style="flex:1;">
+            <div style="font-size:16px;font-weight:700;color:var(--warm-dark);">Self improvement</div>
+            <div style="font-size:13px;color:var(--warm-muted);margin-top:2px;">Personal growth & learning</div>
+          </div>
+          <div class="check"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cta-area">
+      <button class="cta-btn primary">Continue</button>
+      <button class="cta-btn secondary">← Back</button>
+    </div>
+  </div>
+  <div class="phone-home-bar"><div></div></div>
+</div>
+<div class="phone-label">/onboarding (step 3)</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SCREEN 6: ONBOARDING STEP 4 — DAILY SCHEDULE           -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="phone-wrapper">
+<div class="phone">
+  <div class="phone-status"><span>9:41</span><span>●●●● WiFi 100%</span></div>
+  <div class="phone-content">
+    <div class="progress-dots">
+      <div class="dot done"></div><div class="dot done"></div><div class="dot done"></div><div class="dot active"></div><div class="dot"></div>
+    </div>
+
+    <div style="flex:1;display:flex;flex-direction:column;padding:8px 28px 0;overflow-y:auto;">
+      <!-- Illustration (3D Fluent Emoji) -->
+      <div style="text-align:center;padding:12px 0 20px;">
+        <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Alarm%20Clock.png" alt="Clock" style="width:80px;height:80px;object-fit:contain;filter:drop-shadow(0 3px 6px rgba(45,48,71,0.12));">
+      </div>
+
+      <h2 style="font-family:'Nunito',sans-serif;font-size:26px;font-weight:800;color:var(--warm-dark);text-align:center;line-height:1.2;">
+        How much time daily?
+      </h2>
+      <p style="font-size:15px;color:var(--warm-muted);margin-top:8px;text-align:center;line-height:1.5;">
+        We'll build the right plan for you
+      </p>
+
+      <div style="display:flex;flex-direction:column;gap:12px;margin-top:28px;">
+        <div class="option-card" style="padding:18px 20px;">
+          <div style="width:48px;height:48px;border-radius:var(--r-md);background:rgba(123,198,160,0.15);display:flex;align-items:center;justify-content:center;">
+            <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Animals/Seedling.png" alt="" style="width:32px;height:32px;object-fit:contain;">
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:17px;font-weight:700;color:var(--warm-dark);font-family:'Nunito',sans-serif;">5 minutes</div>
+            <div style="font-size:13px;color:var(--warm-muted);margin-top:2px;">Casual • Easy start</div>
+          </div>
+          <div class="check"></div>
+        </div>
+
+        <div class="option-card selected" style="padding:18px 20px;">
+          <div style="width:48px;height:48px;border-radius:var(--r-md);background:rgba(126,206,197,0.15);display:flex;align-items:center;justify-content:center;">
+            <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Travel%20and%20places/Fire.png" alt="" style="width:32px;height:32px;object-fit:contain;">
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:17px;font-weight:700;color:var(--warm-dark);font-family:'Nunito',sans-serif;">15 minutes</div>
+            <div style="font-size:13px;color:var(--warm-muted);margin-top:2px;">Regular • Recommended</div>
+          </div>
+          <div class="check" style="background:var(--teal);border-color:var(--teal);color:#fff;font-size:12px;">✓</div>
+        </div>
+
+        <div class="option-card" style="padding:18px 20px;">
+          <div style="width:48px;height:48px;border-radius:var(--r-md);background:rgba(232,199,123,0.15);display:flex;align-items:center;justify-content:center;">
+            <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Travel%20and%20places/High%20Voltage.png" alt="" style="width:32px;height:32px;object-fit:contain;">
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:17px;font-weight:700;color:var(--warm-dark);font-family:'Nunito',sans-serif;">30 minutes</div>
+            <div style="font-size:13px;color:var(--warm-muted);margin-top:2px;">Intensive • Fast progress</div>
+          </div>
+          <div class="check"></div>
+        </div>
+
+        <div class="option-card" style="padding:18px 20px;">
+          <div style="width:48px;height:48px;border-radius:var(--r-md);background:rgba(167,139,202,0.15);display:flex;align-items:center;justify-content:center;">
+            <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Travel%20and%20places/Rocket.png" alt="" style="width:32px;height:32px;object-fit:contain;">
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:17px;font-weight:700;color:var(--warm-dark);font-family:'Nunito',sans-serif;">60 minutes</div>
+            <div style="font-size:13px;color:var(--warm-muted);margin-top:2px;">Serious • Maximum results</div>
+          </div>
+          <div class="check"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cta-area">
+      <button class="cta-btn primary">Continue</button>
+      <button class="cta-btn secondary">← Back</button>
+    </div>
+  </div>
+  <div class="phone-home-bar"><div></div></div>
+</div>
+<div class="phone-label">/onboarding (step 4)</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SCREEN 7: ONBOARDING STEP 5 — TOPICS (vertical wrap) -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="phone-wrapper">
+<div class="phone">
+  <div class="phone-status"><span>9:41</span><span>●●●● WiFi 100%</span></div>
+  <div class="phone-content">
+    <div class="progress-dots">
+      <div class="dot done"></div><div class="dot done"></div><div class="dot done"></div><div class="dot done"></div><div class="dot active"></div>
+    </div>
+
+    <div style="flex:1;display:flex;flex-direction:column;padding:8px 24px 0;overflow-y:auto;">
+      <h2 style="font-family:'Nunito',sans-serif;font-size:26px;font-weight:800;color:var(--warm-dark);line-height:1.2;">
+        Pick your interests
+      </h2>
+      <p style="font-size:15px;color:var(--warm-muted);margin-top:8px;line-height:1.5;">
+        We'll tailor scenarios to what matters to you
+      </p>
+
+      <!-- Vertical wrapped chips -->
+      <div style="margin-top:20px;display:flex;flex-wrap:wrap;gap:10px;">
+        <div class="topic-chip selected">
+          <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Travel%20and%20places/Airplane.png" alt="">
+          <span>Travel</span>
+        </div>
+        <div class="topic-chip selected">
+          <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Briefcase.png" alt="">
+          <span>Business</span>
+        </div>
+        <div class="topic-chip">
+          <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Food/Clinking%20Glasses.png" alt="">
+          <span>Social</span>
+        </div>
+        <div class="topic-chip">
+          <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Travel%20and%20places/House.png" alt="">
+          <span>Daily Life</span>
+        </div>
+        <div class="topic-chip">
+          <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Laptop.png" alt="">
+          <span>Technology</span>
+        </div>
+        <div class="topic-chip selected">
+          <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Graduation%20Cap.png" alt="">
+          <span>Education</span>
+        </div>
+        <div class="topic-chip">
+          <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Food/Steaming%20Bowl.png" alt="">
+          <span>Food</span>
+        </div>
+        <div class="topic-chip">
+          <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Travel%20and%20places/Hospital.png" alt="">
+          <span>Healthcare</span>
+        </div>
+        <div class="topic-chip">
+          <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Shopping%20Bags.png" alt="">
+          <span>Shopping</span>
+        </div>
+        <div class="topic-chip">
+          <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Clapper%20Board.png" alt="">
+          <span>Entertainment</span>
+        </div>
+        <div class="topic-chip">
+          <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Activities/Soccer%20Ball.png" alt="">
+          <span>Sports</span>
+        </div>
+        <div class="topic-chip">
+          <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Animals/Herb.png" alt="">
+          <span>Nature</span>
+        </div>
+        <div class="topic-chip">
+          <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Money%20Bag.png" alt="">
+          <span>Finance</span>
+        </div>
+        <div class="topic-chip">
+          <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Red%20Heart.png" alt="">
+          <span>Relationships</span>
+        </div>
+        <div class="topic-chip">
+          <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Balance%20Scale.png" alt="">
+          <span>Law</span>
+        </div>
+        <div class="topic-chip">
+          <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Key.png" alt="">
+          <span>Real Estate</span>
+        </div>
+      </div>
+
+      <!-- Custom topic input -->
+      <div style="margin-top:14px;">
+        <div style="display:flex;align-items:center;gap:10px;background:var(--clay-beige);border:2px solid var(--clay-border);border-radius:var(--r-full);padding:12px 18px;">
+          <span style="font-size:16px;">✨</span>
+          <span style="font-size:14px;color:var(--warm-light);flex:1;">Add your own topic...</span>
+          <div style="width:32px;height:32px;border-radius:50%;background:rgba(126,206,197,0.15);border:2px solid rgba(126,206,197,0.3);display:flex;align-items:center;justify-content:center;color:var(--teal);font-size:16px;font-weight:700;">+</div>
+        </div>
+      </div>
+
+      <div style="padding:10px 0;text-align:center;">
+        <span style="font-size:12px;color:var(--warm-light);">Selected: <strong style="color:var(--teal);">3 topics</strong></span>
+      </div>
+    </div>
+
+    <div class="cta-area">
+      <button class="cta-btn primary">Let's go! 🚀</button>
+      <button class="cta-btn secondary">← Back</button>
+    </div>
+  </div>
+  <div class="phone-home-bar"><div></div></div>
+</div>
+<div class="phone-label">/onboarding (step 5)</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SCREEN 8: HOME — MODE SELECTION (Full-height swipe)    -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="phone-wrapper">
+<div class="phone">
+  <div class="phone-status"><span>9:41</span><span>●●●● WiFi 100%</span></div>
+  <div class="phone-content">
+    <!-- Top bar -->
+    <div style="flex-shrink:0;display:flex;justify-content:space-between;align-items:center;padding:4px 20px 8px;">
+      <div style="display:flex;align-items:center;font-family:'Fredoka',sans-serif;font-size:16px;font-weight:800;letter-spacing:0.04em;">
+        <span style="color:var(--teal);">AURA C</span>
+        <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_120,h_120,c_fill,q_90/v1774779556/aura-coach-assets/aura-orbs-icons_1ff981_b7df4e.webp" alt="O" style="width:14px;height:14px;margin:0 1px;">
+        <span style="color:var(--teal);">ACH</span>
+        <span style="color:var(--warm-dark);margin-left:2px;">.AI</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:13px;font-weight:600;color:var(--warm-dark);font-family:'Nunito',sans-serif;">Hi, Luu</span>
+        <div style="width:36px;height:36px;border-radius:50%;overflow:hidden;border:2px solid var(--teal);box-shadow:var(--shadow-clay);">
+          <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_240,h_240,c_fill,q_90/v1774780247/aura-coach-assets/avatars/fox-avatar_677f5f.webp" alt="Avatar" style="width:100%;height:100%;object-fit:cover;">
+        </div>
+      </div>
+    </div>
+
+    <!-- Full-height mode carousel -->
+    <div style="flex:1;overflow-y:auto;scroll-snap-type:y mandatory;-webkit-overflow-scrolling:touch;">
+
+      <!-- MODE 1: Scenario Coach (teal) -->
+      <div class="mode-card" style="background:linear-gradient(180deg, var(--cream) 0%, rgba(126,206,197,0.08) 100%);">
+        <div style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:0.12em;background:rgba(126,206,197,0.1);padding:6px 16px;border-radius:var(--r-full);">Most Popular</div>
+        <div class="mode-icon-wrap" style="background:rgba(126,206,197,0.1);border:2px solid rgba(126,206,197,0.2);">
+          <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_216,h_216,c_fill,q_90/v1774765701/aura-coach-assets/mode-icons/trophy-icon_770c25.webp" alt="Scenario Coach" class="float3d">
+        </div>
+        <h3 style="font-family:'Nunito',sans-serif;font-size:24px;font-weight:800;color:var(--warm-dark);">Scenario Coach</h3>
+        <p style="font-size:15px;color:var(--warm-muted);line-height:1.5;max-width:280px;">
+          Practice real-life situations with AI roleplay. Get instant feedback on grammar, vocabulary & tone.
+        </p>
+        <div style="display:flex;gap:8px;margin-top:4px;">
+          <span style="font-size:12px;color:var(--teal);background:rgba(126,206,197,0.1);padding:4px 12px;border-radius:var(--r-full);font-weight:600;">🎯 Roleplay</span>
+          <span style="font-size:12px;color:var(--teal);background:rgba(126,206,197,0.1);padding:4px 12px;border-radius:var(--r-full);font-weight:600;">💬 4 Tones</span>
+        </div>
+        <button style="margin-top:8px;padding:14px 48px;border-radius:var(--r-lg);background:var(--teal);color:#fff;font-size:16px;font-weight:700;font-family:'Nunito',sans-serif;border:none;box-shadow:var(--shadow-clay);cursor:pointer;">
+          Start Practice →
+        </button>
+        <div style="font-size:11px;color:var(--warm-light);margin-top:8px;">5 free sessions / day</div>
+        <!-- Swipe hint -->
+        <div style="margin-top:auto;padding-bottom:8px;display:flex;flex-direction:column;align-items:center;gap:4px;">
+          <div class="swipe-dots">
+            <div class="s-dot active" style="background:var(--teal);"></div>
+            <div class="s-dot" style="background:var(--clay-border);"></div>
+            <div class="s-dot" style="background:var(--clay-border);"></div>
+            <div class="s-dot" style="background:var(--clay-border);"></div>
+          </div>
+          <span style="font-size:10px;color:var(--warm-light);">Swipe for more modes</span>
+        </div>
+      </div>
+
+      <!-- MODE 2: Story Mode (purple) -->
+      <div class="mode-card" style="background:linear-gradient(180deg, var(--cream) 0%, rgba(167,139,202,0.08) 100%);">
+        <div style="font-size:11px;font-weight:700;color:var(--purple);text-transform:uppercase;letter-spacing:0.12em;background:rgba(167,139,202,0.1);padding:6px 16px;border-radius:var(--r-full);">Interactive</div>
+        <div class="mode-icon-wrap" style="background:rgba(167,139,202,0.1);border:2px solid rgba(167,139,202,0.2);">
+          <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_216,h_216,c_fill,q_90/v1774779261/aura-coach-assets/mode-icons/national-park-icons_628f11.webp" alt="Story Mode" class="float3d">
+        </div>
+        <h3 style="font-family:'Nunito',sans-serif;font-size:24px;font-weight:800;color:var(--warm-dark);">Story Mode</h3>
+        <p style="font-size:15px;color:var(--warm-muted);line-height:1.5;max-width:280px;">
+          Learn through interactive stories. You're the main character — your choices shape the narrative.
+        </p>
+        <div style="display:flex;gap:8px;margin-top:4px;">
+          <span style="font-size:12px;color:var(--purple);background:rgba(167,139,202,0.1);padding:4px 12px;border-radius:var(--r-full);font-weight:600;">📖 Narrative</span>
+          <span style="font-size:12px;color:var(--purple);background:rgba(167,139,202,0.1);padding:4px 12px;border-radius:var(--r-full);font-weight:600;">🎭 Choices</span>
+        </div>
+        <button style="margin-top:8px;padding:14px 48px;border-radius:var(--r-lg);background:var(--purple);color:#fff;font-size:16px;font-weight:700;font-family:'Nunito',sans-serif;border:none;box-shadow:3px 3px 0px rgba(167,139,202,0.4);cursor:pointer;">
+          Begin Story →
+        </button>
+        <div style="font-size:11px;color:var(--warm-light);margin-top:8px;">3 free stories / day</div>
+        <div style="margin-top:auto;padding-bottom:8px;">
+          <div class="swipe-dots">
+            <div class="s-dot" style="background:var(--clay-border);"></div>
+            <div class="s-dot active" style="background:var(--purple);"></div>
+            <div class="s-dot" style="background:var(--clay-border);"></div>
+            <div class="s-dot" style="background:var(--clay-border);"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODE 3: Tone Translator (gold) -->
+      <div class="mode-card" style="background:linear-gradient(180deg, var(--cream) 0%, rgba(232,199,123,0.08) 100%);">
+        <div style="font-size:11px;font-weight:700;color:#9A7B3D;text-transform:uppercase;letter-spacing:0.12em;background:rgba(232,199,123,0.15);padding:6px 16px;border-radius:var(--r-full);">Unique</div>
+        <div class="mode-icon-wrap" style="background:rgba(232,199,123,0.1);border:2px solid rgba(232,199,123,0.2);">
+          <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_216,h_216,c_fill,q_90/v1774766467/aura-coach-assets/mode-icons/tone-translator_327cd6.webp" alt="Tone Translator" class="float3d">
+        </div>
+        <h3 style="font-family:'Nunito',sans-serif;font-size:24px;font-weight:800;color:var(--warm-dark);">Tone Translator</h3>
+        <p style="font-size:15px;color:var(--warm-muted);line-height:1.5;max-width:280px;">
+          Master the art of tone. See how one sentence sounds formal, friendly, casual & neutral.
+        </p>
+        <div style="display:flex;gap:8px;margin-top:4px;">
+          <span style="font-size:12px;color:#9A7B3D;background:rgba(232,199,123,0.15);padding:4px 12px;border-radius:var(--r-full);font-weight:600;">🎭 4 Tones</span>
+          <span style="font-size:12px;color:#9A7B3D;background:rgba(232,199,123,0.15);padding:4px 12px;border-radius:var(--r-full);font-weight:600;">🔊 TTS</span>
+        </div>
+        <button style="margin-top:8px;padding:14px 48px;border-radius:var(--r-lg);background:var(--gold);color:#fff;font-size:16px;font-weight:700;font-family:'Nunito',sans-serif;border:none;box-shadow:3px 3px 0px rgba(232,199,123,0.4);cursor:pointer;">
+          Translate Now →
+        </button>
+        <div style="font-size:11px;color:var(--warm-light);margin-top:8px;">10 free translations / day</div>
+        <div style="margin-top:auto;padding-bottom:8px;">
+          <div class="swipe-dots">
+            <div class="s-dot" style="background:var(--clay-border);"></div>
+            <div class="s-dot" style="background:var(--clay-border);"></div>
+            <div class="s-dot active" style="background:var(--gold);"></div>
+            <div class="s-dot" style="background:var(--clay-border);"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODE 4: Vocab Hub (purple) -->
+      <div class="mode-card" style="background:linear-gradient(180deg, var(--cream) 0%, rgba(167,139,202,0.08) 100%);">
+        <div style="font-size:11px;font-weight:700;color:var(--purple);text-transform:uppercase;letter-spacing:0.12em;background:rgba(167,139,202,0.1);padding:6px 16px;border-radius:var(--r-full);">Build Skills</div>
+        <div class="mode-icon-wrap" style="background:rgba(167,139,202,0.1);border:2px solid rgba(167,139,202,0.2);">
+          <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_216,h_216,c_fill,q_90/v1774779311/aura-coach-assets/mode-icons/ringed-planet-icons_bbcaa8.webp" alt="Vocab Hub" class="float3d">
+        </div>
+        <h3 style="font-family:'Nunito',sans-serif;font-size:24px;font-weight:800;color:var(--warm-dark);">Vocab Hub</h3>
+        <p style="font-size:15px;color:var(--warm-muted);line-height:1.5;max-width:280px;">
+          Deep-dive into any word. Get analysis, mind maps, examples & spaced repetition flashcards.
+        </p>
+        <div style="display:flex;gap:8px;margin-top:4px;">
+          <span style="font-size:12px;color:var(--purple);background:rgba(167,139,202,0.1);padding:4px 12px;border-radius:var(--r-full);font-weight:600;">🧠 Mind Map</span>
+          <span style="font-size:12px;color:var(--purple);background:rgba(167,139,202,0.1);padding:4px 12px;border-radius:var(--r-full);font-weight:600;">📝 Quiz</span>
+        </div>
+        <button style="margin-top:8px;padding:14px 48px;border-radius:var(--r-lg);background:var(--purple);color:#fff;font-size:16px;font-weight:700;font-family:'Nunito',sans-serif;border:none;box-shadow:3px 3px 0px rgba(167,139,202,0.4);cursor:pointer;">
+          Explore Words →
+        </button>
+        <div style="font-size:11px;color:var(--warm-light);margin-top:8px;">Unlimited</div>
+        <div style="margin-top:auto;padding-bottom:8px;">
+          <div class="swipe-dots">
+            <div class="s-dot" style="background:var(--clay-border);"></div>
+            <div class="s-dot" style="background:var(--clay-border);"></div>
+            <div class="s-dot" style="background:var(--clay-border);"></div>
+            <div class="s-dot active" style="background:var(--purple);"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom nav -->
+    <div class="bottom-nav">
+      <div class="nav-item active">
+        <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_84,h_84,c_fill,q_85/v1774765585/aura-coach-assets/navigation-bar/home-icon_f164a9.webp" alt="Home">
+        <span>Home</span>
+        <div class="indicator"></div>
+      </div>
+      <div class="nav-item">
+        <div style="font-size:20px;opacity:0.45;">👤</div>
+        <span>Profile</span>
+        <div class="indicator"></div>
+      </div>
+      <div class="nav-item">
+        <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_84,h_84,c_fill,q_85/v1774780351/aura-coach-assets/navigation-bar/setting-icon_42d237_cac3a9.webp" alt="Settings">
+        <span>Settings</span>
+        <div class="indicator"></div>
+      </div>
+    </div>
+  </div>
+  <div class="phone-home-bar"><div></div></div>
+</div>
+<div class="phone-label">/home</div>
+</div>
+
+</div><!-- end screens-row -->
+
+</body>
+</html>

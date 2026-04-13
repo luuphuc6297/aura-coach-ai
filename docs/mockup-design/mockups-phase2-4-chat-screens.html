@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aura Coach AI — Phase 2-4: Chat, Assessment, Translator & Settings</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700;800&family=Nunito:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --cream: #FFF8F0; --clay-white: #FEFCF9; --clay-beige: #F5EDE3;
+      --clay-border: #E8DFD3; --clay-shadow: #D4C9BB;
+      --warm-dark: #2D3047; --warm-muted: #6B6D7B; --warm-light: #9B9DAB;
+      --teal: #7ECEC5; --purple: #A78BCA; --gold: #E8C77B;
+      --success: #7BC6A0; --error: #D98A8A; --warning: #E8C77B;
+      --formal: #6366F1; --neutral: #7BC6A0; --friendly: #E8C77B; --casual: #D98A8A;
+      --shadow-clay: 3px 3px 0px #D4C9BB;
+      --shadow-card: 0 2px 8px rgba(45,48,71,0.04);
+      --shadow-soft: 0 4px 12px rgba(45,48,71,0.06);
+      --shadow-lifted: 0 6px 20px rgba(45,48,71,0.10), 3px 3px 0px #D4C9BB;
+      --r-sm: 8px; --r-md: 12px; --r-lg: 20px; --r-xl: 28px; --r-full: 9999px;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html, body { font-family:'Inter',sans-serif; background:#EEEAE5; min-height:100vh; }
+    .page-header { text-align:center; padding:48px 20px 32px; }
+    .page-header h1 { font-family:'Fredoka',sans-serif; font-size:32px; font-weight:800; color:var(--warm-dark); }
+    .page-header p { color:var(--warm-muted); font-size:14px; margin-top:6px; }
+
+    .screens-row {
+      display:flex; gap:32px; padding:0 40px 60px;
+      overflow-x:auto; scroll-snap-type:x mandatory;
+    }
+    .screens-row::-webkit-scrollbar { height:6px; }
+    .screens-row::-webkit-scrollbar-thumb { background:var(--clay-shadow); border-radius:3px; }
+
+    .phone {
+      flex-shrink:0; scroll-snap-align:center;
+      width:375px; height:812px;
+      background:var(--cream); border-radius:44px;
+      border:3px solid var(--clay-border);
+      box-shadow:0 8px 32px rgba(45,48,71,0.08);
+      overflow:hidden; display:flex; flex-direction:column;
+    }
+    .phone-status { height:44px; display:flex; align-items:center; justify-content:space-between; padding:0 24px; font-size:12px; color:var(--warm-muted); font-weight:600; flex-shrink:0; }
+    .phone-content { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+    .phone-home-bar { height:28px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .phone-home-bar div { width:134px; height:5px; background:var(--clay-border); border-radius:3px; }
+    .phone-label { text-align:center; margin-top:12px; font-size:11px; font-weight:700; color:var(--teal); text-transform:uppercase; letter-spacing:0.1em; background:rgba(126,206,197,0.1); padding:4px 14px; border-radius:var(--r-full); display:inline-block; }
+    .phone-wrapper { display:flex; flex-direction:column; align-items:center; }
+
+    .section-title { text-align:center; padding:40px 20px 20px; }
+    .section-title h2 { font-family:'Nunito',sans-serif; font-size:22px; font-weight:700; color:var(--warm-dark); }
+    .section-title p { font-size:13px; color:var(--warm-muted); margin-top:4px; }
+
+    .app-bar { flex-shrink:0; display:flex; align-items:center; padding:0 12px; height:48px; border-bottom:2px solid var(--clay-border); background:var(--cream); gap:8px; }
+    .app-bar .back { width:36px; height:36px; display:flex; align-items:center; justify-content:center; font-size:16px; color:var(--warm-dark); cursor:pointer; border-radius:var(--r-md); }
+    .app-bar .title { flex:1; font-size:16px; font-weight:600; font-family:'Nunito',sans-serif; }
+    .app-bar .actions { display:flex; gap:4px; }
+    .app-bar .actions span { width:36px; height:36px; display:flex; align-items:center; justify-content:center; font-size:14px; cursor:pointer; }
+
+    .chat-area { flex:1; padding:10px 14px; overflow-y:auto; display:flex; flex-direction:column; gap:10px; background:var(--cream); }
+    .bubble-user { align-self:flex-end; max-width:80%; }
+    .bubble-user .msg { padding:14px 18px; border-radius:var(--r-xl) var(--r-xl) 4px var(--r-xl); font-size:14px; color:#fff; line-height:1.5; }
+    .bubble-ai { max-width:85%; }
+    .bubble-ai .msg { padding:14px 18px; border-radius:4px var(--r-xl) var(--r-xl) var(--r-xl); background:var(--clay-white); border:1.5px solid var(--clay-border); font-size:14px; color:var(--warm-dark); line-height:1.5; box-shadow:var(--shadow-card); }
+    .bubble-ai .msg .role { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px; }
+    .listen-tag { display:inline-flex; align-items:center; gap:4px; font-size:10px; color:var(--warm-muted); background:var(--clay-beige); padding:3px 8px; border-radius:var(--r-full); margin-top:4px; cursor:pointer; }
+
+    /* === ASSESSMENT — with depth shadow === */
+    .assess-card {
+      background:var(--clay-white); border:2px solid var(--clay-border);
+      border-radius:var(--r-lg); overflow:hidden;
+      box-shadow:var(--shadow-lifted);
+    }
+    .assess-section { padding:14px 16px; border-bottom:2px solid var(--clay-border); }
+    .assess-section:last-child { border-bottom:none; }
+    .badge { font-size:11px; font-weight:700; padding:4px 12px; border-radius:var(--r-full); text-transform:uppercase; letter-spacing:0.05em; display:inline-block; }
+    .tip-box { border-radius:var(--r-md); padding:10px 12px; margin-top:8px; }
+    .tone-card { border-radius:var(--r-md); padding:10px 12px; margin-bottom:6px; }
+    .tone-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+
+    .input-bar { flex-shrink:0; border-top:2px solid var(--clay-border); background:var(--clay-white); padding:8px 12px; }
+    .input-row { display:flex; align-items:center; gap:8px; background:var(--clay-white); border:2px solid var(--clay-border); border-radius:var(--r-full); padding:6px 6px 6px 18px; }
+    .input-row .placeholder { flex:1; font-size:14px; color:var(--warm-light); }
+    .input-row .mic { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; }
+    .input-row .send { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-size:14px; }
+
+    .q-action { flex:1; display:flex; align-items:center; justify-content:center; gap:4px; padding:8px 0; border-radius:var(--r-md); font-size:11px; font-weight:600; }
+
+    .bottom-nav { flex-shrink:0; background:var(--clay-white); border-top:2px solid var(--clay-border); display:flex; justify-content:space-around; align-items:center; padding:8px 0 4px; height:60px; }
+    .nav-item { display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; }
+    .nav-item img { width:24px; height:24px; object-fit:contain; opacity:0.45; }
+    .nav-item.active img { opacity:1; transform:scale(1.15); }
+    .nav-item span { font-size:10px; font-weight:500; color:var(--warm-light); }
+    .nav-item.active span { color:var(--teal); font-weight:700; }
+
+    .settings-item { display:flex; align-items:center; gap:14px; padding:14px 0; border-bottom:1px solid var(--clay-border); }
+    .settings-item:last-child { border-bottom:none; }
+    .settings-icon { width:40px; height:40px; border-radius:var(--r-md); display:flex; align-items:center; justify-content:center; font-size:18px; }
+    .settings-item .label { flex:1; }
+    .settings-item .label .name { font-size:15px; font-weight:600; color:var(--warm-dark); }
+    .settings-item .label .desc { font-size:12px; color:var(--warm-muted); margin-top:2px; }
+    .settings-item .arrow { font-size:14px; color:var(--warm-light); }
+    .toggle { width:44px; height:24px; border-radius:12px; position:relative; cursor:pointer; }
+    .toggle.on { background:var(--teal); }
+    .toggle.off { background:var(--clay-border); }
+    .toggle::after { content:''; position:absolute; top:2px; width:20px; height:20px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,0.2); transition:left 0.2s; }
+    .toggle.on::after { left:22px; }
+    .toggle.off::after { left:2px; }
+
+    /* === TRANSLATE PROMPT — Bold & Prominent === */
+    .translate-prompt {
+      flex-shrink:0;
+      background:linear-gradient(135deg, rgba(126,206,197,0.12) 0%, rgba(232,199,123,0.08) 100%);
+      border-bottom:2.5px solid var(--teal);
+      padding:14px 16px;
+      box-shadow:0 4px 12px rgba(126,206,197,0.12);
+    }
+    .translate-header {
+      display:flex; align-items:center; gap:8px; margin-bottom:10px;
+    }
+    .translate-badge {
+      display:inline-flex; align-items:center; gap:6px;
+      padding:6px 14px; border-radius:var(--r-full);
+      background:var(--teal); color:#fff;
+      font-size:12px; font-weight:800; letter-spacing:0.06em;
+      text-transform:uppercase;
+      box-shadow:2px 2px 0px rgba(126,206,197,0.4);
+    }
+    .translate-actions {
+      display:flex; gap:6px; margin-left:auto;
+    }
+    .translate-action-btn {
+      display:inline-flex; align-items:center; gap:4px;
+      padding:5px 10px; border-radius:var(--r-full);
+      font-size:11px; font-weight:700; cursor:pointer;
+      border:2px solid; transition:all 0.2s;
+    }
+    .translate-action-btn:hover { transform:scale(1.04); }
+    .translate-text {
+      font-size:17px; font-weight:800; color:var(--warm-dark);
+      line-height:1.5; font-family:'Nunito',sans-serif;
+      padding:10px 14px;
+      background:var(--clay-white);
+      border:2px solid var(--clay-border);
+      border-left:4px solid var(--teal);
+      border-radius:var(--r-md);
+      box-shadow:var(--shadow-card);
+    }
+    .translate-context {
+      font-size:12px; color:var(--warm-muted); margin-top:8px;
+      display:flex; align-items:center; gap:6px;
+    }
+    .translate-context .loc-icon {
+      width:22px; height:22px; border-radius:50%;
+      background:rgba(232,199,123,0.15);
+      display:flex; align-items:center; justify-content:center;
+      font-size:12px;
+    }
+
+    /* AI Character Avatar in Chat */
+    .ai-avatar-row { display:flex; gap:10px; max-width:88%; }
+    .ai-avatar {
+      width:36px; height:36px; border-radius:50%; flex-shrink:0;
+      border:2px solid var(--clay-border); overflow:hidden;
+      box-shadow:var(--shadow-card);
+    }
+    .ai-avatar img { width:100%; height:100%; object-fit:cover; }
+
+    /* Typing indicator */
+    .typing-indicator {
+      display:flex; align-items:center; gap:4px;
+      padding:12px 18px; background:var(--clay-white);
+      border:1.5px solid var(--clay-border);
+      border-radius:4px var(--r-xl) var(--r-xl) var(--r-xl);
+      box-shadow:var(--shadow-card);
+    }
+    .typing-dot {
+      width:8px; height:8px; border-radius:50%; background:var(--clay-shadow);
+      animation:typing 1.4s infinite;
+    }
+    .typing-dot:nth-child(2) { animation-delay:0.2s; }
+    .typing-dot:nth-child(3) { animation-delay:0.4s; }
+    @keyframes typing {
+      0%, 60%, 100% { transform:translateY(0); opacity:0.4; }
+      30% { transform:translateY(-6px); opacity:1; }
+    }
+
+    /* Pronunciation tag */
+    .pron-tag {
+      display:inline-flex; align-items:center; gap:3px;
+      font-size:10px; padding:2px 8px; border-radius:var(--r-full);
+      font-weight:600; cursor:pointer;
+    }
+    .pron-good { background:rgba(123,198,160,0.15); color:var(--success); }
+
+    /* Score circle */
+    @keyframes score-pop {
+      0% { transform:scale(0.5); opacity:0; }
+      60% { transform:scale(1.15); }
+      100% { transform:scale(1); opacity:1; }
+    }
+    .score-circle {
+      width:64px; height:64px; border-radius:50%;
+      display:flex; align-items:center; justify-content:center;
+      flex-direction:column; flex-shrink:0;
+      animation:score-pop 0.6s cubic-bezier(0.34,1.56,0.64,1) forwards;
+    }
+    .score-circle .num { font-size:24px; font-weight:800; font-family:'Fredoka',sans-serif; }
+    .score-circle .of { font-size:9px; font-weight:600; opacity:0.7; }
+
+    /* Metric pill */
+    .metric-pill {
+      display:flex; align-items:center; gap:6px;
+      padding:8px 12px; border-radius:var(--r-md);
+      border:1.5px solid var(--clay-border); background:var(--clay-white);
+    }
+    .metric-pill .bar { flex:1; height:6px; border-radius:3px; background:var(--clay-beige); overflow:hidden; }
+    .metric-pill .bar-fill { height:100%; border-radius:3px; }
+    .metric-pill .label { font-size:11px; font-weight:600; color:var(--warm-dark); min-width:68px; }
+    .metric-pill .val { font-size:11px; font-weight:700; min-width:32px; text-align:right; }
+
+    /* Session summary */
+    .summary-card {
+      background:linear-gradient(135deg, rgba(126,206,197,0.08), rgba(167,139,202,0.08));
+      border:2px solid var(--clay-border); border-radius:var(--r-lg); padding:20px;
+      box-shadow:var(--shadow-soft);
+    }
+    .stat-row { display:flex; gap:8px; }
+    .stat-item {
+      flex:1; text-align:center; padding:12px 8px;
+      background:var(--clay-white); border:1.5px solid var(--clay-border);
+      border-radius:var(--r-md); box-shadow:var(--shadow-card);
+    }
+    .stat-item .val { font-size:20px; font-weight:800; font-family:'Fredoka',sans-serif; color:var(--teal); }
+    .stat-item .lab { font-size:10px; color:var(--warm-muted); margin-top:2px; font-weight:500; }
+
+    .end-btn {
+      width:100%; padding:14px; border-radius:var(--r-xl);
+      font-size:15px; font-weight:700; font-family:'Nunito',sans-serif;
+      text-align:center; cursor:pointer; box-shadow:var(--shadow-clay);
+      transition:all 0.2s ease;
+    }
+    .end-btn:hover { transform:translateY(-1px); }
+
+    @keyframes float3d {
+      0%, 100% { transform:translateY(0) rotate(0deg); }
+      50% { transform:translateY(-6px) rotate(1deg); }
+    }
+    .float3d { animation:float3d 3s ease-in-out infinite; }
+  </style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Phase 2-4 — Roleplay Chat, Story, Translator & Settings</h1>
+  <p>Chat interfaces, assessments, tone translator, context panel, settings</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!--              SCENARIO COACH — ROLEPLAY CHAT                 -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="section-title">
+  <h2>Scenario Coach — Roleplay Chat</h2>
+  <p>Bold translate prompt + AI avatar chat + Inline assessment with depth</p>
+</div>
+<div class="screens-row">
+
+<!-- SCREEN 1: Roleplay Chat (Immersive) -->
+<div class="phone-wrapper">
+<div class="phone">
+  <div class="phone-status"><span>9:41</span><span>⚡ 📶 🔋</span></div>
+  <div class="phone-content">
+    <!-- App Bar with scenario context + progress -->
+    <div class="app-bar" style="height:auto;padding:8px 12px;flex-direction:column;gap:0;border-bottom:none;">
+      <div style="display:flex;align-items:center;width:100%;gap:8px;">
+        <div class="back">‹</div>
+        <div style="flex:1;">
+          <div style="font-size:15px;font-weight:700;color:var(--teal);font-family:'Nunito',sans-serif;">Office Apology</div>
+          <div style="font-size:11px;color:var(--warm-muted);">💼 Business · Beginner</div>
+        </div>
+        <div style="display:flex;gap:2px;">
+          <span style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;">💡</span>
+          <span style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;">🔊</span>
+          <span style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;">⋯</span>
+        </div>
+      </div>
+      <div style="width:100%;height:3px;background:var(--clay-beige);border-radius:2px;margin-top:6px;">
+        <div style="width:40%;height:100%;background:var(--teal);border-radius:2px;transition:width 0.3s ease;"></div>
+      </div>
+    </div>
+
+    <!-- ★★★ TRANSLATE PROMPT — Bold & Prominent ★★★ -->
+    <div class="translate-prompt">
+      <div class="translate-header">
+        <div class="translate-badge">🌐 Scenario</div>
+        <div class="translate-actions">
+          <div class="translate-action-btn" style="color:#fff;background:var(--teal);border-color:var(--teal);box-shadow:2px 2px 0px rgba(126,206,197,0.3);">🔄 Translate</div>
+          <div class="translate-action-btn" style="color:#9A7B3D;background:rgba(232,199,123,0.1);border-color:rgba(232,199,123,0.4);">💡 Hint</div>
+        </div>
+      </div>
+      <div class="translate-text">"Xin lỗi, tôi không để ý và vô tình làm đổ cà phê lên báo cáo của bạn."</div>
+      <div class="translate-context">
+        <div class="loc-icon">📍</div>
+        <span style="font-weight:600;color:var(--warm-dark);">Office</span> — apologizing to a colleague
+      </div>
+    </div>
+
+    <div class="chat-area">
+      <!-- AI Character with avatar -->
+      <div class="ai-avatar-row">
+        <div class="ai-avatar">
+          <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_120,h_120,c_fill,q_85/v1774765004/aura-coach-assets/avatars/chat-bot-avatar_tranformed.webp" alt="Aura">
+        </div>
+        <div style="flex:1;">
+          <div style="font-size:11px;font-weight:600;color:var(--teal);margin-bottom:4px;">Aura Coach</div>
+          <div class="bubble-ai" style="max-width:100%;">
+            <div class="msg">Great! Let's practice this scenario. I'll be your colleague. Go ahead and translate the sentence above.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- User response -->
+      <div class="bubble-user">
+        <div class="msg" style="background:var(--teal);box-shadow:3px 3px 0px rgba(126,206,197,0.3);">
+          Oh gosh! I'm so sorry - I <span style="border-bottom:2px solid var(--gold);padding-bottom:1px;">wasn't paying attention</span> and I accidentally spilled some coffee on your report.
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:6px;margin-top:4px;">
+          <span class="listen-tag">🔊 Listen</span>
+          <span class="pron-tag pron-good">✓ Good pron.</span>
+        </div>
+      </div>
+
+      <!-- Inline save -->
+      <div style="display:flex;justify-content:flex-end;">
+        <div style="background:var(--clay-white);border:2px solid rgba(126,206,197,0.3);border-radius:var(--r-md);padding:6px 10px;display:flex;align-items:center;gap:6px;box-shadow:var(--shadow-clay);">
+          <span style="font-size:10px;">📖</span>
+          <span style="font-size:10px;color:var(--warm-dark);font-weight:500;">"wasn't paying attention"</span>
+          <span style="font-size:10px;color:var(--teal);font-weight:700;cursor:pointer;">Save</span>
+        </div>
+      </div>
+
+      <!-- AI Assessment with shadow depth -->
+      <div class="ai-avatar-row">
+        <div class="ai-avatar">
+          <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_120,h_120,c_fill,q_85/v1774765004/aura-coach-assets/avatars/chat-bot-avatar_tranformed.webp" alt="Aura">
+        </div>
+        <div style="flex:1;">
+          <div style="font-size:11px;font-weight:600;color:var(--teal);margin-bottom:4px;">Aura Coach</div>
+          <div class="assess-card">
+            <div class="assess-section">
+              <div style="display:flex;align-items:center;gap:12px;">
+                <div class="score-circle" style="background:rgba(123,198,160,0.12);border:3px solid var(--success);">
+                  <span class="num" style="color:var(--success);">8</span>
+                  <span class="of" style="color:var(--success);">/10</span>
+                </div>
+                <div style="flex:1;">
+                  <div style="display:flex;gap:4px;margin-bottom:6px;">
+                    <span class="badge" style="color:var(--success);background:rgba(123,198,160,0.1);border:1.5px solid rgba(123,198,160,0.3);">Excellent</span>
+                    <span class="badge" style="color:var(--warm-muted);background:var(--clay-beige);border:1.5px solid var(--clay-border);">Friendly</span>
+                  </div>
+                  <p style="font-size:12px;color:var(--warm-muted);line-height:1.4;">Natural translation! You captured the tone well. Consider offering to fix the situation.</p>
+                </div>
+              </div>
+            </div>
+            <div class="assess-section" style="display:flex;flex-direction:column;gap:6px;">
+              <div class="metric-pill"><span class="label">Accuracy</span><div class="bar"><div class="bar-fill" style="width:85%;background:var(--teal);"></div></div><span class="val" style="color:var(--teal);">85%</span></div>
+              <div class="metric-pill"><span class="label">Naturalness</span><div class="bar"><div class="bar-fill" style="width:90%;background:var(--success);"></div></div><span class="val" style="color:var(--success);">90%</span></div>
+              <div class="metric-pill"><span class="label">Complexity</span><div class="bar"><div class="bar-fill" style="width:70%;background:var(--purple);"></div></div><span class="val" style="color:var(--purple);">70%</span></div>
+            </div>
+            <div class="assess-section">
+              <div class="tip-box" style="background:rgba(232,199,123,0.08);border:1.5px solid rgba(232,199,123,0.25);">
+                <div style="display:flex;align-items:center;gap:4px;margin-bottom:4px;">
+                  <span>💡</span><span style="font-size:11px;font-weight:700;color:#9A7B3D;text-transform:uppercase;letter-spacing:0.04em;">Better Way</span>
+                </div>
+                <p style="font-size:12px;color:var(--warm-dark);line-height:1.5;">Oh gosh! I'm so sorry – I wasn't paying attention and I accidentally spilled coffee on your report. <span style="color:var(--teal);font-weight:600;">Let me reprint it for you right away.</span></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="input-bar">
+      <div class="input-row">
+        <span class="placeholder">Type your translation...</span>
+        <div class="mic" style="background:rgba(217,138,138,0.1);cursor:pointer;">🎤</div>
+        <div class="send" style="background:var(--teal);cursor:pointer;">➤</div>
+      </div>
+    </div>
+  </div>
+  <div class="phone-home-bar"><div></div></div>
+</div>
+<span class="phone-label">Roleplay Chat</span>
+</div>
+
+<!-- SCREEN 2: Full Assessment -->
+<div class="phone-wrapper">
+<div class="phone">
+  <div class="phone-status"><span>9:41</span><span>⚡ 📶 🔋</span></div>
+  <div class="phone-content">
+    <div class="app-bar">
+      <div class="back">‹</div>
+      <div class="title" style="color:var(--teal);">Assessment</div>
+    </div>
+
+    <div style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:12px;">
+      <!-- Score Hero -->
+      <div style="text-align:center;padding:16px 0;">
+        <div style="display:inline-flex;">
+          <div class="score-circle" style="width:88px;height:88px;background:rgba(123,198,160,0.12);border:4px solid var(--success);">
+            <span class="num" style="color:var(--success);font-size:32px;">8</span>
+            <span class="of" style="color:var(--success);font-size:11px;">/10</span>
+          </div>
+        </div>
+        <div style="font-family:'Nunito',sans-serif;font-size:18px;font-weight:700;color:var(--warm-dark);margin-top:10px;">Excellent Work!</div>
+        <div style="font-size:13px;color:var(--warm-muted);margin-top:4px;">Your translation was natural and contextually appropriate</div>
+      </div>
+
+      <!-- Metrics with shadow -->
+      <div class="assess-card">
+        <div class="assess-section" style="display:flex;flex-direction:column;gap:6px;">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+            <span>📊</span><span style="font-size:11px;font-weight:700;color:var(--warm-dark);text-transform:uppercase;letter-spacing:0.06em;">Detailed Metrics</span>
+          </div>
+          <div class="metric-pill"><span class="label">✏️ Grammar</span><div class="bar"><div class="bar-fill" style="width:90%;background:var(--formal);"></div></div><span class="val" style="color:var(--formal);">9/10</span></div>
+          <div class="metric-pill"><span class="label">📖 Vocabulary</span><div class="bar"><div class="bar-fill" style="width:80%;background:var(--purple);"></div></div><span class="val" style="color:var(--purple);">8/10</span></div>
+          <div class="metric-pill"><span class="label">🎯 Accuracy</span><div class="bar"><div class="bar-fill" style="width:85%;background:var(--teal);"></div></div><span class="val" style="color:var(--teal);">8.5</span></div>
+          <div class="metric-pill"><span class="label">💬 Naturalness</span><div class="bar"><div class="bar-fill" style="width:90%;background:var(--success);"></div></div><span class="val" style="color:var(--success);">9/10</span></div>
+        </div>
+      </div>
+
+      <!-- Tone Variations with shadow -->
+      <div class="assess-card">
+        <div class="assess-section">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
+            <span>🎭</span><span style="font-size:11px;font-weight:700;color:var(--warm-dark);text-transform:uppercase;letter-spacing:0.06em;">Tone Variations</span>
+          </div>
+          <div class="tone-card" style="background:rgba(99,102,241,0.06);border:1.5px solid rgba(99,102,241,0.2);">
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span class="tone-label" style="color:var(--formal);">🏛️ FORMAL</span><span style="font-size:11px;color:var(--warm-light);display:flex;gap:6px;"><span style="cursor:pointer;">🔖</span><span style="cursor:pointer;">🔊</span></span></div>
+            <p style="font-size:11px;color:var(--warm-dark);line-height:1.5;">"I sincerely apologize for my carelessness; I have inadvertently spilled coffee on your report."</p>
+          </div>
+          <div class="tone-card" style="background:rgba(123,198,160,0.06);border:1.5px solid rgba(123,198,160,0.2);outline:2px solid rgba(123,198,160,0.4);outline-offset:-1px;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span class="tone-label" style="color:var(--neutral);">💬 NEUTRAL</span><span style="font-size:10px;color:var(--success);font-weight:600;">✓ Closest</span></div>
+            <p style="font-size:11px;color:var(--warm-dark);line-height:1.5;">"Oh gosh, I'm so sorry! I wasn't looking where I was going and spilled coffee on your report."</p>
+          </div>
+          <div class="tone-card" style="background:rgba(232,199,123,0.06);border:1.5px solid rgba(232,199,123,0.2);">
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span class="tone-label" style="color:#9A7B3D;">😊 FRIENDLY</span><span style="font-size:11px;color:var(--warm-light);display:flex;gap:6px;"><span style="cursor:pointer;">🔖</span><span style="cursor:pointer;">🔊</span></span></div>
+            <p style="font-size:11px;color:var(--warm-dark);line-height:1.5;">"Oh no! I'm so sorry—I was being so clumsy and got coffee all over your report!"</p>
+          </div>
+          <div class="tone-card" style="background:rgba(217,138,138,0.06);border:1.5px solid rgba(217,138,138,0.2);">
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span class="tone-label" style="color:var(--casual);">☕ CASUAL</span><span style="font-size:11px;color:var(--warm-light);display:flex;gap:6px;"><span style="cursor:pointer;">🔖</span><span style="cursor:pointer;">🔊</span></span></div>
+            <p style="font-size:11px;color:var(--warm-dark);line-height:1.5;">"Oops, my bad! I totally spaced out and spilled my drink on your papers."</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Difficulty Actions -->
+      <div style="display:flex;gap:8px;">
+        <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:4px;padding:12px 0;background:rgba(123,198,160,0.1);border:1.5px solid rgba(123,198,160,0.3);border-radius:var(--r-md);font-size:12px;color:var(--success);font-weight:700;cursor:pointer;">📉 Easier</div>
+        <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:4px;padding:12px 0;background:rgba(126,206,197,0.1);border:1.5px solid rgba(126,206,197,0.3);border-radius:var(--r-md);font-size:12px;color:var(--teal);font-weight:700;cursor:pointer;">🔄 New One</div>
+        <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:4px;padding:12px 0;background:rgba(217,138,138,0.1);border:1.5px solid rgba(217,138,138,0.3);border-radius:var(--r-md);font-size:12px;color:var(--error);font-weight:700;cursor:pointer;">📈 Harder</div>
+      </div>
+    </div>
+  </div>
+  <div class="phone-home-bar"><div></div></div>
+</div>
+<span class="phone-label">Full Assessment</span>
+</div>
+
+<!-- SCREEN 3: Session Summary -->
+<div class="phone-wrapper">
+<div class="phone">
+  <div class="phone-status"><span>9:41</span><span>⚡ 📶 🔋</span></div>
+  <div class="phone-content">
+    <div class="app-bar" style="border-bottom:none;">
+      <div class="back">‹</div>
+      <div style="flex:1;"></div>
+      <span style="font-size:13px;color:var(--warm-muted);font-weight:500;cursor:pointer;">Done</span>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px;">
+      <div style="text-align:center;padding:8px 0 16px;">
+        <div style="font-size:56px;margin-bottom:8px;">🎉</div>
+        <div style="font-family:'Fredoka',sans-serif;font-size:24px;font-weight:800;color:var(--warm-dark);">Session Complete!</div>
+        <div style="font-size:14px;color:var(--warm-muted);margin-top:6px;">Office Apology · Beginner</div>
+      </div>
+      <div class="summary-card">
+        <div class="stat-row" style="margin-bottom:10px;">
+          <div class="stat-item"><div class="val">8.2</div><div class="lab">Avg Score</div></div>
+          <div class="stat-item"><div class="val" style="color:var(--purple);">4</div><div class="lab">Turns</div></div>
+          <div class="stat-item"><div class="val" style="color:var(--gold);">3</div><div class="lab">Words Saved</div></div>
+        </div>
+        <div class="stat-row">
+          <div class="stat-item"><div class="val" style="color:var(--success);">5m</div><div class="lab">Duration</div></div>
+          <div class="stat-item"><div class="val" style="color:var(--formal);">92%</div><div class="lab">Grammar</div></div>
+          <div class="stat-item"><div class="val" style="color:var(--teal);">88%</div><div class="lab">Fluency</div></div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--clay-white);border:2px solid var(--clay-border);border-radius:var(--r-lg);box-shadow:var(--shadow-card);">
+        <span style="font-size:28px;">🔥</span>
+        <div style="flex:1;"><div style="font-size:15px;font-weight:700;color:var(--warm-dark);font-family:'Nunito',sans-serif;">8 Day Streak!</div><div style="font-size:12px;color:var(--warm-muted);">Keep it up — you're on fire!</div></div>
+        <span style="font-size:14px;color:var(--warm-light);">+1</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--clay-white);border:2px solid var(--clay-border);border-radius:var(--r-lg);box-shadow:var(--shadow-card);">
+        <span style="font-size:28px;">⭐</span>
+        <div style="flex:1;"><div style="font-size:13px;font-weight:600;color:var(--warm-dark);">Daily Progress</div><div style="height:8px;background:var(--clay-beige);border-radius:4px;margin-top:6px;overflow:hidden;"><div style="width:60%;height:100%;background:linear-gradient(90deg,var(--teal),var(--purple));border-radius:4px;"></div></div><div style="font-size:11px;color:var(--warm-muted);margin-top:4px;">3/5 scenarios today</div></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:auto;">
+        <div class="end-btn" style="background:var(--teal);color:#fff;">Next Scenario ▶</div>
+        <div class="end-btn" style="background:var(--clay-white);color:var(--warm-muted);border:2px solid var(--clay-border);box-shadow:none;">Back to Home</div>
+      </div>
+    </div>
+  </div>
+  <div class="phone-home-bar"><div></div></div>
+</div>
+<span class="phone-label">Session Summary</span>
+</div>
+
+<!-- SCREEN 4: Context Panel -->
+<div class="phone-wrapper">
+<div class="phone">
+  <div class="phone-status"><span>9:41</span><span>⚡ 📶 🔋</span></div>
+  <div class="phone-content">
+    <div class="app-bar"><div class="back">‹</div><div class="title" style="color:var(--teal);">Scenario Coach</div></div>
+    <div style="flex:1;background:rgba(45,48,71,0.4);display:flex;flex-direction:column;justify-content:flex-end;">
+      <div style="padding:8px 12px;opacity:0.3;"><div style="background:var(--clay-beige);border-radius:var(--r-md);padding:12px;font-size:12px;color:var(--warm-light);">Chat messages behind...</div></div>
+      <div style="background:var(--clay-white);border-radius:var(--r-lg) var(--r-lg) 0 0;padding:8px 16px 16px;border:2px solid var(--clay-border);border-bottom:none;max-height:480px;overflow:auto;">
+        <div style="display:flex;justify-content:center;margin-bottom:12px;"><div style="width:36px;height:4px;background:var(--clay-border);border-radius:2px;"></div></div>
+        <h3 style="font-size:18px;font-weight:700;color:var(--warm-dark);margin-bottom:12px;font-family:'Nunito',sans-serif;">Context Details</h3>
+        <div style="background:var(--clay-white);border:2px solid var(--clay-border);border-radius:var(--r-lg);padding:14px;margin-bottom:10px;box-shadow:var(--shadow-soft);">
+          <div style="font-size:12px;font-weight:700;color:var(--teal);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em;">Current Scenario</div>
+          <div style="font-size:14px;color:var(--warm-dark);font-weight:600;">Office — Apologizing to a colleague</div>
+          <div style="font-size:12px;color:var(--warm-muted);margin-top:4px;">Level: Beginner · Topic: Business</div>
+        </div>
+        <div style="background:var(--clay-white);border:2px solid var(--clay-border);border-left:4px solid var(--gold);border-radius:var(--r-lg);padding:14px;margin-bottom:10px;box-shadow:var(--shadow-soft);">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;"><span>💡</span><span style="font-size:12px;font-weight:700;color:#9A7B3D;">Hints (2/3)</span></div>
+          <div style="font-size:12px;color:var(--warm-muted);border-left:3px solid var(--teal);padding-left:8px;margin-bottom:6px;">Use an exclamation to show genuine surprise at your mistake</div>
+          <div style="font-size:12px;color:var(--warm-muted);border-left:3px solid var(--teal);padding-left:8px;margin-bottom:6px;">Offer to fix the situation — this is culturally expected</div>
+          <div style="font-size:12px;color:var(--teal);font-weight:600;cursor:pointer;">▶ Reveal next hint</div>
+        </div>
+        <div style="background:var(--clay-white);border:2px solid var(--clay-border);border-radius:var(--r-lg);padding:14px;box-shadow:var(--shadow-soft);">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;"><span>🎯</span><span style="font-size:12px;font-weight:700;color:#9A7B3D;">Tips for Success</span></div>
+          <p style="font-size:12px;color:var(--warm-muted);line-height:1.6;">• Use formal-friendly register<br>• Show empathy and accountability<br>• Offer a concrete solution</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="phone-home-bar"><div></div></div>
+</div>
+<span class="phone-label">Context Panel</span>
+</div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!--                    STORY MODE                               -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="section-title">
+  <h2>Story Mode</h2>
+  <p>Story selection + Immersive narrative chat with character roles</p>
+</div>
+<div class="screens-row">
+
+<!-- SCREEN 5: Story Select -->
+<div class="phone-wrapper">
+<div class="phone">
+  <div class="phone-status"><span>9:41</span><span>⚡ 📶 🔋</span></div>
+  <div class="phone-content">
+    <div class="app-bar"><div class="back">‹</div><div class="title" style="color:var(--purple);">Choose a Story</div></div>
+    <div style="flex:1;padding:12px 14px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;background:var(--cream);">
+      <div style="background:linear-gradient(135deg,rgba(167,139,202,0.12),rgba(126,206,197,0.08));border:2px solid rgba(167,139,202,0.3);border-radius:var(--r-lg);padding:16px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+          <div style="width:40px;height:40px;border-radius:var(--r-md);background:rgba(167,139,202,0.2);display:flex;align-items:center;justify-content:center;font-size:20px;">✨</div>
+          <div><div style="font-size:15px;font-weight:700;color:var(--warm-dark);font-family:'Nunito',sans-serif;">Create Your Story</div><div style="font-size:12px;color:var(--warm-muted);">Describe any scenario</div></div>
+        </div>
+        <div style="background:var(--clay-white);border:2px solid var(--clay-border);border-radius:var(--r-md);padding:10px 12px;font-size:13px;color:var(--warm-light);margin-bottom:10px;">Describe your scenario...</div>
+        <div style="padding:10px;border-radius:var(--r-lg);background:var(--purple);color:#fff;font-size:14px;font-weight:700;text-align:center;box-shadow:3px 3px 0px rgba(167,139,202,0.4);cursor:pointer;">Start Custom Story ✨</div>
+      </div>
+      <div style="background:var(--clay-white);border:2px solid var(--clay-border);border-radius:var(--r-lg);padding:14px;display:flex;gap:12px;align-items:center;box-shadow:var(--shadow-soft);cursor:pointer;">
+        <div style="width:48px;height:48px;border-radius:var(--r-md);background:rgba(123,198,160,0.15);display:flex;align-items:center;justify-content:center;font-size:28px;">✈️</div>
+        <div style="flex:1;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><span style="font-size:14px;font-weight:700;color:var(--warm-dark);">At the Airport</span><span class="badge" style="color:var(--success);background:rgba(123,198,160,0.1);border:1.5px solid rgba(123,198,160,0.3);">Beginner</span></div><span style="font-size:12px;color:var(--warm-muted);">Navigate check-in and boarding</span></div>
+      </div>
+      <div style="background:var(--clay-white);border:2px solid var(--clay-border);border-radius:var(--r-lg);padding:14px;display:flex;gap:12px;align-items:center;box-shadow:var(--shadow-soft);cursor:pointer;">
+        <div style="width:48px;height:48px;border-radius:var(--r-md);background:rgba(232,199,123,0.15);display:flex;align-items:center;justify-content:center;font-size:28px;">💼</div>
+        <div style="flex:1;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><span style="font-size:14px;font-weight:700;color:var(--warm-dark);">Job Interview</span><span class="badge" style="color:#9A7B3D;background:rgba(232,199,123,0.1);border:1.5px solid rgba(232,199,123,0.3);">Intermediate</span></div><span style="font-size:12px;color:var(--warm-muted);">Practice professional dialogue</span></div>
+      </div>
+      <div style="background:var(--clay-white);border:2px solid var(--clay-border);border-radius:var(--r-lg);padding:14px;display:flex;gap:12px;align-items:center;box-shadow:var(--shadow-soft);cursor:pointer;">
+        <div style="width:48px;height:48px;border-radius:var(--r-md);background:rgba(217,138,138,0.15);display:flex;align-items:center;justify-content:center;font-size:28px;">🏥</div>
+        <div style="flex:1;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><span style="font-size:14px;font-weight:700;color:var(--warm-dark);">Medical Emergency</span><span class="badge" style="color:var(--error);background:rgba(217,138,138,0.1);border:1.5px solid rgba(217,138,138,0.3);">Advanced</span></div><span style="font-size:12px;color:var(--warm-muted);">Handle urgent situations</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="phone-home-bar"><div></div></div>
+</div>
+<span class="phone-label">Story Select</span>
+</div>
+
+<!-- SCREEN 6: Story Chat -->
+<div class="phone-wrapper">
+<div class="phone">
+  <div class="phone-status"><span>9:41</span><span>⚡ 📶 🔋</span></div>
+  <div class="phone-content">
+    <div class="app-bar" style="height:auto;padding:8px 12px;flex-direction:column;gap:0;border-bottom:none;">
+      <div style="display:flex;align-items:center;width:100%;gap:8px;">
+        <div class="back">‹</div>
+        <div style="flex:1;"><div style="font-size:15px;font-weight:700;color:var(--purple);font-family:'Nunito',sans-serif;">At the Airport</div><div style="font-size:11px;color:var(--warm-muted);">✈️ Travel · Beginner</div></div>
+        <div style="display:flex;gap:2px;"><span style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:14px;">ℹ️</span><span style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:14px;">🔊</span></div>
+      </div>
+      <div style="width:100%;height:3px;background:var(--clay-beige);border-radius:2px;margin-top:6px;"><div style="width:25%;height:100%;background:var(--purple);border-radius:2px;"></div></div>
+    </div>
+    <div class="chat-area">
+      <div class="ai-avatar-row">
+        <div class="ai-avatar" style="border-color:var(--purple);"><img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_120,h_120,c_fill,q_85/v1774765004/aura-coach-assets/avatars/chat-bot-avatar_tranformed.webp" alt="Narrator"></div>
+        <div style="flex:1;"><div style="font-size:11px;font-weight:600;color:var(--purple);margin-bottom:4px;">🎭 Narrator</div><div class="bubble-ai" style="max-width:100%;"><div class="msg" style="border-left:4px solid var(--purple);">You arrive at the international terminal. A friendly gate agent waves you over...</div></div></div>
+      </div>
+      <div class="ai-avatar-row">
+        <div class="ai-avatar" style="border-color:var(--teal);"><img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_240,h_240,c_fill,q_90/v1774780247/aura-coach-assets/avatars/fox-avatar_677f5f.webp" alt="Agent"></div>
+        <div style="flex:1;"><div style="font-size:11px;font-weight:600;color:var(--teal);margin-bottom:4px;">👤 Gate Agent</div><div class="bubble-ai" style="max-width:100%;"><div class="msg">"Good morning! May I see your boarding pass and passport, please?"<div style="margin-top:6px;"><span class="listen-tag">🔊 Listen</span></div></div></div></div>
+      </div>
+      <div class="bubble-user"><div class="msg" style="background:var(--purple);box-shadow:3px 3px 0px rgba(167,139,202,0.3);">Here you go. Is the flight on time?</div><div style="display:flex;justify-content:flex-end;gap:6px;margin-top:4px;"><span class="listen-tag">🔊 Listen</span><span class="pron-tag pron-good">✓ Natural</span></div></div>
+      <!-- Assessment with shadow -->
+      <div class="ai-avatar-row">
+        <div class="ai-avatar" style="border-color:var(--teal);"><img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_120,h_120,c_fill,q_85/v1774765004/aura-coach-assets/avatars/chat-bot-avatar_tranformed.webp" alt="Aura"></div>
+        <div style="flex:1;">
+          <div class="assess-card">
+            <div class="assess-section" style="padding:10px 12px;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <div class="score-circle" style="width:44px;height:44px;background:rgba(123,198,160,0.12);border:2px solid var(--success);"><span class="num" style="color:var(--success);font-size:18px;">9</span><span class="of" style="color:var(--success);font-size:8px;">/10</span></div>
+                <div style="flex:1;"><span class="badge" style="color:var(--success);background:rgba(123,198,160,0.1);border:1.5px solid rgba(123,198,160,0.3);">Excellent</span><p style="font-size:11px;color:var(--warm-muted);line-height:1.4;margin-top:4px;">Natural and contextually appropriate!</p></div>
+              </div>
+            </div>
+            <div class="assess-section" style="display:flex;gap:6px;padding:10px 12px;">
+              <div style="flex:1;padding:10px;border-radius:var(--r-lg);background:var(--purple);color:#fff;font-size:13px;font-weight:700;text-align:center;box-shadow:3px 3px 0px rgba(167,139,202,0.4);cursor:pointer;">▶ Continue</div>
+              <div style="flex:1;padding:10px;border-radius:var(--r-lg);border:2px solid var(--clay-border);color:var(--warm-muted);font-size:13px;font-weight:600;text-align:center;cursor:pointer;">End</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ai-avatar-row">
+        <div class="ai-avatar" style="border-color:var(--purple);"><img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_120,h_120,c_fill,q_85/v1774765004/aura-coach-assets/avatars/chat-bot-avatar_tranformed.webp" alt="Narrator"></div>
+        <div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>
+      </div>
+    </div>
+    <div class="input-bar"><div class="input-row"><span class="placeholder">What do you say?</span><div class="mic" style="background:rgba(217,138,138,0.1);">🎤</div><div class="send" style="background:var(--purple);">➤</div></div></div>
+  </div>
+  <div class="phone-home-bar"><div></div></div>
+</div>
+<span class="phone-label">Story Chat</span>
+</div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!--                    TONE TRANSLATOR                          -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="section-title">
+  <h2>Tone Translator</h2>
+  <p>Input phrase → 4 tone variations with save & listen</p>
+</div>
+<div class="screens-row">
+
+<!-- SCREEN 7: Tone Translator -->
+<div class="phone-wrapper">
+<div class="phone">
+  <div class="phone-status"><span>9:41</span><span>⚡ 📶 🔋</span></div>
+  <div class="phone-content">
+    <div class="app-bar"><div class="back">‹</div><div class="title" style="color:#9A7B3D;">Tone Translator</div><div class="actions"><span>🔊</span></div></div>
+    <div class="chat-area">
+      <div class="bubble-user"><div class="msg" style="background:var(--gold);box-shadow:3px 3px 0px rgba(232,199,123,0.3);color:var(--warm-dark);">I need to tell my boss I can't come to work tomorrow</div></div>
+      <div style="background:var(--clay-white);border:2px solid var(--clay-border);border-radius:var(--r-lg);padding:14px;box-shadow:var(--shadow-lifted);">
+        <p style="font-size:12px;color:var(--warm-light);font-style:italic;margin-bottom:10px;">Original: "I need to tell my boss I can't come to work tomorrow"</p>
+        <div class="tone-card" style="background:rgba(99,102,241,0.06);border:1.5px solid rgba(99,102,241,0.2);"><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span class="tone-label" style="color:var(--formal);">🏛️ FORMAL</span><span style="font-size:11px;color:var(--warm-light);display:flex;gap:6px;"><span style="cursor:pointer;">🔖</span><span style="cursor:pointer;">🔊</span></span></div><p style="font-size:12px;color:var(--warm-dark);line-height:1.5;">"I would like to inform you that I will be unable to attend work tomorrow."</p></div>
+        <div class="tone-card" style="background:rgba(123,198,160,0.06);border:1.5px solid rgba(123,198,160,0.2);"><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span class="tone-label" style="color:var(--neutral);">😊 FRIENDLY</span><span style="font-size:11px;color:var(--warm-light);display:flex;gap:6px;"><span style="cursor:pointer;">🔖</span><span style="cursor:pointer;">🔊</span></span></div><p style="font-size:12px;color:var(--warm-dark);line-height:1.5;">"Hey! Just wanted to let you know I won't be able to make it tomorrow."</p></div>
+        <div class="tone-card" style="background:rgba(232,199,123,0.06);border:1.5px solid rgba(232,199,123,0.2);"><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span class="tone-label" style="color:#9A7B3D;">☕ INFORMAL</span><span style="font-size:11px;color:var(--warm-light);display:flex;gap:6px;"><span style="cursor:pointer;">🔖</span><span style="cursor:pointer;">🔊</span></span></div><p style="font-size:12px;color:var(--warm-dark);line-height:1.5;">"Can't come in tomorrow — something came up. Hope that's okay!"</p></div>
+        <div class="tone-card" style="background:rgba(217,138,138,0.06);border:1.5px solid rgba(217,138,138,0.2);"><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span class="tone-label" style="color:var(--casual);">💬 CASUAL</span><span style="font-size:11px;color:var(--warm-light);display:flex;gap:6px;"><span style="cursor:pointer;">🔖</span><span style="cursor:pointer;">🔊</span></span></div><p style="font-size:12px;color:var(--warm-dark);line-height:1.5;">"Yo, heads up — not gonna be in tomorrow."</p></div>
+      </div>
+    </div>
+    <div class="input-bar">
+      <div class="q-action" style="background:var(--clay-beige);border:1.5px solid var(--clay-border);color:var(--warm-muted);margin-bottom:8px;border-radius:var(--r-md);padding:8px;text-align:center;font-size:11px;font-weight:600;cursor:pointer;">💬 New Translation</div>
+      <div class="input-row"><span class="placeholder">Enter a phrase to translate...</span><div class="send" style="background:var(--gold);cursor:pointer;">➤</div></div>
+    </div>
+  </div>
+  <div class="phone-home-bar"><div></div></div>
+</div>
+<span class="phone-label">Tone Translator</span>
+</div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!--                    SETTINGS                                 -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="section-title">
+  <h2>Settings</h2>
+  <p>Profile card, upgrade CTA, grouped preferences</p>
+</div>
+<div class="screens-row">
+
+<!-- SCREEN 8: Settings -->
+<div class="phone-wrapper">
+<div class="phone">
+  <div class="phone-status"><span>9:41</span><span>⚡ 📶 🔋</span></div>
+  <div class="phone-content">
+    <div class="app-bar"><div class="back">‹</div><div class="title">Settings</div></div>
+    <div style="flex:1;padding:16px 20px;overflow-y:auto;background:var(--cream);">
+      <div style="display:flex;align-items:center;gap:14px;padding:16px;background:var(--clay-white);border:2px solid var(--clay-border);border-radius:var(--r-lg);box-shadow:var(--shadow-soft);margin-bottom:20px;">
+        <div style="width:52px;height:52px;border-radius:50%;overflow:hidden;border:2px solid var(--teal);box-shadow:var(--shadow-clay);"><img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_240,h_240,c_fill,q_90/v1774780247/aura-coach-assets/avatars/fox-avatar_677f5f.webp" style="width:100%;height:100%;object-fit:cover;"></div>
+        <div style="flex:1;"><div style="font-size:17px;font-weight:700;color:var(--warm-dark);font-family:'Nunito',sans-serif;">Luu</div><div style="font-size:12px;color:var(--warm-muted);">luuphuc6297@gmail.com</div><span class="badge" style="margin-top:4px;color:var(--warm-muted);background:var(--clay-beige);border:1.5px solid var(--clay-border);">Free Tier</span></div>
+        <span style="font-size:14px;color:var(--warm-light);">›</span>
+      </div>
+      <div style="padding:16px;background:linear-gradient(135deg,rgba(126,206,197,0.15),rgba(167,139,202,0.15));border:2px solid rgba(126,206,197,0.3);border-radius:var(--r-lg);margin-bottom:20px;text-align:center;">
+        <div style="font-size:16px;font-weight:700;color:var(--warm-dark);font-family:'Nunito',sans-serif;">⭐ Upgrade to Pro</div>
+        <p style="font-size:13px;color:var(--warm-muted);margin-top:4px;">Unlimited sessions, priority AI, no ads</p>
+        <div style="margin-top:10px;padding:10px 24px;border-radius:var(--r-lg);background:var(--teal);color:#fff;font-size:14px;font-weight:700;display:inline-block;box-shadow:var(--shadow-clay);cursor:pointer;">See Plans</div>
+      </div>
+      <div style="font-size:11px;font-weight:700;color:var(--warm-light);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;">Learning</div>
+      <div style="background:var(--clay-white);border:2px solid var(--clay-border);border-radius:var(--r-lg);padding:0 16px;margin-bottom:16px;">
+        <div class="settings-item"><div class="settings-icon" style="background:rgba(126,206,197,0.15);"><span>🌍</span></div><div class="label"><div class="name">English Level</div><div class="desc">Intermediate (B1/B2)</div></div><span class="arrow">›</span></div>
+        <div class="settings-item"><div class="settings-icon" style="background:rgba(167,139,202,0.15);"><span>🎯</span></div><div class="label"><div class="name">Topics</div><div class="desc">Travel, Business, Education</div></div><span class="arrow">›</span></div>
+        <div class="settings-item"><div class="settings-icon" style="background:rgba(232,199,123,0.15);"><span>⏰</span></div><div class="label"><div class="name">Daily Goal</div><div class="desc">15 minutes</div></div><span class="arrow">›</span></div>
+      </div>
+      <div style="font-size:11px;font-weight:700;color:var(--warm-light);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;">Preferences</div>
+      <div style="background:var(--clay-white);border:2px solid var(--clay-border);border-radius:var(--r-lg);padding:0 16px;margin-bottom:16px;">
+        <div class="settings-item"><div class="settings-icon" style="background:rgba(126,206,197,0.15);"><span>🔔</span></div><div class="label"><div class="name">Notifications</div><div class="desc">Daily reminder at 9:00 AM</div></div><div class="toggle on"></div></div>
+        <div class="settings-item"><div class="settings-icon" style="background:rgba(167,139,202,0.15);"><span>🔊</span></div><div class="label"><div class="name">Sound Effects</div></div><div class="toggle on"></div></div>
+        <div class="settings-item"><div class="settings-icon" style="background:rgba(232,199,123,0.15);"><span>🌙</span></div><div class="label"><div class="name">Dark Mode</div></div><div class="toggle off"></div></div>
+      </div>
+      <div style="font-size:11px;font-weight:700;color:var(--warm-light);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;">Account</div>
+      <div style="background:var(--clay-white);border:2px solid var(--clay-border);border-radius:var(--r-lg);padding:0 16px;margin-bottom:16px;">
+        <div class="settings-item"><div class="settings-icon" style="background:var(--clay-beige);"><span>📋</span></div><div class="label"><div class="name">Terms of Service</div></div><span class="arrow">›</span></div>
+        <div class="settings-item"><div class="settings-icon" style="background:var(--clay-beige);"><span>🔒</span></div><div class="label"><div class="name">Privacy Policy</div></div><span class="arrow">›</span></div>
+        <div class="settings-item" style="border-bottom:none;"><div class="settings-icon" style="background:rgba(217,138,138,0.15);"><span>🚪</span></div><div class="label"><div class="name" style="color:var(--error);">Log Out</div></div></div>
+      </div>
+      <p style="text-align:center;font-size:11px;color:var(--warm-light);padding:8px 0;">Aura Coach AI v1.0.0</p>
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item"><img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_84,h_84,c_fill,q_85/v1774765585/aura-coach-assets/navigation-bar/home-icon_f164a9.webp" alt="Home"><span>Home</span></div>
+      <div class="nav-item"><div style="font-size:20px;opacity:0.45;">👤</div><span>Profile</span></div>
+      <div class="nav-item active"><img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_84,h_84,c_fill,q_85/v1774780351/aura-coach-assets/navigation-bar/setting-icon_42d237_cac3a9.webp" alt="Settings"><span>Settings</span></div>
+    </div>
+  </div>
+  <div class="phone-home-bar"><div></div></div>
+</div>
+<span class="phone-label">Settings</span>
+</div>
+
+</div>
+
+<div style="text-align:center;padding:40px 20px 60px;color:var(--warm-muted);font-size:13px;">
+  Aura Coach AI — Phase 2-4 Mockups · Clay Design System · 8 screens
+</div>
+
+</body>
+</html>

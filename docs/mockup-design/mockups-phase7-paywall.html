@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aura Coach AI — Phase 7: Paywall & Subscription</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700;800&family=Nunito:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --cream: #FFF8F0; --clay-white: #FEFCF9; --clay-beige: #F5EDE3;
+      --clay-border: #E8DFD3; --clay-shadow: #D4C9BB;
+      --warm-dark: #2D3047; --warm-muted: #6B6D7B; --warm-light: #9B9DAB;
+      --teal: #7ECEC5; --purple: #A78BCA; --gold: #E8C77B;
+      --success: #7BC6A0; --error: #D98A8A; --warning: #E8C77B;
+      --shadow-clay: 3px 3px 0px #D4C9BB;
+      --shadow-card: 0 2px 8px rgba(45,48,71,0.04);
+      --shadow-soft: 0 4px 12px rgba(45,48,71,0.06);
+      --r-sm: 8px; --r-md: 12px; --r-lg: 20px; --r-xl: 28px; --r-full: 9999px;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html, body { font-family:'Inter',sans-serif; background:#EEEAE5; min-height:100vh; }
+
+    .page-header { text-align:center; padding:48px 20px 32px; }
+    .page-header h1 { font-family:'Fredoka',sans-serif; font-size:32px; font-weight:800; color:var(--warm-dark); }
+    .page-header p { color:var(--warm-muted); font-size:14px; margin-top:6px; }
+
+    .screens-row {
+      display:flex; gap:32px; padding:0 40px 60px;
+      overflow-x:auto; scroll-snap-type:x mandatory;
+    }
+    .screens-row::-webkit-scrollbar { height:6px; }
+    .screens-row::-webkit-scrollbar-thumb { background:var(--clay-shadow); border-radius:3px; }
+
+    .phone {
+      flex-shrink:0; scroll-snap-align:center;
+      width:375px; height:812px;
+      background:var(--cream); border-radius:44px;
+      border:3px solid var(--clay-border);
+      box-shadow:0 8px 32px rgba(45,48,71,0.08);
+      overflow:hidden; display:flex; flex-direction:column;
+    }
+    .phone-status { height:44px; display:flex; align-items:center; justify-content:space-between; padding:0 24px; font-size:12px; color:var(--warm-muted); font-weight:600; flex-shrink:0; }
+    .phone-content { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+    .phone-home-bar { height:28px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .phone-home-bar div { width:134px; height:5px; background:var(--clay-border); border-radius:3px; }
+    .phone-label { text-align:center; margin-top:12px; font-size:11px; font-weight:700; color:var(--teal); text-transform:uppercase; letter-spacing:0.1em; background:rgba(126,206,197,0.1); padding:4px 14px; border-radius:var(--r-full); display:inline-block; }
+    .phone-wrapper { display:flex; flex-direction:column; align-items:center; }
+
+    .section-title { text-align:center; padding:40px 20px 20px; }
+    .section-title h2 { font-family:'Nunito',sans-serif; font-size:22px; font-weight:700; color:var(--warm-dark); }
+    .section-title p { font-size:13px; color:var(--warm-muted); margin-top:4px; }
+
+    .app-bar { flex-shrink:0; display:flex; align-items:center; padding:0 12px; height:48px; background:var(--cream); gap:8px; }
+    .app-bar .back { width:36px; height:36px; display:flex; align-items:center; justify-content:center; font-size:16px; color:var(--warm-dark); cursor:pointer; }
+
+    .badge { font-size:11px; font-weight:700; padding:4px 12px; border-radius:var(--r-full); text-transform:uppercase; letter-spacing:0.05em; display:inline-block; }
+
+    /* Plan toggle */
+    .plan-toggle {
+      display:flex; background:var(--clay-beige); border-radius:var(--r-full);
+      padding:3px; margin:0 auto; width:220px;
+    }
+    .plan-toggle .tab {
+      flex:1; text-align:center; padding:8px 0; border-radius:var(--r-full);
+      font-size:13px; font-weight:600; cursor:pointer; transition:all 0.2s;
+    }
+    .plan-toggle .tab.active { background:var(--teal); color:#fff; box-shadow:var(--shadow-clay); }
+    .plan-toggle .tab:not(.active) { color:var(--warm-muted); }
+
+    /* Tier card */
+    .tier-card {
+      border-radius:var(--r-lg); padding:20px;
+      background:var(--clay-white); position:relative;
+      transition:all 0.2s ease;
+    }
+    .tier-popular {
+      position:absolute; top:-10px; right:16px;
+      font-size:10px; font-weight:700; padding:4px 12px;
+      border-radius:var(--r-full); color:#fff;
+      background:linear-gradient(135deg, var(--teal), var(--purple));
+      box-shadow:var(--shadow-soft);
+      text-transform:uppercase; letter-spacing:0.04em;
+    }
+
+    .feature-row {
+      display:flex; align-items:center; gap:8px;
+      padding:5px 0; font-size:13px; color:var(--warm-dark);
+    }
+    .feature-check { font-size:14px; }
+
+    .cta-btn {
+      width:100%; padding:14px; border:none; border-radius:var(--r-xl);
+      font-family:'Nunito',sans-serif; font-size:15px; font-weight:700;
+      cursor:pointer; text-align:center;
+      transition:all 0.2s ease;
+    }
+    .cta-btn:hover { transform:translateY(-1px); }
+
+    /* Confirmation modal */
+    .modal-overlay {
+      position:absolute; inset:0; background:rgba(45,48,71,0.4);
+      display:flex; align-items:center; justify-content:center; z-index:10;
+    }
+    .modal-content {
+      width:300px; background:var(--cream); border-radius:var(--r-lg);
+      padding:24px; text-align:center; box-shadow:0 16px 48px rgba(45,48,71,0.15);
+    }
+
+    /* Float animation */
+    @keyframes float3d {
+      0%, 100% { transform:translateY(0) rotate(0deg); }
+      50% { transform:translateY(-8px) rotate(2deg); }
+    }
+    .float3d { animation:float3d 3s ease-in-out infinite; }
+
+    @keyframes shimmer {
+      0% { background-position:-200% 0; }
+      100% { background-position:200% 0; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Phase 7 — Paywall & Subscription</h1>
+  <p>Tier comparison, pricing toggle, purchase confirmation</p>
+</div>
+
+<!-- ═══ SECTION: PAYWALL ═══ -->
+<div class="section-title">
+  <h2>Subscription Paywall</h2>
+  <p>Clear value hierarchy + Annual/Monthly toggle + Benefit-driven CTAs</p>
+</div>
+<div class="screens-row">
+
+<!-- SCREEN 1: Paywall (Full) -->
+<div class="phone-wrapper">
+<div class="phone">
+  <div class="phone-status"><span>9:41</span><span>⚡ 📶 🔋</span></div>
+  <div class="phone-content">
+    <div class="app-bar">
+      <div class="back">✕</div>
+      <div style="flex:1;"></div>
+      <span style="font-size:13px;color:var(--warm-muted);cursor:pointer;">Restore</span>
+    </div>
+
+    <div style="flex:1;overflow-y:auto;padding:0 20px 24px;">
+      <!-- Hero -->
+      <div style="text-align:center;padding:8px 0 20px;">
+        <div style="font-size:48px;margin-bottom:8px;" class="float3d">
+          <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_120,h_120,c_fill,q_90/v1774779556/aura-coach-assets/aura-orbs-icons_1ff981_b7df4e.webp" alt="Aura" style="width:56px;height:56px;object-fit:contain;">
+        </div>
+        <div style="font-family:'Fredoka',sans-serif;font-size:24px;font-weight:800;color:var(--warm-dark);">Unlock Your Potential</div>
+        <div style="font-size:14px;color:var(--warm-muted);margin-top:6px;line-height:1.5;">Choose a plan that fits your goals</div>
+      </div>
+
+      <!-- Monthly / Yearly Toggle -->
+      <div style="margin-bottom:20px;">
+        <div class="plan-toggle">
+          <div class="tab">Monthly</div>
+          <div class="tab active">Yearly <span style="font-size:10px;">-40%</span></div>
+        </div>
+      </div>
+
+      <!-- Tier Cards -->
+      <div style="display:flex;flex-direction:column;gap:12px;">
+
+        <!-- FREE -->
+        <div class="tier-card" style="border:2px solid var(--clay-border);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <div>
+              <div style="font-size:16px;font-weight:700;color:var(--warm-dark);font-family:'Nunito',sans-serif;">Free</div>
+              <div style="font-size:24px;font-weight:800;color:var(--warm-dark);font-family:'Fredoka',sans-serif;">$0</div>
+            </div>
+            <span class="badge" style="color:var(--warm-muted);background:var(--clay-beige);border:1.5px solid var(--clay-border);">Current</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:2px;margin-bottom:14px;">
+            <div class="feature-row"><span class="feature-check" style="color:var(--teal);">✓</span> 5 scenarios/day</div>
+            <div class="feature-row"><span class="feature-check" style="color:var(--teal);">✓</span> 3 stories/day</div>
+            <div class="feature-row"><span class="feature-check" style="color:var(--teal);">✓</span> 10 translations/day</div>
+            <div class="feature-row"><span class="feature-check" style="color:var(--warm-light);">✗</span><span style="color:var(--warm-light);">Advanced mind maps</span></div>
+          </div>
+          <div class="cta-btn" style="background:var(--clay-beige);color:var(--warm-muted);cursor:default;">Current Plan</div>
+        </div>
+
+        <!-- PRO (Recommended) -->
+        <div class="tier-card" style="border:2.5px solid var(--teal);box-shadow:0 4px 20px rgba(126,206,197,0.2);">
+          <div class="tier-popular">Most Popular</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <div>
+              <div style="font-size:16px;font-weight:700;color:var(--teal);font-family:'Nunito',sans-serif;">Pro</div>
+              <div style="display:flex;align-items:baseline;gap:4px;">
+                <span style="font-size:28px;font-weight:800;color:var(--warm-dark);font-family:'Fredoka',sans-serif;">$5.99</span>
+                <span style="font-size:12px;color:var(--warm-muted);">/mo</span>
+              </div>
+              <div style="font-size:11px;color:var(--warm-light);text-decoration:line-through;">$9.99/mo</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:11px;color:var(--teal);font-weight:600;">Billed yearly</div>
+              <div style="font-size:11px;color:var(--warm-muted);">$71.88/year</div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:2px;margin-bottom:14px;">
+            <div class="feature-row"><span class="feature-check" style="color:var(--teal);">✓</span><strong>Unlimited</strong> scenarios</div>
+            <div class="feature-row"><span class="feature-check" style="color:var(--teal);">✓</span> 10 stories/day</div>
+            <div class="feature-row"><span class="feature-check" style="color:var(--teal);">✓</span><strong>Unlimited</strong> translations</div>
+            <div class="feature-row"><span class="feature-check" style="color:var(--teal);">✓</span> Advanced mind maps</div>
+            <div class="feature-row"><span class="feature-check" style="color:var(--teal);">✓</span> 15 TTS/day</div>
+            <div class="feature-row"><span class="feature-check" style="color:var(--teal);">✓</span> Ad-free</div>
+          </div>
+          <div class="cta-btn" style="background:var(--teal);color:#fff;box-shadow:var(--shadow-clay);">Start 7-Day Free Trial</div>
+          <div style="text-align:center;font-size:11px;color:var(--warm-light);margin-top:6px;">Cancel anytime during trial</div>
+        </div>
+
+        <!-- PREMIUM -->
+        <div class="tier-card" style="border:2px solid var(--gold);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <div>
+              <div style="font-size:16px;font-weight:700;color:#9A7B3D;font-family:'Nunito',sans-serif;">Premium ⭐</div>
+              <div style="display:flex;align-items:baseline;gap:4px;">
+                <span style="font-size:28px;font-weight:800;color:var(--warm-dark);font-family:'Fredoka',sans-serif;">$11.99</span>
+                <span style="font-size:12px;color:var(--warm-muted);">/mo</span>
+              </div>
+              <div style="font-size:11px;color:var(--warm-light);text-decoration:line-through;">$19.99/mo</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:11px;color:#9A7B3D;font-weight:600;">Billed yearly</div>
+              <div style="font-size:11px;color:var(--warm-muted);">$143.88/year</div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:2px;margin-bottom:14px;">
+            <div class="feature-row"><span class="feature-check" style="color:var(--gold);">✓</span> All Pro features</div>
+            <div class="feature-row"><span class="feature-check" style="color:var(--gold);">✓</span><strong>Unlimited everything</strong></div>
+            <div class="feature-row"><span class="feature-check" style="color:var(--gold);">✓</span> Live conversation mode</div>
+            <div class="feature-row"><span class="feature-check" style="color:var(--gold);">✓</span> Private tutor chat</div>
+            <div class="feature-row"><span class="feature-check" style="color:var(--gold);">✓</span> Grammar deep-dives</div>
+          </div>
+          <div class="cta-btn" style="background:var(--gold);color:#fff;box-shadow:3px 3px 0px rgba(232,199,123,0.4);">Upgrade to Premium</div>
+        </div>
+      </div>
+
+      <!-- Terms -->
+      <p style="text-align:center;font-size:11px;color:var(--warm-light);margin-top:16px;line-height:1.5;">
+        By subscribing, you agree to our<br>
+        <span style="text-decoration:underline;cursor:pointer;">Terms of Service</span> & <span style="text-decoration:underline;cursor:pointer;">Privacy Policy</span>
+      </p>
+    </div>
+  </div>
+  <div class="phone-home-bar"><div></div></div>
+</div>
+<span class="phone-label">Paywall</span>
+</div>
+
+<!-- SCREEN 2: Purchase Confirmation -->
+<div class="phone-wrapper">
+<div class="phone">
+  <div class="phone-status"><span>9:41</span><span>⚡ 📶 🔋</span></div>
+  <div class="phone-content" style="position:relative;">
+    <!-- Background: paywall dimmed -->
+    <div style="flex:1;opacity:0.3;padding:20px;">
+      <div style="text-align:center;padding:20px 0;">
+        <div style="font-family:'Fredoka',sans-serif;font-size:24px;font-weight:800;color:var(--warm-dark);">Unlock Your Potential</div>
+      </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal-overlay">
+      <div class="modal-content">
+        <div style="font-size:48px;margin-bottom:12px;">🎉</div>
+        <div style="font-family:'Fredoka',sans-serif;font-size:22px;font-weight:800;color:var(--warm-dark);margin-bottom:6px;">Welcome to Pro!</div>
+        <div style="font-size:14px;color:var(--warm-muted);line-height:1.5;margin-bottom:20px;">Your 7-day free trial has started. Enjoy unlimited scenarios and more!</div>
+
+        <div style="background:var(--clay-white);border:2px solid var(--clay-border);border-radius:var(--r-md);padding:14px;margin-bottom:16px;text-align:left;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+            <span style="font-size:16px;">✓</span>
+            <span style="font-size:13px;font-weight:600;color:var(--warm-dark);">Unlimited scenarios</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+            <span style="font-size:16px;">✓</span>
+            <span style="font-size:13px;font-weight:600;color:var(--warm-dark);">Advanced mind maps</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:16px;">✓</span>
+            <span style="font-size:13px;font-weight:600;color:var(--warm-dark);">Ad-free experience</span>
+          </div>
+        </div>
+
+        <div style="font-size:11px;color:var(--warm-light);margin-bottom:16px;">Trial ends Apr 15. You'll be charged $71.88/year after.</div>
+
+        <div style="padding:14px;border-radius:var(--r-xl);background:var(--teal);color:#fff;font-family:'Nunito',sans-serif;font-size:15px;font-weight:700;cursor:pointer;box-shadow:var(--shadow-clay);">Start Learning</div>
+      </div>
+    </div>
+  </div>
+  <div class="phone-home-bar"><div></div></div>
+</div>
+<span class="phone-label">Purchase Confirm</span>
+</div>
+
+<!-- SCREEN 3: Quota Limit Hit (Upsell) -->
+<div class="phone-wrapper">
+<div class="phone">
+  <div class="phone-status"><span>9:41</span><span>⚡ 📶 🔋</span></div>
+  <div class="phone-content" style="position:relative;">
+    <!-- Background: chat screen dimmed -->
+    <div style="flex:1;opacity:0.2;padding:20px;">
+      <div style="height:48px;display:flex;align-items:center;font-family:'Nunito',sans-serif;font-size:16px;font-weight:600;color:var(--teal);">Scenario Coach</div>
+      <div style="background:var(--clay-beige);border-radius:var(--r-md);padding:16px;margin-top:8px;height:60px;"></div>
+      <div style="background:var(--clay-beige);border-radius:var(--r-md);padding:16px;margin-top:8px;height:40px;"></div>
+    </div>
+
+    <!-- Quota Upsell Modal -->
+    <div class="modal-overlay">
+      <div class="modal-content">
+        <div style="font-size:48px;margin-bottom:12px;">⚡</div>
+        <div style="font-family:'Fredoka',sans-serif;font-size:20px;font-weight:800;color:var(--warm-dark);margin-bottom:6px;">Daily Limit Reached</div>
+        <div style="font-size:14px;color:var(--warm-muted);line-height:1.5;margin-bottom:6px;">You've used all 5 scenarios today</div>
+
+        <!-- Usage indicator -->
+        <div style="display:flex;align-items:center;gap:6px;padding:10px 16px;background:var(--clay-beige);border-radius:var(--r-full);margin-bottom:16px;">
+          <div style="flex:1;height:6px;border-radius:3px;background:var(--clay-border);overflow:hidden;">
+            <div style="width:100%;height:100%;background:var(--error);border-radius:3px;"></div>
+          </div>
+          <span style="font-size:12px;font-weight:700;color:var(--error);">5/5</span>
+        </div>
+
+        <div style="font-size:13px;color:var(--warm-muted);margin-bottom:16px;line-height:1.5;">Upgrade to Pro for <strong>unlimited</strong> scenarios and practice without limits.</div>
+
+        <div style="padding:14px;border-radius:var(--r-xl);background:var(--teal);color:#fff;font-family:'Nunito',sans-serif;font-size:15px;font-weight:700;cursor:pointer;box-shadow:var(--shadow-clay);margin-bottom:8px;">Upgrade to Pro</div>
+        <div style="font-size:13px;color:var(--warm-muted);cursor:pointer;">Resets in 6h 23m</div>
+      </div>
+    </div>
+  </div>
+  <div class="phone-home-bar"><div></div></div>
+</div>
+<span class="phone-label">Quota Upsell</span>
+</div>
+
+</div>
+
+<div style="text-align:center;padding:40px 20px 60px;color:var(--warm-muted);font-size:13px;">
+  Aura Coach AI — Phase 7 Paywall Mockups · Clay Design System · 3 screens
+</div>
+
+</body>
+</html>

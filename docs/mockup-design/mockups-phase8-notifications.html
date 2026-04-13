@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aura Coach AI — Phase 8: Notifications</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700;800&family=Nunito:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --cream: #FFF8F0; --clay-white: #FEFCF9; --clay-beige: #F5EDE3;
+      --clay-border: #E8DFD3; --clay-shadow: #D4C9BB;
+      --warm-dark: #2D3047; --warm-muted: #6B6D7B; --warm-light: #9B9DAB;
+      --teal: #7ECEC5; --purple: #A78BCA; --gold: #E8C77B;
+      --success: #7BC6A0; --error: #D98A8A; --warning: #E8C77B;
+      --shadow-clay: 3px 3px 0px #D4C9BB;
+      --shadow-card: 0 2px 8px rgba(45,48,71,0.04);
+      --shadow-soft: 0 4px 12px rgba(45,48,71,0.06);
+      --r-sm: 8px; --r-md: 12px; --r-lg: 20px; --r-xl: 28px; --r-full: 9999px;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html, body { font-family:'Inter',sans-serif; background:#EEEAE5; min-height:100vh; }
+
+    .page-header { text-align:center; padding:48px 20px 32px; }
+    .page-header h1 { font-family:'Fredoka',sans-serif; font-size:32px; font-weight:800; color:var(--warm-dark); }
+    .page-header p { color:var(--warm-muted); font-size:14px; margin-top:6px; }
+
+    .screens-row {
+      display:flex; gap:32px; padding:0 40px 60px;
+      overflow-x:auto; scroll-snap-type:x mandatory;
+    }
+    .screens-row::-webkit-scrollbar { height:6px; }
+    .screens-row::-webkit-scrollbar-thumb { background:var(--clay-shadow); border-radius:3px; }
+
+    .phone {
+      flex-shrink:0; scroll-snap-align:center;
+      width:375px; height:812px;
+      background:var(--cream); border-radius:44px;
+      border:3px solid var(--clay-border);
+      box-shadow:0 8px 32px rgba(45,48,71,0.08);
+      overflow:hidden; display:flex; flex-direction:column;
+    }
+    .phone-status { height:44px; display:flex; align-items:center; justify-content:space-between; padding:0 24px; font-size:12px; color:var(--warm-muted); font-weight:600; flex-shrink:0; }
+    .phone-content { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+    .phone-home-bar { height:28px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .phone-home-bar div { width:134px; height:5px; background:var(--clay-border); border-radius:3px; }
+    .phone-label { text-align:center; margin-top:12px; font-size:11px; font-weight:700; color:var(--teal); text-transform:uppercase; letter-spacing:0.1em; background:rgba(126,206,197,0.1); padding:4px 14px; border-radius:var(--r-full); display:inline-block; }
+    .phone-wrapper { display:flex; flex-direction:column; align-items:center; }
+
+    .section-title { text-align:center; padding:40px 20px 20px; }
+    .section-title h2 { font-family:'Nunito',sans-serif; font-size:22px; font-weight:700; color:var(--warm-dark); }
+    .section-title p { font-size:13px; color:var(--warm-muted); margin-top:4px; }
+
+    .app-bar { flex-shrink:0; display:flex; align-items:center; padding:0 12px; height:48px; border-bottom:2px solid var(--clay-border); background:var(--cream); gap:8px; }
+    .app-bar .back { width:36px; height:36px; display:flex; align-items:center; justify-content:center; font-size:16px; color:var(--warm-dark); cursor:pointer; border-radius:var(--r-md); }
+    .app-bar .title { flex:1; font-size:16px; font-weight:600; font-family:'Nunito',sans-serif; }
+    .app-bar .actions { display:flex; gap:4px; }
+    .app-bar .action-text { font-size:13px; font-weight:600; color:var(--teal); cursor:pointer; padding:8px 12px; }
+
+    .scroll-area { flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:8px; }
+
+    .section-heading { font-size:13px; font-weight:600; color:var(--warm-muted); margin-bottom:4px; margin-top:8px; }
+
+    /* Notification Card */
+    .notif-card {
+      display:flex; align-items:flex-start; gap:12px;
+      padding:14px; border-radius:var(--r-lg);
+      border:2px solid var(--clay-border);
+      cursor:pointer; transition:all 0.2s ease;
+    }
+    .notif-card:hover { transform:translateY(-1px); box-shadow:var(--shadow-soft); }
+    .notif-card.unread { background:rgba(126,206,197,0.06); }
+    .notif-card.read { background:var(--clay-white); opacity:0.75; }
+    .notif-icon {
+      width:40px; height:40px; border-radius:50%;
+      display:flex; align-items:center; justify-content:center;
+      font-size:20px; flex-shrink:0;
+    }
+    .notif-icon.daily { background:rgba(126,206,197,0.15); }
+    .notif-icon.streak { background:rgba(232,199,123,0.15); }
+    .notif-icon.review { background:rgba(167,139,202,0.15); }
+    .notif-icon.quota { background:rgba(123,198,160,0.15); }
+    .notif-body { flex:1; min-width:0; }
+    .notif-title { font-size:13px; font-weight:700; color:var(--warm-dark); line-height:1.4; }
+    .notif-text { font-size:12px; color:var(--warm-muted); line-height:1.4; margin-top:2px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+    .notif-time { font-size:11px; color:var(--warm-light); flex-shrink:0; white-space:nowrap; margin-top:2px; }
+
+    /* Bottom Nav */
+    .bottom-nav { flex-shrink:0; background:var(--clay-white); border-top:2px solid var(--clay-border); display:flex; justify-content:space-around; align-items:center; padding:8px 0 4px; height:60px; }
+    .nav-item { display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; }
+    .nav-item img { width:24px; height:24px; object-fit:contain; opacity:0.45; }
+    .nav-item.active img { opacity:1; transform:scale(1.15); }
+    .nav-item span { font-size:10px; font-weight:500; color:var(--warm-light); }
+    .nav-item.active span { color:var(--teal); font-weight:700; }
+
+    /* Bell Badge */
+    .bell-badge {
+      position:relative; width:36px; height:36px;
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer; border-radius:var(--r-md);
+    }
+    .bell-badge .badge-dot {
+      position:absolute; top:4px; right:4px;
+      width:16px; height:16px; border-radius:50%;
+      background:var(--error); color:#fff;
+      font-size:10px; font-weight:700;
+      display:flex; align-items:center; justify-content:center;
+      border:2px solid var(--cream);
+      animation:badge-pulse 2s ease-in-out infinite;
+    }
+    @keyframes badge-pulse {
+      0%, 100% { transform:scale(1); }
+      50% { transform:scale(1.1); }
+    }
+
+    /* Toggle */
+    .toggle { width:44px; height:24px; border-radius:12px; position:relative; cursor:pointer; flex-shrink:0; }
+    .toggle.on { background:var(--teal); }
+    .toggle.off { background:var(--clay-border); }
+    .toggle::after { content:''; position:absolute; top:2px; width:20px; height:20px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,0.2); transition:left 0.2s; }
+    .toggle.on::after { left:22px; }
+    .toggle.off::after { left:2px; }
+
+    /* Settings row */
+    .settings-row {
+      display:flex; align-items:center; gap:12px;
+      padding:14px 16px; background:var(--clay-white);
+      border-radius:var(--r-md); border:1.5px solid var(--clay-border);
+    }
+    .settings-row .label { flex:1; }
+    .settings-row .name { font-size:15px; font-weight:600; color:var(--warm-dark); }
+    .settings-row .desc { font-size:12px; color:var(--warm-muted); margin-top:2px; }
+    .settings-row .time-pick { font-size:13px; font-weight:600; color:var(--teal); padding:4px 10px; background:rgba(126,206,197,0.1); border-radius:var(--r-full); margin-right:8px; white-space:nowrap; }
+    .settings-row.disabled { opacity:0.4; pointer-events:none; }
+
+    /* Permission Sheet */
+    .sheet-overlay {
+      position:absolute; inset:0; background:rgba(45,48,71,0.3); z-index:10;
+      display:flex; align-items:flex-end;
+    }
+    .sheet-content {
+      width:100%; background:var(--cream);
+      border-radius:28px 28px 0 0;
+      padding:24px; display:flex; flex-direction:column;
+      align-items:center; gap:16px;
+    }
+    .sheet-handle { width:40px; height:4px; background:var(--clay-border); border-radius:2px; }
+
+    .preview-chip {
+      display:inline-flex; align-items:center; gap:8px;
+      padding:10px 16px; border-radius:var(--r-full);
+      background:var(--clay-beige); font-size:13px; font-weight:600; color:var(--warm-dark);
+    }
+    .preview-chip .emoji { font-size:18px; }
+
+    .btn-primary {
+      width:100%; padding:16px; border:none; border-radius:var(--r-xl);
+      background:var(--teal); color:#fff;
+      font-family:'Nunito',sans-serif; font-size:16px; font-weight:700;
+      cursor:pointer; box-shadow:var(--shadow-clay);
+      transition:all 0.2s ease;
+    }
+    .btn-primary:hover { transform:translateY(-1px); }
+    .btn-skip { background:none; border:none; font-size:13px; color:var(--warm-muted); cursor:pointer; padding:8px; }
+
+    /* Push Notification Preview */
+    .push-preview {
+      position:absolute; top:54px; left:16px; right:16px; z-index:20;
+      background:#fff; border-radius:var(--r-lg);
+      box-shadow:0 8px 32px rgba(45,48,71,0.15);
+      padding:14px 16px; display:flex; gap:12px; align-items:flex-start;
+      animation:slide-down 0.3s ease-out;
+    }
+    @keyframes slide-down {
+      from { transform:translateY(-20px); opacity:0; }
+      to { transform:translateY(0); opacity:1; }
+    }
+    .push-icon {
+      width:36px; height:36px; border-radius:var(--r-sm);
+      overflow:hidden; flex-shrink:0;
+    }
+    .push-icon img { width:100%; height:100%; object-fit:cover; }
+    .push-body { flex:1; min-width:0; }
+    .push-app { font-size:11px; font-weight:600; color:var(--warm-light); text-transform:uppercase; letter-spacing:0.03em; }
+    .push-title { font-size:13px; font-weight:700; color:var(--warm-dark); margin-top:2px; }
+    .push-text { font-size:12px; color:var(--warm-muted); margin-top:2px; line-height:1.4; }
+    .push-time { font-size:11px; color:var(--warm-light); flex-shrink:0; }
+
+    /* Empty state */
+    .empty-state {
+      display:flex; flex-direction:column; align-items:center;
+      justify-content:center; text-align:center;
+      padding:60px 32px; gap:12px;
+    }
+    .empty-icon { font-size:48px; opacity:0.4; }
+    .empty-title { font-size:16px; font-weight:600; color:var(--warm-dark); }
+    .empty-sub { font-size:13px; color:var(--warm-muted); line-height:1.5; }
+
+    /* Float animation */
+    @keyframes float3d {
+      0%, 100% { transform:translateY(0) rotate(0deg); }
+      50% { transform:translateY(-8px) rotate(2deg); }
+    }
+    .float3d { animation:float3d 3s ease-in-out infinite; }
+
+    /* Unread dot for bell */
+    .home-bell { position:relative; }
+  </style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Phase 8 — Notifications</h1>
+  <p>Notification Center, Permission Request, Settings, Push Previews</p>
+</div>
+
+<!-- ═══ SECTION: NOTIFICATION CENTER ═══ -->
+<div class="section-title">
+  <h2>Notification Center</h2>
+  <p>Bell icon entry + Unread/read states + Deep link navigation</p>
+</div>
+<div class="screens-row">
+
+<!-- SCREEN 1: Home with Bell Badge -->
+<div class="phone-wrapper">
+  <div class="phone">
+    <div class="phone-status">
+      <span>9:41</span>
+      <span>⚡ 📶 🔋</span>
+    </div>
+    <div class="phone-content">
+      <div class="app-bar" style="border-bottom:none;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_120,h_120,c_fill,q_90/v1774779556/aura-coach-assets/aura-orbs-icons_1ff981_b7df4e.webp" alt="Orb" style="width:28px;height:28px;object-fit:contain;">
+          <div>
+            <div style="font-size:11px;color:var(--warm-muted);">Good morning</div>
+            <div style="font-size:15px;font-weight:700;font-family:'Nunito',sans-serif;color:var(--warm-dark);">Luu</div>
+          </div>
+        </div>
+        <div style="flex:1;"></div>
+        <div class="bell-badge">
+          <span style="font-size:20px;">🔔</span>
+          <div class="badge-dot">3</div>
+        </div>
+      </div>
+
+      <!-- Simplified home content to show bell in context -->
+      <div style="flex:1;padding:16px;overflow-y:auto;">
+        <div style="font-family:'Fredoka',sans-serif;font-size:22px;font-weight:700;color:var(--warm-dark);margin-bottom:4px;">Today's Practice</div>
+        <div style="font-size:13px;color:var(--warm-muted);margin-bottom:20px;">🔥 7 day streak · 3 lessons today</div>
+
+        <!-- Mode cards preview -->
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div style="padding:20px;background:var(--clay-white);border:2px solid var(--clay-border);border-radius:var(--r-lg);display:flex;align-items:center;gap:14px;">
+            <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_216,h_216,c_fill,q_90/v1774765701/aura-coach-assets/mode-icons/trophy-icon_770c25.webp" alt="Scenario" style="width:52px;height:52px;object-fit:contain;">
+            <div style="flex:1;">
+              <div style="font-size:15px;font-weight:700;color:var(--warm-dark);font-family:'Nunito',sans-serif;">Scenario Coach</div>
+              <div style="font-size:12px;color:var(--warm-muted);margin-top:2px;">3/5 sessions today</div>
+            </div>
+            <span style="font-size:14px;color:var(--warm-light);">›</span>
+          </div>
+          <div style="padding:20px;background:var(--clay-white);border:2px solid var(--clay-border);border-radius:var(--r-lg);display:flex;align-items:center;gap:14px;">
+            <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_216,h_216,c_fill,q_90/v1774779261/aura-coach-assets/mode-icons/national-park-icons_628f11.webp" alt="Story" style="width:52px;height:52px;object-fit:contain;">
+            <div style="flex:1;">
+              <div style="font-size:15px;font-weight:700;color:var(--warm-dark);font-family:'Nunito',sans-serif;">Story Mode</div>
+              <div style="font-size:12px;color:var(--warm-muted);margin-top:2px;">1/3 sessions today</div>
+            </div>
+            <span style="font-size:14px;color:var(--warm-light);">›</span>
+          </div>
+          <div style="padding:20px;background:var(--clay-white);border:2px solid var(--clay-border);border-radius:var(--r-lg);display:flex;align-items:center;gap:14px;">
+            <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_216,h_216,c_fill,q_90/v1774779311/aura-coach-assets/mode-icons/ringed-planet-icons_bbcaa8.webp" alt="Vocab" style="width:52px;height:52px;object-fit:contain;">
+            <div style="flex:1;">
+              <div style="font-size:15px;font-weight:700;color:var(--warm-dark);font-family:'Nunito',sans-serif;">Vocab Hub</div>
+              <div style="font-size:12px;color:var(--warm-muted);margin-top:2px;">12 words saved</div>
+            </div>
+            <span style="font-size:14px;color:var(--warm-light);">›</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bottom-nav">
+        <div class="nav-item active">
+          <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_84,h_84,c_fill,q_85/v1774765585/aura-coach-assets/navigation-bar/home-icon_f164a9.webp" alt="Home">
+          <span>Home</span>
+        </div>
+        <div class="nav-item">
+          <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_84,h_84,c_fill,q_85/v1774765585/aura-coach-assets/navigation-bar/home-icon_f164a9.webp" alt="Profile" style="filter:grayscale(1);">
+          <span>Profile</span>
+        </div>
+        <div class="nav-item">
+          <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_84,h_84,c_fill,q_85/v1774780351/aura-coach-assets/navigation-bar/setting-icon_42d237_cac3a9.webp" alt="Settings">
+          <span>Settings</span>
+        </div>
+      </div>
+    </div>
+    <div class="phone-home-bar"><div></div></div>
+  </div>
+  <span class="phone-label">Home — Bell Badge</span>
+</div>
+
+<!-- SCREEN 2: Notification Center (with items) -->
+<div class="phone-wrapper">
+  <div class="phone">
+    <div class="phone-status">
+      <span>9:41</span>
+      <span>⚡ 📶 🔋</span>
+    </div>
+    <div class="phone-content">
+      <div class="app-bar">
+        <div class="back">‹</div>
+        <div class="title">Notifications</div>
+        <div class="actions">
+          <span class="action-text">Mark all read</span>
+        </div>
+      </div>
+
+      <div class="scroll-area">
+        <!-- New section -->
+        <div class="section-heading">New</div>
+
+        <div class="notif-card unread">
+          <div class="notif-icon streak">🔥</div>
+          <div class="notif-body">
+            <div class="notif-title">Don't lose your streak!</div>
+            <div class="notif-text">You haven't practiced today. Complete one lesson to keep your 7-day streak going!</div>
+          </div>
+          <div class="notif-time">2h ago</div>
+        </div>
+
+        <div class="notif-card unread">
+          <div class="notif-icon review">🃏</div>
+          <div class="notif-body">
+            <div class="notif-title">8 words need your attention</div>
+            <div class="notif-text">You have flashcards due for review. Quick revision keeps knowledge fresh!</div>
+          </div>
+          <div class="notif-time">5h ago</div>
+        </div>
+
+        <div class="notif-card unread">
+          <div class="notif-icon daily">
+            <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_120,h_120,c_fill,q_90/v1774779556/aura-coach-assets/aura-orbs-icons_1ff981_b7df4e.webp" alt="Orb" style="width:24px;height:24px;object-fit:contain;">
+          </div>
+          <div class="notif-body">
+            <div class="notif-title">Time to practice!</div>
+            <div class="notif-text">Your daily English lesson is waiting. Keep your streak alive!</div>
+          </div>
+          <div class="notif-time">8h ago</div>
+        </div>
+
+        <!-- Earlier section -->
+        <div class="section-heading" style="margin-top:16px;">Earlier</div>
+
+        <div class="notif-card read">
+          <div class="notif-icon quota">🔄</div>
+          <div class="notif-body">
+            <div class="notif-title">Quota refreshed!</div>
+            <div class="notif-text">Your daily limits have reset. 5 scenarios, 3 stories, and more — all available again!</div>
+          </div>
+          <div class="notif-time">Yesterday</div>
+        </div>
+
+        <div class="notif-card read">
+          <div class="notif-icon daily">
+            <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_120,h_120,c_fill,q_90/v1774779556/aura-coach-assets/aura-orbs-icons_1ff981_b7df4e.webp" alt="Orb" style="width:24px;height:24px;object-fit:contain;">
+          </div>
+          <div class="notif-body">
+            <div class="notif-title">New day, new lesson!</div>
+            <div class="notif-text">Practice makes perfect. Start a quick scenario today!</div>
+          </div>
+          <div class="notif-time">Yesterday</div>
+        </div>
+
+        <div class="notif-card read">
+          <div class="notif-icon streak">🔥</div>
+          <div class="notif-body">
+            <div class="notif-title">Your 6-day streak is at risk!</div>
+            <div class="notif-text">Just one more lesson to save your streak!</div>
+          </div>
+          <div class="notif-time">2 days ago</div>
+        </div>
+
+        <div class="notif-card read">
+          <div class="notif-icon review">🃏</div>
+          <div class="notif-body">
+            <div class="notif-title">Flashcards ready for review</div>
+            <div class="notif-text">You have 5 cards due for review. Quick revision keeps knowledge fresh!</div>
+          </div>
+          <div class="notif-time">2 days ago</div>
+        </div>
+
+        <div class="notif-card read">
+          <div class="notif-icon daily">
+            <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_120,h_120,c_fill,q_90/v1774779556/aura-coach-assets/aura-orbs-icons_1ff981_b7df4e.webp" alt="Orb" style="width:24px;height:24px;object-fit:contain;">
+          </div>
+          <div class="notif-body">
+            <div class="notif-title">Your English coach is ready!</div>
+            <div class="notif-text">Just 5 minutes can make a difference. Let's go!</div>
+          </div>
+          <div class="notif-time">3 days ago</div>
+        </div>
+      </div>
+    </div>
+    <div class="phone-home-bar"><div></div></div>
+  </div>
+  <span class="phone-label">Notification Center</span>
+</div>
+
+<!-- SCREEN 3: Notification Center (Empty State) -->
+<div class="phone-wrapper">
+  <div class="phone">
+    <div class="phone-status">
+      <span>9:41</span>
+      <span>⚡ 📶 🔋</span>
+    </div>
+    <div class="phone-content">
+      <div class="app-bar">
+        <div class="back">‹</div>
+        <div class="title">Notifications</div>
+      </div>
+
+      <div class="scroll-area" style="justify-content:center;">
+        <div class="empty-state">
+          <div class="empty-icon">🔕</div>
+          <div class="empty-title">No notifications yet</div>
+          <div class="empty-sub">Your learning reminders will<br>appear here</div>
+        </div>
+      </div>
+    </div>
+    <div class="phone-home-bar"><div></div></div>
+  </div>
+  <span class="phone-label">Empty State</span>
+</div>
+
+</div>
+
+<!-- ═══ SECTION: PUSH NOTIFICATION PREVIEWS ═══ -->
+<div class="section-title">
+  <h2>Push Notification Previews</h2>
+  <p>How notifications appear on the device (4 types)</p>
+</div>
+<div class="screens-row">
+
+<!-- SCREEN 4: Daily Reminder Push -->
+<div class="phone-wrapper">
+  <div class="phone">
+    <div class="phone-status">
+      <span>9:00</span>
+      <span>⚡ 📶 🔋</span>
+    </div>
+    <div class="phone-content" style="position:relative;">
+      <!-- Push notification banner -->
+      <div class="push-preview">
+        <div class="push-icon">
+          <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_120,h_120,c_fill,q_90/v1774779556/aura-coach-assets/aura-orbs-icons_1ff981_b7df4e.webp" alt="Aura">
+        </div>
+        <div class="push-body">
+          <div class="push-app">Aura Coach</div>
+          <div class="push-title">Time to practice! ✨</div>
+          <div class="push-text">Your daily English lesson is waiting. Keep your streak alive!</div>
+        </div>
+        <div class="push-time">now</div>
+      </div>
+
+      <!-- Background: home screen (blurred effect) -->
+      <div style="flex:1;padding:16px;padding-top:80px;opacity:0.5;">
+        <div style="font-family:'Fredoka',sans-serif;font-size:22px;font-weight:700;color:var(--warm-dark);margin-bottom:4px;">Today's Practice</div>
+        <div style="font-size:13px;color:var(--warm-muted);margin-bottom:20px;">🔥 7 day streak · 0 lessons today</div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div style="padding:20px;background:var(--clay-white);border:2px solid var(--clay-border);border-radius:var(--r-lg);height:76px;"></div>
+          <div style="padding:20px;background:var(--clay-white);border:2px solid var(--clay-border);border-radius:var(--r-lg);height:76px;"></div>
+          <div style="padding:20px;background:var(--clay-white);border:2px solid var(--clay-border);border-radius:var(--r-lg);height:76px;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="phone-home-bar"><div></div></div>
+  </div>
+  <span class="phone-label">Daily Reminder</span>
+</div>
+
+<!-- SCREEN 5: Streak Warning Push -->
+<div class="phone-wrapper">
+  <div class="phone">
+    <div class="phone-status">
+      <span>20:00</span>
+      <span>⚡ 📶 🔋</span>
+    </div>
+    <div class="phone-content" style="position:relative;">
+      <div class="push-preview" style="border-left:3px solid var(--gold);">
+        <div class="push-icon" style="background:rgba(232,199,123,0.15);border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;">
+          <span style="font-size:22px;">🔥</span>
+        </div>
+        <div class="push-body">
+          <div class="push-app">Aura Coach</div>
+          <div class="push-title">Don't lose your streak! 🔥</div>
+          <div class="push-text">You haven't practiced today. Complete one lesson to keep your 7-day streak going!</div>
+        </div>
+        <div class="push-time">now</div>
+      </div>
+
+      <div style="flex:1;padding:16px;padding-top:80px;opacity:0.5;">
+        <div style="font-family:'Fredoka',sans-serif;font-size:22px;font-weight:700;color:var(--warm-dark);margin-bottom:4px;">Today's Practice</div>
+        <div style="font-size:13px;color:var(--warm-muted);margin-bottom:20px;">🔥 7 day streak · 0 lessons today</div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div style="padding:20px;background:var(--clay-white);border:2px solid var(--clay-border);border-radius:var(--r-lg);height:76px;"></div>
+          <div style="padding:20px;background:var(--clay-white);border:2px solid var(--clay-border);border-radius:var(--r-lg);height:76px;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="phone-home-bar"><div></div></div>
+  </div>
+  <span class="phone-label">Streak Warning</span>
+</div>
+
+<!-- SCREEN 6: Review Due Push -->
+<div class="phone-wrapper">
+  <div class="phone">
+    <div class="phone-status">
+      <span>10:00</span>
+      <span>⚡ 📶 🔋</span>
+    </div>
+    <div class="phone-content" style="position:relative;">
+      <div class="push-preview">
+        <div class="push-icon" style="background:rgba(167,139,202,0.15);border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;">
+          <span style="font-size:22px;">🃏</span>
+        </div>
+        <div class="push-body">
+          <div class="push-app">Aura Coach</div>
+          <div class="push-title">8 words need your attention</div>
+          <div class="push-text">You have flashcards due for review. Quick revision keeps knowledge fresh!</div>
+        </div>
+        <div class="push-time">now</div>
+      </div>
+
+      <div style="flex:1;padding:16px;padding-top:80px;opacity:0.5;">
+        <div style="font-family:'Fredoka',sans-serif;font-size:22px;font-weight:700;color:var(--warm-dark);margin-bottom:4px;">Today's Practice</div>
+        <div style="font-size:13px;color:var(--warm-muted);margin-bottom:20px;">🔥 8 day streak · 2 lessons today</div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div style="padding:20px;background:var(--clay-white);border:2px solid var(--clay-border);border-radius:var(--r-lg);height:76px;"></div>
+          <div style="padding:20px;background:var(--clay-white);border:2px solid var(--clay-border);border-radius:var(--r-lg);height:76px;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="phone-home-bar"><div></div></div>
+  </div>
+  <span class="phone-label">Review Due</span>
+</div>
+
+<!-- SCREEN 7: Quota Reset Push -->
+<div class="phone-wrapper">
+  <div class="phone">
+    <div class="phone-status">
+      <span>0:05</span>
+      <span>⚡ 📶 🔋</span>
+    </div>
+    <div class="phone-content" style="position:relative;">
+      <div class="push-preview">
+        <div class="push-icon" style="background:rgba(123,198,160,0.15);border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;">
+          <span style="font-size:22px;">🔄</span>
+        </div>
+        <div class="push-body">
+          <div class="push-app">Aura Coach</div>
+          <div class="push-title">Quota refreshed!</div>
+          <div class="push-text">Your daily limits have reset. Start a new lesson now!</div>
+        </div>
+        <div class="push-time">now</div>
+      </div>
+
+      <div style="flex:1;padding:16px;padding-top:80px;opacity:0.5;">
+        <div style="font-family:'Fredoka',sans-serif;font-size:22px;font-weight:700;color:var(--warm-dark);margin-bottom:4px;">Today's Practice</div>
+        <div style="font-size:13px;color:var(--warm-muted);margin-bottom:20px;">🔥 8 day streak · 0 lessons today</div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div style="padding:20px;background:var(--clay-white);border:2px solid var(--clay-border);border-radius:var(--r-lg);height:76px;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="phone-home-bar"><div></div></div>
+  </div>
+  <span class="phone-label">Quota Reset</span>
+</div>
+
+</div>
+
+<!-- ═══ SECTION: NOTIFICATION PERMISSION ═══ -->
+<div class="section-title">
+  <h2>Notification Permission</h2>
+  <p>Onboarding step 6 — Bottom sheet requesting push notification access</p>
+</div>
+<div class="screens-row">
+
+<!-- SCREEN 8: Permission Request (Onboarding) -->
+<div class="phone-wrapper">
+  <div class="phone">
+    <div class="phone-status">
+      <span>9:41</span>
+      <span>⚡ 📶 🔋</span>
+    </div>
+    <div class="phone-content" style="position:relative;">
+      <!-- Background: last onboarding step (topic selection) faded -->
+      <div style="flex:1;padding:24px 24px 0;opacity:0.3;">
+        <div style="text-align:center;margin-bottom:16px;">
+          <div style="display:flex;justify-content:center;gap:6px;margin-bottom:24px;">
+            <div style="width:8px;height:8px;border-radius:50%;background:var(--teal);"></div>
+            <div style="width:8px;height:8px;border-radius:50%;background:var(--teal);"></div>
+            <div style="width:8px;height:8px;border-radius:50%;background:var(--teal);"></div>
+            <div style="width:8px;height:8px;border-radius:50%;background:var(--teal);"></div>
+            <div style="width:8px;height:8px;border-radius:50%;background:var(--teal);"></div>
+          </div>
+          <div style="font-family:'Fredoka',sans-serif;font-size:22px;font-weight:700;color:var(--warm-dark);">What interests you?</div>
+        </div>
+      </div>
+
+      <!-- Bottom sheet overlay -->
+      <div class="sheet-overlay">
+        <div class="sheet-content">
+          <div class="sheet-handle"></div>
+          <div style="font-size:48px;" class="float3d">🔔</div>
+          <div style="font-family:'Fredoka',sans-serif;font-size:22px;font-weight:700;color:var(--warm-dark);text-align:center;">Stay on track</div>
+          <div style="font-size:14px;color:var(--warm-muted);text-align:center;line-height:1.6;max-width:280px;">Get gentle reminders to practice daily and keep your streak alive</div>
+
+          <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;">
+            <div class="preview-chip"><span class="emoji">⏰</span> Daily reminder</div>
+            <div class="preview-chip"><span class="emoji">🔥</span> Streak alerts</div>
+            <div class="preview-chip"><span class="emoji">🃏</span> Review reminders</div>
+          </div>
+
+          <button class="btn-primary">Enable Notifications</button>
+          <button class="btn-skip">Maybe later</button>
+        </div>
+      </div>
+    </div>
+    <div class="phone-home-bar"><div></div></div>
+  </div>
+  <span class="phone-label">Permission Request</span>
+</div>
+
+<!-- SCREEN 9: iOS System Permission Dialog -->
+<div class="phone-wrapper">
+  <div class="phone">
+    <div class="phone-status">
+      <span>9:41</span>
+      <span>⚡ 📶 🔋</span>
+    </div>
+    <div class="phone-content" style="position:relative;align-items:center;justify-content:center;">
+      <!-- Background dimmed -->
+      <div style="position:absolute;inset:0;background:rgba(0,0,0,0.4);"></div>
+
+      <!-- System dialog -->
+      <div style="position:relative;z-index:5;width:280px;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,0.2);">
+        <div style="padding:24px 20px 16px;text-align:center;">
+          <div style="font-size:17px;font-weight:600;color:#000;margin-bottom:6px;">"Aura Coach" Would Like to Send You Notifications</div>
+          <div style="font-size:13px;color:#666;line-height:1.4;">Notifications may include alerts, sounds, and icon badges. These can be configured in Settings.</div>
+        </div>
+        <div style="border-top:1px solid #e5e5e5;display:flex;">
+          <div style="flex:1;padding:12px;text-align:center;font-size:17px;color:#007AFF;cursor:pointer;border-right:1px solid #e5e5e5;">Don't Allow</div>
+          <div style="flex:1;padding:12px;text-align:center;font-size:17px;font-weight:600;color:#007AFF;cursor:pointer;">Allow</div>
+        </div>
+      </div>
+    </div>
+    <div class="phone-home-bar"><div></div></div>
+  </div>
+  <span class="phone-label">iOS System Dialog</span>
+</div>
+
+</div>
+
+<!-- ═══ SECTION: NOTIFICATION SETTINGS ═══ -->
+<div class="section-title">
+  <h2>Notification Settings</h2>
+  <p>Integrated into Settings screen — Master toggle + per-type controls with time pickers</p>
+</div>
+<div class="screens-row">
+
+<!-- SCREEN 10: Settings — Notifications Enabled -->
+<div class="phone-wrapper">
+  <div class="phone">
+    <div class="phone-status">
+      <span>9:41</span>
+      <span>⚡ 📶 🔋</span>
+    </div>
+    <div class="phone-content">
+      <div class="app-bar">
+        <div class="back">‹</div>
+        <div class="title">Settings</div>
+      </div>
+
+      <div class="scroll-area" style="gap:6px;">
+        <!-- General section (existing) -->
+        <div class="section-heading">General</div>
+        <div class="settings-row">
+          <div class="label">
+            <div class="name">Language</div>
+            <div class="desc">App language</div>
+          </div>
+          <span style="font-size:13px;color:var(--warm-muted);">English</span>
+          <span style="font-size:14px;color:var(--warm-light);">›</span>
+        </div>
+        <div class="settings-row">
+          <div class="label">
+            <div class="name">Sound</div>
+            <div class="desc">UI sounds & haptics</div>
+          </div>
+          <div class="toggle on"></div>
+        </div>
+
+        <!-- Notification section (NEW) -->
+        <div class="section-heading" style="margin-top:12px;">Notifications</div>
+
+        <div class="settings-row">
+          <div class="label">
+            <div class="name">Push Notifications</div>
+            <div class="desc">Enable all learning reminders</div>
+          </div>
+          <div class="toggle on"></div>
+        </div>
+
+        <div class="settings-row">
+          <div class="label">
+            <div class="name">Daily Reminder</div>
+            <div class="desc">Remind me to practice</div>
+          </div>
+          <span class="time-pick">9:00 AM</span>
+          <div class="toggle on"></div>
+        </div>
+
+        <div class="settings-row">
+          <div class="label">
+            <div class="name">Streak Warning</div>
+            <div class="desc">Alert before losing streak</div>
+          </div>
+          <span class="time-pick">8:00 PM</span>
+          <div class="toggle on"></div>
+        </div>
+
+        <div class="settings-row">
+          <div class="label">
+            <div class="name">Review Reminder</div>
+            <div class="desc">Flashcards due for review</div>
+          </div>
+          <span class="time-pick">10:00 AM</span>
+          <div class="toggle on"></div>
+        </div>
+
+        <div class="settings-row">
+          <div class="label">
+            <div class="name">Quota Reset</div>
+            <div class="desc">Notify when daily limits refresh</div>
+          </div>
+          <div class="toggle on"></div>
+        </div>
+
+        <!-- Learning section (existing) -->
+        <div class="section-heading" style="margin-top:12px;">Learning</div>
+        <div class="settings-row">
+          <div class="label">
+            <div class="name">Difficulty</div>
+            <div class="desc">Current level</div>
+          </div>
+          <span style="font-size:13px;color:var(--warm-muted);">Intermediate</span>
+          <span style="font-size:14px;color:var(--warm-light);">›</span>
+        </div>
+      </div>
+
+      <div class="bottom-nav">
+        <div class="nav-item">
+          <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_84,h_84,c_fill,q_85/v1774765585/aura-coach-assets/navigation-bar/home-icon_f164a9.webp" alt="Home">
+          <span>Home</span>
+        </div>
+        <div class="nav-item">
+          <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_84,h_84,c_fill,q_85/v1774765585/aura-coach-assets/navigation-bar/home-icon_f164a9.webp" alt="Profile" style="filter:grayscale(1);">
+          <span>Profile</span>
+        </div>
+        <div class="nav-item active">
+          <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_84,h_84,c_fill,q_85/v1774780351/aura-coach-assets/navigation-bar/setting-icon_42d237_cac3a9.webp" alt="Settings">
+          <span>Settings</span>
+        </div>
+      </div>
+    </div>
+    <div class="phone-home-bar"><div></div></div>
+  </div>
+  <span class="phone-label">Settings — All Enabled</span>
+</div>
+
+<!-- SCREEN 11: Settings — Master Toggle OFF -->
+<div class="phone-wrapper">
+  <div class="phone">
+    <div class="phone-status">
+      <span>9:41</span>
+      <span>⚡ 📶 🔋</span>
+    </div>
+    <div class="phone-content">
+      <div class="app-bar">
+        <div class="back">‹</div>
+        <div class="title">Settings</div>
+      </div>
+
+      <div class="scroll-area" style="gap:6px;">
+        <div class="section-heading">General</div>
+        <div class="settings-row">
+          <div class="label">
+            <div class="name">Language</div>
+            <div class="desc">App language</div>
+          </div>
+          <span style="font-size:13px;color:var(--warm-muted);">English</span>
+          <span style="font-size:14px;color:var(--warm-light);">›</span>
+        </div>
+        <div class="settings-row">
+          <div class="label">
+            <div class="name">Sound</div>
+            <div class="desc">UI sounds & haptics</div>
+          </div>
+          <div class="toggle on"></div>
+        </div>
+
+        <div class="section-heading" style="margin-top:12px;">Notifications</div>
+
+        <div class="settings-row">
+          <div class="label">
+            <div class="name">Push Notifications</div>
+            <div class="desc">Enable all learning reminders</div>
+          </div>
+          <div class="toggle off"></div>
+        </div>
+
+        <!-- All sub-toggles disabled -->
+        <div class="settings-row disabled">
+          <div class="label">
+            <div class="name">Daily Reminder</div>
+            <div class="desc">Remind me to practice</div>
+          </div>
+          <span class="time-pick" style="opacity:0.4;">9:00 AM</span>
+          <div class="toggle off"></div>
+        </div>
+
+        <div class="settings-row disabled">
+          <div class="label">
+            <div class="name">Streak Warning</div>
+            <div class="desc">Alert before losing streak</div>
+          </div>
+          <span class="time-pick" style="opacity:0.4;">8:00 PM</span>
+          <div class="toggle off"></div>
+        </div>
+
+        <div class="settings-row disabled">
+          <div class="label">
+            <div class="name">Review Reminder</div>
+            <div class="desc">Flashcards due for review</div>
+          </div>
+          <span class="time-pick" style="opacity:0.4;">10:00 AM</span>
+          <div class="toggle off"></div>
+        </div>
+
+        <div class="settings-row disabled">
+          <div class="label">
+            <div class="name">Quota Reset</div>
+            <div class="desc">Notify when daily limits refresh</div>
+          </div>
+          <div class="toggle off"></div>
+        </div>
+
+        <div class="section-heading" style="margin-top:12px;">Learning</div>
+        <div class="settings-row">
+          <div class="label">
+            <div class="name">Difficulty</div>
+            <div class="desc">Current level</div>
+          </div>
+          <span style="font-size:13px;color:var(--warm-muted);">Intermediate</span>
+          <span style="font-size:14px;color:var(--warm-light);">›</span>
+        </div>
+      </div>
+
+      <div class="bottom-nav">
+        <div class="nav-item">
+          <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_84,h_84,c_fill,q_85/v1774765585/aura-coach-assets/navigation-bar/home-icon_f164a9.webp" alt="Home">
+          <span>Home</span>
+        </div>
+        <div class="nav-item">
+          <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_84,h_84,c_fill,q_85/v1774765585/aura-coach-assets/navigation-bar/home-icon_f164a9.webp" alt="Profile" style="filter:grayscale(1);">
+          <span>Profile</span>
+        </div>
+        <div class="nav-item active">
+          <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_84,h_84,c_fill,q_85/v1774780351/aura-coach-assets/navigation-bar/setting-icon_42d237_cac3a9.webp" alt="Settings">
+          <span>Settings</span>
+        </div>
+      </div>
+    </div>
+    <div class="phone-home-bar"><div></div></div>
+  </div>
+  <span class="phone-label">Settings — Master OFF</span>
+</div>
+
+<!-- SCREEN 12: Time Picker Modal -->
+<div class="phone-wrapper">
+  <div class="phone">
+    <div class="phone-status">
+      <span>9:41</span>
+      <span>⚡ 📶 🔋</span>
+    </div>
+    <div class="phone-content" style="position:relative;">
+      <!-- Background settings (dimmed) -->
+      <div style="flex:1;opacity:0.3;padding:16px;">
+        <div style="height:48px;display:flex;align-items:center;font-family:'Nunito',sans-serif;font-size:16px;font-weight:600;color:var(--warm-dark);">Settings</div>
+      </div>
+
+      <!-- Time picker sheet -->
+      <div class="sheet-overlay">
+        <div class="sheet-content" style="padding-bottom:32px;">
+          <div class="sheet-handle"></div>
+          <div style="font-family:'Nunito',sans-serif;font-size:18px;font-weight:700;color:var(--warm-dark);margin-bottom:4px;">Daily Reminder Time</div>
+          <div style="font-size:13px;color:var(--warm-muted);margin-bottom:16px;">Choose when to receive your daily reminder</div>
+
+          <!-- Time picker wheel mockup -->
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:24px;">
+            <div style="width:80px;height:160px;position:relative;overflow:hidden;border-radius:var(--r-md);background:var(--clay-beige);">
+              <div style="position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);height:40px;background:rgba(126,206,197,0.15);border-top:2px solid var(--teal);border-bottom:2px solid var(--teal);"></div>
+              <div style="display:flex;flex-direction:column;align-items:center;padding-top:40px;">
+                <div style="height:40px;display:flex;align-items:center;font-size:20px;color:var(--warm-light);">07</div>
+                <div style="height:40px;display:flex;align-items:center;font-size:20px;color:var(--warm-light);">08</div>
+                <div style="height:40px;display:flex;align-items:center;font-size:22px;font-weight:700;color:var(--warm-dark);">09</div>
+                <div style="height:40px;display:flex;align-items:center;font-size:20px;color:var(--warm-light);">10</div>
+                <div style="height:40px;display:flex;align-items:center;font-size:20px;color:var(--warm-light);">11</div>
+              </div>
+            </div>
+            <span style="font-size:24px;font-weight:700;color:var(--warm-dark);">:</span>
+            <div style="width:80px;height:160px;position:relative;overflow:hidden;border-radius:var(--r-md);background:var(--clay-beige);">
+              <div style="position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);height:40px;background:rgba(126,206,197,0.15);border-top:2px solid var(--teal);border-bottom:2px solid var(--teal);"></div>
+              <div style="display:flex;flex-direction:column;align-items:center;padding-top:40px;">
+                <div style="height:40px;display:flex;align-items:center;font-size:20px;color:var(--warm-light);">45</div>
+                <div style="height:40px;display:flex;align-items:center;font-size:20px;color:var(--warm-light);">50</div>
+                <div style="height:40px;display:flex;align-items:center;font-size:22px;font-weight:700;color:var(--warm-dark);">00</div>
+                <div style="height:40px;display:flex;align-items:center;font-size:20px;color:var(--warm-light);">05</div>
+                <div style="height:40px;display:flex;align-items:center;font-size:20px;color:var(--warm-light);">10</div>
+              </div>
+            </div>
+            <div style="width:64px;height:160px;position:relative;overflow:hidden;border-radius:var(--r-md);background:var(--clay-beige);">
+              <div style="position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);height:40px;background:rgba(126,206,197,0.15);border-top:2px solid var(--teal);border-bottom:2px solid var(--teal);"></div>
+              <div style="display:flex;flex-direction:column;align-items:center;padding-top:60px;">
+                <div style="height:40px;display:flex;align-items:center;font-size:22px;font-weight:700;color:var(--warm-dark);">AM</div>
+                <div style="height:40px;display:flex;align-items:center;font-size:20px;color:var(--warm-light);">PM</div>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn-primary">Save</button>
+        </div>
+      </div>
+    </div>
+    <div class="phone-home-bar"><div></div></div>
+  </div>
+  <span class="phone-label">Time Picker</span>
+</div>
+
+</div>
+
+<div style="text-align:center;padding:40px 20px 60px;color:var(--warm-muted);font-size:13px;">
+  Aura Coach AI — Phase 8 Notification Mockups · Clay Design System · 12 screens
+</div>
+
+</body>
+</html>
