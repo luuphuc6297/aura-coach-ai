@@ -5,8 +5,8 @@ class ApiConstants {
 
   static String get geminiApiKey => dotenv.env['GEMINI_API_KEY'] ?? '';
 
-  static const modelFlash = 'gemini-2.0-flash';
-  static const modelPro = 'gemini-2.0-pro';
+  static const modelFlash = 'gemini-2.5-flash';
+  static const modelPro = 'gemini-2.5-pro';
 
   static const temperature = 0.7;
   static const topP = 0.95;
