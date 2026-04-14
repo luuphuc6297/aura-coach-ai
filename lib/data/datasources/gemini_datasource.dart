@@ -1,6 +1,14 @@
 import 'dart:convert';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import '../../core/constants/api_constants.dart';
+import '../prompts/prompt_constants.dart';
+import '../prompts/scenario_prompts.dart';
+import '../prompts/story_prompts.dart';
+import '../prompts/tone_prompts.dart';
+import '../prompts/vocab_prompts.dart';
+import '../prompts/mindmap_prompts.dart';
+import '../prompts/quiz_prompts.dart';
+import '../prompts/video_prompt.dart';
 
 class GeminiDatasource {
   late final GenerativeModel _model;
@@ -18,125 +26,217 @@ class GeminiDatasource {
     );
   }
 
-  /// Generate a scenario lesson context + AI opening line.
-  /// Returns raw JSON string for the caller to parse.
-  Future<String> generateScenarioLesson(String topic, String proficiency) async {
-    final prompt = '''
-You are an English conversation coach. Generate a realistic scenario for practicing English.
-
-Topic: $topic
-Proficiency Level: $proficiency
-
-Create a scenario that:
-1. Is realistic and relatable
-2. Matches the proficiency level (beginner = simple vocab, advanced = complex idioms)
-3. Includes context (location, time, who you're talking to)
-4. Starts with an opening line from the AI (role-player)
-5. Includes a Vietnamese sentence for the student to translate to English
-
-Format your response as JSON:
-{
-  "scenarioContext": "You are at a hotel reception desk...",
-  "vietnameseSentence": "Xin chào, tôi muốn đặt phòng...",
-  "englishTranslation": "Hello, I would like to book a room...",
-  "openingLine": "Welcome to the Grand Hotel! How can I help you today?",
-  "vocabularyPrep": ["check-in", "reservation", "room type"],
-  "hints": [
-    "Start with a polite greeting",
-    "Specify what you need clearly",
-    "Mention relevant details like dates or preferences"
-  ],
-  "difficulty": "$proficiency"
-}
-''';
-
+  Future<String> _run(String prompt) async {
     final response = await _model.generateContent([Content.text(prompt)]);
-    return response.text ?? '{}';
+    return response.text ?? '';
   }
 
-  /// Evaluate user's roleplay response. Returns JSON string for AssessmentResult parsing.
-  Future<String> evaluateUserResponse({
-    required String userText,
-    required String scenarioContext,
-    required String vietnameseSentence,
-    required String proficiencyLevel,
+  // ------------------- Scenario Coach -------------------
+
+  /// Generate the next micro-scenario. Returns a [NextLessonResult] wrapping
+  /// the raw JSON along with the topic and sentence type the prompt enforced.
+  Future<NextLessonResult> generateNextLesson({
+    required CefrLevel userLevel,
+    required List<String> userTopics,
+    required List<String> previousTitles,
+  }) async {
+    final built = buildGenerateNextLessonPrompt(
+      userLevel: userLevel,
+      userTopics: userTopics,
+      previousTitles: previousTitles,
+    );
+    final raw = await _run(built.prompt);
+    return NextLessonResult(
+      rawJson: raw.isEmpty ? '{}' : raw,
+      chosenTopic: built.chosenTopic,
+      chosenSentenceType: built.chosenSentenceType,
+    );
+  }
+
+  /// Evaluate the user's translation response.
+  Future<String> evaluateResponse({
+    required String userInput,
+    required String sourcePhrase,
+    required String situation,
+    required CefrLevel targetLevel,
     required String direction,
   }) async {
-    final prompt = '''
-You are an English conversation coach evaluating a student's translation/response.
-
-Student's Response: "$userText"
-Original Sentence: "$vietnameseSentence"
-Translation Direction: $direction
-Scenario Context: $scenarioContext
-Proficiency Level: $proficiencyLevel
-
-Evaluate and return JSON (no markdown, pure JSON only):
-{
-  "score": 8,
-  "accuracyScore": 9,
-  "naturalnessScore": 8,
-  "complexityScore": 7,
-  "feedback": "Good translation! Your response captures the main idea clearly.",
-  "correction": "Corrected version if needed, or null",
-  "betterAlternative": "A more natural way to say it",
-  "analysis": "Overall analysis of the response",
-  "grammarAnalysis": "Grammar-specific feedback",
-  "vocabularyAnalysis": "Vocabulary usage feedback",
-  "improvements": [
-    {
-      "original": "what user said",
-      "suggestion": "better version",
-      "explanation": "why this is better"
-    }
-  ],
-  "userTone": "Neutral",
-  "alternativeTones": {
-    "formal": {"text": "Formal version of the response", "color": "#6366F1"},
-    "friendly": {"text": "Friendly version", "color": "#9A7B3D"},
-    "informal": {"text": "Informal/casual version", "color": "#D98A8A"},
-    "conversational": {"text": "Conversational version", "color": "#7BC6A0"}
-  }
-}
-
-Score scale: 1-10 for each metric.
-Respond with ONLY the JSON object, no extra text.
-''';
-
-    final response = await _model.generateContent([Content.text(prompt)]);
-    return response.text ?? '{}';
+    final prompt = buildEvaluateResponsePrompt(
+      userInput: userInput,
+      sourcePhrase: sourcePhrase,
+      situation: situation,
+      targetLevel: targetLevel,
+      direction: direction,
+    );
+    final raw = await _run(prompt);
+    return raw.isEmpty ? '{}' : raw;
   }
 
-  /// Generate progressive hints for a scenario.
+  /// Generate structured progressive hints for a scenario.
   Future<String> generateProgressiveHints({
-    required String scenarioContext,
-    required String vietnameseSentence,
-    required int hintLevel,
+    required String situation,
+    required String vietnamesePhrase,
+    required CefrLevel targetLevel,
   }) async {
-    final prompt = '''
-You are helping a student who is struggling with translating a sentence.
-
-Scenario: $scenarioContext
-Sentence to translate: "$vietnameseSentence"
-Hint Level: $hintLevel (1=vocab hint, 2=structure hint, 3=full example)
-
-Generate 3 progressive hints:
-1. Vocabulary hint: Key words to use
-2. Structure hint: Sentence pattern "I want to [verb]..."
-3. Full example: A complete sentence they can adapt
-
-Return JSON only:
-{
-  "hints": ["hint 1", "hint 2", "hint 3"]
-}
-''';
-
-    final response = await _model.generateContent([Content.text(prompt)]);
-    return response.text ?? '{"hints": []}';
+    final prompt = buildProgressiveHintsPrompt(
+      situation: situation,
+      vietnamesePhrase: vietnamesePhrase,
+      targetLevel: targetLevel,
+    );
+    final raw = await _run(prompt);
+    return raw.isEmpty ? '{"hints":{}}' : raw;
   }
+
+  // ------------------- Story Mode -------------------
+
+  Future<String> generateStoryScenario({
+    required CefrLevel level,
+    required String topic,
+    required List<String> previousTitles,
+    String? customContext,
+  }) async {
+    final prompt = buildStoryScenarioPrompt(
+      level: level,
+      topic: topic,
+      previousTitles: previousTitles,
+      customContext: customContext,
+    );
+    return _run(prompt).then((v) => v.isEmpty ? '{}' : v);
+  }
+
+  Future<String> generateStoryTurn({
+    required String situation,
+    required String agentName,
+    required String agentLastMessage,
+    required String userReply,
+    required CefrLevel targetLevel,
+  }) async {
+    final prompt = buildStoryTurnPrompt(
+      situation: situation,
+      agentName: agentName,
+      agentLastMessage: agentLastMessage,
+      userReply: userReply,
+      targetLevel: targetLevel,
+    );
+    return _run(prompt).then((v) => v.isEmpty ? '{}' : v);
+  }
+
+  // ------------------- Tone Mode -------------------
+
+  Future<String> generateToneTranslations(String text) async {
+    final prompt = buildToneTranslationPrompt(text);
+    return _run(prompt).then((v) => v.isEmpty ? '{}' : v);
+  }
+
+  // ------------------- Vocab / Dictionary -------------------
+
+  Future<String> lookupDictionary({
+    required String phrase,
+    required String context,
+  }) async {
+    final prompt = buildDictionaryPrompt(phrase: phrase, context: context);
+    return _run(prompt).then((v) => v.isEmpty ? '{}' : v);
+  }
+
+  Future<String> analyzeWord({required String word, String? context}) async {
+    final prompt = buildWordAnalysisPrompt(word: word, context: context);
+    return _run(prompt).then((v) => v.isEmpty ? '{}' : v);
+  }
+
+  // ------------------- Mind Map -------------------
+
+  Future<String> generateMindMapRoot({
+    required String topic,
+    required CefrLevel level,
+  }) async {
+    final prompt = buildMindMapRootPrompt(topic: topic, level: level);
+    return _run(prompt).then((v) => v.isEmpty ? '{}' : v);
+  }
+
+  Future<String> expandMindMapNode({
+    required String nodeLabel,
+    required String rootTopic,
+    required CefrLevel level,
+  }) async {
+    final prompt = buildMindMapExpandPrompt(
+      nodeLabel: nodeLabel,
+      rootTopic: rootTopic,
+      level: level,
+    );
+    return _run(prompt).then((v) => v.isEmpty ? '[]' : v);
+  }
+
+  Future<String> checkCustomMindMapNode({
+    required String customWord,
+    required List<Map<String, String>> existingNodes,
+  }) async {
+    final prompt = buildCustomNodePrompt(
+      customWord: customWord,
+      existingNodes: existingNodes,
+    );
+    return _run(prompt).then((v) => v.isEmpty ? '{}' : v);
+  }
+
+  // ------------------- Quiz -------------------
+
+  Future<String> evaluateQuizAnswer({
+    required String itemOriginal,
+    required String itemCorrection,
+    required String itemType,
+    required String itemContext,
+    required String userAnswer,
+  }) async {
+    final prompt = buildQuizEvaluationPrompt(
+      itemOriginal: itemOriginal,
+      itemCorrection: itemCorrection,
+      itemType: itemType,
+      itemContext: itemContext,
+      userAnswer: userAnswer,
+    );
+    return _run(prompt).then((v) => v.isEmpty ? '{}' : v);
+  }
+
+  Future<String> generateQuizExercises(
+      List<Map<String, String>> vocabList) async {
+    final prompt = buildExercisesPrompt(vocabList);
+    return _run(prompt).then((v) => v.isEmpty ? '{"exercises":[]}' : v);
+  }
+
+  // ------------------- Video -------------------
+
+  Future<String> buildVideoGenerationPrompt({
+    required String situation,
+    required String phrase,
+  }) async {
+    // This builder produces a prompt string to pass to a downstream video
+    // generator; no Gemini round-trip is needed here.
+    return buildVideoPrompt(situation: situation, phrase: phrase);
+  }
+
+  // ------------------- Parsing helpers -------------------
 
   /// Parse JSON from Gemini response, handling markdown code blocks.
   static Map<String, dynamic> parseJson(String text) {
+    final cleaned = _stripFences(text);
+    try {
+      return jsonDecode(cleaned) as Map<String, dynamic>;
+    } catch (_) {
+      return {};
+    }
+  }
+
+  /// Parse a JSON array response (used by mindmap expansion).
+  static List<dynamic> parseJsonArray(String text) {
+    final cleaned = _stripFences(text);
+    try {
+      final decoded = jsonDecode(cleaned);
+      return decoded is List ? decoded : [];
+    } catch (_) {
+      return [];
+    }
+  }
+
+  static String _stripFences(String text) {
     var cleaned = text.trim();
     if (cleaned.startsWith('```json')) {
       cleaned = cleaned.substring(7);
@@ -146,11 +246,21 @@ Return JSON only:
     if (cleaned.endsWith('```')) {
       cleaned = cleaned.substring(0, cleaned.length - 3);
     }
-    cleaned = cleaned.trim();
-    try {
-      return jsonDecode(cleaned) as Map<String, dynamic>;
-    } catch (_) {
-      return {};
-    }
+    return cleaned.trim();
   }
+}
+
+/// Wrapper returned by [GeminiDatasource.generateNextLesson] so the caller
+/// can persist the topic and sentence type the prompt enforced alongside the
+/// generated scenario.
+class NextLessonResult {
+  final String rawJson;
+  final String chosenTopic;
+  final String chosenSentenceType;
+
+  const NextLessonResult({
+    required this.rawJson,
+    required this.chosenTopic,
+    required this.chosenSentenceType,
+  });
 }

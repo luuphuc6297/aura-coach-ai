@@ -7,6 +7,7 @@ import '../../../core/constants/api_constants.dart';
 import '../../../data/datasources/gemini_datasource.dart';
 import '../../../data/datasources/firebase_datasource.dart';
 import '../../../data/datasources/local_datasource.dart';
+import '../../../data/prompts/prompt_constants.dart';
 import '../../../core/constants/quota_constants.dart';
 import '../models/scenario.dart';
 import '../models/chat_message.dart';
@@ -51,6 +52,7 @@ class ScenarioProvider extends ChangeNotifier {
   String? _error;
   List<String> _userTopics = [];
   String _userLevel = '';
+  final List<String> _recentTitles = [];
 
   // Quota state
   Map<String, int> _dailyUsage = {};
@@ -148,26 +150,50 @@ class ScenarioProvider extends ChangeNotifier {
     try {
       final selectedTopic = topic ?? (_userTopics..shuffle()).first;
       final selectedDifficulty = difficulty ?? _userLevel;
+      final cefrLevel = CefrLevel.fromProficiencyId(selectedDifficulty);
 
       Scenario? scenario;
 
       if (_isGeminiKeyConfigured()) {
         try {
-          final rawJson = await _gemini
-              .generateScenarioLesson(selectedTopic, selectedDifficulty)
+          final result = await _gemini
+              .generateNextLesson(
+                userLevel: cefrLevel,
+                userTopics:
+                    topic != null ? [topic] : _userTopics,
+                previousTitles: _recentTitles,
+              )
               .timeout(_kGeminiTimeout);
-          final json = GeminiDatasource.parseJson(rawJson);
-          if (json.isNotEmpty && json['vietnameseSentence'] != null) {
+          final json = GeminiDatasource.parseJson(result.rawJson);
+          final vietnamesePhrase = (json['vietnamesePhrase'] ??
+              json['vietnameseSentence']) as String?;
+          if (json.isNotEmpty && vietnamesePhrase != null) {
+            final hintsJson = json['hints'] is Map<String, dynamic>
+                ? json['hints'] as Map<String, dynamic>
+                : null;
+            final title = (json['title'] as String?) ?? '';
             scenario = Scenario(
               id: _uuid.v4(),
-              topic: selectedTopic,
-              vietnameseSentence: json['vietnameseSentence'] as String,
-              englishTranslation: json['englishTranslation'] as String? ?? '',
-              context: json['scenarioContext'] as String? ?? selectedTopic,
-              difficulty: json['difficulty'] as String? ?? selectedDifficulty,
-              hints: List<String>.from(json['hints'] ?? []),
+              topic: (json['topic'] as String?) ?? result.chosenTopic,
+              vietnameseSentence: vietnamesePhrase,
+              englishTranslation: (json['englishPhrase'] ??
+                      json['englishTranslation']) as String? ??
+                  '',
+              context: (json['situation'] ?? json['scenarioContext']) as String? ??
+                  selectedTopic,
+              difficulty: (json['difficulty'] as String?) ?? cefrLevel.code,
+              title: title,
+              sentenceType:
+                  (json['sentenceType'] as String?) ?? result.chosenSentenceType,
+              structuredHints: ScenarioHints.fromJson(hintsJson),
               vocabularyPrep: List<String>.from(json['vocabularyPrep'] ?? []),
             );
+            if (title.isNotEmpty) {
+              _recentTitles.add(title);
+              if (_recentTitles.length > 20) {
+                _recentTitles.removeAt(0);
+              }
+            }
           }
         } catch (_) {
           // AI failed or timed out — fall through to catalog
@@ -252,13 +278,13 @@ class ScenarioProvider extends ChangeNotifier {
         throw StateError('Gemini API key not configured');
       }
       final rawJson = await _gemini
-          .evaluateUserResponse(
-            userText: text,
-            scenarioContext: _currentScenario!.context,
-            vietnameseSentence: _direction == 'vn-to-en'
+          .evaluateResponse(
+            userInput: text,
+            sourcePhrase: _direction == 'vn-to-en'
                 ? _currentScenario!.vietnameseSentence
                 : _currentScenario!.englishTranslation,
-            proficiencyLevel: _userLevel,
+            situation: _currentScenario!.context,
+            targetLevel: CefrLevel.fromProficiencyId(_userLevel),
             direction: _direction,
           )
           .timeout(_kGeminiTimeout);
@@ -418,6 +444,7 @@ class ScenarioProvider extends ChangeNotifier {
     _direction = 'vn-to-en';
     _scenarioIndex = 0;
     _error = null;
+    _recentTitles.clear();
     notifyListeners();
   }
 }
