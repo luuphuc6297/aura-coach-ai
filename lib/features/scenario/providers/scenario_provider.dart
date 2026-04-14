@@ -14,7 +14,8 @@ import '../models/chat_message.dart';
 import '../models/assessment.dart';
 import '../data/scenario_catalog.dart';
 
-const Duration _kGeminiTimeout = Duration(seconds: 12);
+const Duration _kGeminiScenarioTimeout = Duration(seconds: 30);
+const Duration _kGeminiEvaluateTimeout = Duration(seconds: 20);
 
 bool _isGeminiKeyConfigured() {
   final key = ApiConstants.geminiApiKey.trim();
@@ -163,7 +164,7 @@ class ScenarioProvider extends ChangeNotifier {
                     topic != null ? [topic] : _userTopics,
                 previousTitles: _recentTitles,
               )
-              .timeout(_kGeminiTimeout);
+              .timeout(_kGeminiScenarioTimeout);
           final json = GeminiDatasource.parseJson(result.rawJson);
           final vietnamesePhrase = (json['vietnamesePhrase'] ??
               json['vietnameseSentence']) as String?;
@@ -195,7 +196,8 @@ class ScenarioProvider extends ChangeNotifier {
               }
             }
           }
-        } catch (_) {
+        } catch (e) {
+          debugPrint('[ScenarioProvider] Gemini scenario generation failed: $e');
           // AI failed or timed out — fall through to catalog
         }
       }
@@ -287,7 +289,7 @@ class ScenarioProvider extends ChangeNotifier {
             targetLevel: CefrLevel.fromProficiencyId(_userLevel),
             direction: _direction,
           )
-          .timeout(_kGeminiTimeout);
+          .timeout(_kGeminiEvaluateTimeout);
 
       final json = GeminiDatasource.parseJson(rawJson);
       final assessment = AssessmentResult.fromJson(json);

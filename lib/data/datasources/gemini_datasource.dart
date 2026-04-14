@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import '../../core/constants/api_constants.dart';
 import '../prompts/prompt_constants.dart';
@@ -11,10 +12,15 @@ import '../prompts/quiz_prompts.dart';
 import '../prompts/video_prompt.dart';
 
 class GeminiDatasource {
-  late final GenerativeModel _model;
+  /// Fast model for evaluation and short tasks.
+  late final GenerativeModel _flashModel;
+
+  /// High-quality model for scenario/story creative generation, where
+  /// natural Vietnamese colloquial output and nuanced register matter.
+  late final GenerativeModel _proModel;
 
   GeminiDatasource() {
-    _model = GenerativeModel(
+    _flashModel = GenerativeModel(
       model: ApiConstants.modelFlash,
       apiKey: ApiConstants.geminiApiKey,
       generationConfig: GenerationConfig(
@@ -22,13 +28,38 @@ class GeminiDatasource {
         topP: ApiConstants.topP,
         topK: ApiConstants.topK,
         maxOutputTokens: ApiConstants.maxTokensFlash,
+        responseMimeType: 'application/json',
+      ),
+    );
+
+    _proModel = GenerativeModel(
+      model: ApiConstants.modelPro,
+      apiKey: ApiConstants.geminiApiKey,
+      generationConfig: GenerationConfig(
+        temperature: 0.95,
+        topP: 0.95,
+        topK: 40,
+        maxOutputTokens: ApiConstants.maxTokensPro,
+        responseMimeType: 'application/json',
       ),
     );
   }
 
-  Future<String> _run(String prompt) async {
-    final response = await _model.generateContent([Content.text(prompt)]);
-    return response.text ?? '';
+  Future<String> _run(String prompt, {bool hi = false}) async {
+    final model = hi ? _proModel : _flashModel;
+    try {
+      final response = await model.generateContent([Content.text(prompt)]);
+      final text = response.text ?? '';
+      if (kDebugMode && text.isEmpty) {
+        debugPrint('[Gemini] Empty response from ${hi ? "pro" : "flash"}');
+      }
+      return text;
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[Gemini] ${hi ? "pro" : "flash"} error: $e');
+      }
+      rethrow;
+    }
   }
 
   // ------------------- Scenario Coach -------------------
@@ -45,7 +76,7 @@ class GeminiDatasource {
       userTopics: userTopics,
       previousTitles: previousTitles,
     );
-    final raw = await _run(built.prompt);
+    final raw = await _run(built.prompt, hi: true);
     return NextLessonResult(
       rawJson: raw.isEmpty ? '{}' : raw,
       chosenTopic: built.chosenTopic,

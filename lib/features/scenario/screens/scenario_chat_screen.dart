@@ -153,7 +153,9 @@ class ScenarioChatScreen extends StatelessWidget {
             return Column(
               children: [
                 ScenarioAppBar(
-                  title: scenario.context,
+                  title: scenario.title.isNotEmpty
+                      ? scenario.title
+                      : topicLabel,
                   emoji: topicEmoji,
                   category: topicLabel,
                   level: scenario.difficulty,
@@ -170,6 +172,8 @@ class ScenarioChatScreen extends StatelessWidget {
                   difficulty: scenario.difficulty,
                   scenarioIndex: provider.scenarioIndex,
                   isVnToEn: provider.isVnToEn,
+                  title: scenario.title,
+                  situation: scenario.context,
                   onHint: () => _showContextPanel(context),
                   onToggleDirection: () => provider.toggleDirection(),
                 ),
