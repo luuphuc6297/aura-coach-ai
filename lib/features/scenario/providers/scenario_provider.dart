@@ -1,7 +1,9 @@
 // lib/features/scenario/providers/scenario_provider.dart
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
+import '../../../core/constants/api_constants.dart';
 import '../../../data/datasources/gemini_datasource.dart';
 import '../../../data/datasources/firebase_datasource.dart';
 import '../../../data/datasources/local_datasource.dart';
@@ -10,6 +12,15 @@ import '../models/scenario.dart';
 import '../models/chat_message.dart';
 import '../models/assessment.dart';
 import '../data/scenario_catalog.dart';
+
+const Duration _kGeminiTimeout = Duration(seconds: 12);
+
+bool _isGeminiKeyConfigured() {
+  final key = ApiConstants.geminiApiKey.trim();
+  if (key.isEmpty) return false;
+  if (key.startsWith('your-')) return false;
+  return true;
+}
 
 class ScenarioProvider extends ChangeNotifier {
   final GeminiDatasource _gemini;
@@ -100,7 +111,9 @@ class ScenarioProvider extends ChangeNotifier {
   Future<void> _loadDailyUsage() async {
     if (_uid == null) return;
     try {
-      _dailyUsage = await _firebase.getDailyUsage(_uid!, _todayDate);
+      _dailyUsage = await _firebase
+          .getDailyUsage(_uid!, _todayDate)
+          .timeout(const Duration(seconds: 5));
       _local.cacheDailyUsage(_todayDate, _dailyUsage);
     } catch (_) {
       // Fallback to local cache
@@ -136,54 +149,36 @@ class ScenarioProvider extends ChangeNotifier {
       final selectedTopic = topic ?? (_userTopics..shuffle()).first;
       final selectedDifficulty = difficulty ?? _userLevel;
 
-      // Try AI-generated scenario first
       Scenario? scenario;
-      try {
-        final rawJson = await _gemini.generateScenarioLesson(
-          selectedTopic,
-          selectedDifficulty,
-        );
-        final json = GeminiDatasource.parseJson(rawJson);
-        if (json.isNotEmpty && json['vietnameseSentence'] != null) {
-          scenario = Scenario(
-            id: _uuid.v4(),
-            topic: selectedTopic,
-            vietnameseSentence: json['vietnameseSentence'] as String,
-            englishTranslation: json['englishTranslation'] as String? ?? '',
-            context: json['scenarioContext'] as String? ?? selectedTopic,
-            difficulty: json['difficulty'] as String? ?? selectedDifficulty,
-            hints: List<String>.from(json['hints'] ?? []),
-            vocabularyPrep: List<String>.from(json['vocabularyPrep'] ?? []),
-          );
+
+      if (_isGeminiKeyConfigured()) {
+        try {
+          final rawJson = await _gemini
+              .generateScenarioLesson(selectedTopic, selectedDifficulty)
+              .timeout(_kGeminiTimeout);
+          final json = GeminiDatasource.parseJson(rawJson);
+          if (json.isNotEmpty && json['vietnameseSentence'] != null) {
+            scenario = Scenario(
+              id: _uuid.v4(),
+              topic: selectedTopic,
+              vietnameseSentence: json['vietnameseSentence'] as String,
+              englishTranslation: json['englishTranslation'] as String? ?? '',
+              context: json['scenarioContext'] as String? ?? selectedTopic,
+              difficulty: json['difficulty'] as String? ?? selectedDifficulty,
+              hints: List<String>.from(json['hints'] ?? []),
+              vocabularyPrep: List<String>.from(json['vocabularyPrep'] ?? []),
+            );
+          }
+        } catch (_) {
+          // AI failed or timed out — fall through to catalog
         }
-      } catch (_) {
-        // AI generation failed — fall through to catalog fallback
       }
 
-      // Fallback to static catalog if AI failed
+      // Fallback to static catalog if AI skipped or failed
+      scenario ??= _pickCatalogScenario(selectedTopic, selectedDifficulty);
       if (scenario == null) {
-        final candidates = scenarioCatalog
-            .where((s) =>
-                s.topic == selectedTopic &&
-                s.difficulty == selectedDifficulty &&
-                s.id != _currentScenario?.id)
-            .toList();
-        if (candidates.isEmpty) {
-          final anyCandidates = scenarioCatalog
-              .where((s) => s.topic == selectedTopic)
-              .toList();
-          if (anyCandidates.isEmpty) {
-            _error = 'No scenarios available for this topic.';
-            _isLoading = false;
-            notifyListeners();
-            return;
-          }
-          anyCandidates.shuffle();
-          scenario = anyCandidates.first;
-        } else {
-          candidates.shuffle();
-          scenario = candidates.first;
-        }
+        _error = 'No scenarios available for this topic.';
+        return;
       }
 
       _currentScenario = scenario;
@@ -194,7 +189,6 @@ class ScenarioProvider extends ChangeNotifier {
       _scenarioIndex++;
       _direction = 'vn-to-en';
 
-      // Add AI opening message
       _messages.add(ChatMessage(
         id: _uuid.v4(),
         type: MessageType.ai,
@@ -203,18 +197,38 @@ class ScenarioProvider extends ChangeNotifier {
         timestamp: DateTime.now(),
       ));
 
-      // Increment daily usage
-      await _firebase.incrementDailyUsage(_uid!, _todayDate, 'roleplay');
+      // Fire-and-forget: never block UI on Firestore writes
       _dailyUsage['roleplayCount'] = roleplayUsedToday + 1;
-
-      // Save conversation to Firestore (background)
-      _saveConversationToFirestore();
+      unawaited(_firebase
+          .incrementDailyUsage(_uid!, _todayDate, 'roleplay')
+          .catchError((_) {}));
+      unawaited(_saveConversationToFirestore());
     } catch (e) {
       _error = 'Failed to start scenario: ${e.toString()}';
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
+  }
 
-    _isLoading = false;
-    notifyListeners();
+  Scenario? _pickCatalogScenario(String topic, String difficulty) {
+    final exact = scenarioCatalog
+        .where((s) =>
+            s.topic == topic &&
+            s.difficulty == difficulty &&
+            s.id != _currentScenario?.id)
+        .toList();
+    if (exact.isNotEmpty) {
+      exact.shuffle();
+      return exact.first;
+    }
+    final anyForTopic =
+        scenarioCatalog.where((s) => s.topic == topic).toList();
+    if (anyForTopic.isNotEmpty) {
+      anyForTopic.shuffle();
+      return anyForTopic.first;
+    }
+    return null;
   }
 
   /// Send user message and get AI assessment.
@@ -234,16 +248,20 @@ class ScenarioProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Call Gemini for real evaluation
-      final rawJson = await _gemini.evaluateUserResponse(
-        userText: text,
-        scenarioContext: _currentScenario!.context,
-        vietnameseSentence: _direction == 'vn-to-en'
-            ? _currentScenario!.vietnameseSentence
-            : _currentScenario!.englishTranslation,
-        proficiencyLevel: _userLevel,
-        direction: _direction,
-      );
+      if (!_isGeminiKeyConfigured()) {
+        throw StateError('Gemini API key not configured');
+      }
+      final rawJson = await _gemini
+          .evaluateUserResponse(
+            userText: text,
+            scenarioContext: _currentScenario!.context,
+            vietnameseSentence: _direction == 'vn-to-en'
+                ? _currentScenario!.vietnameseSentence
+                : _currentScenario!.englishTranslation,
+            proficiencyLevel: _userLevel,
+            direction: _direction,
+          )
+          .timeout(_kGeminiTimeout);
 
       final json = GeminiDatasource.parseJson(rawJson);
       final assessment = AssessmentResult.fromJson(json);
@@ -256,10 +274,8 @@ class ScenarioProvider extends ChangeNotifier {
         assessment: assessment,
       ));
 
-      // Persist to Firestore (background)
-      _saveConversationToFirestore();
+      unawaited(_saveConversationToFirestore());
     } catch (e) {
-      // On AI failure, show error in chat
       _messages.add(ChatMessage(
         id: _uuid.v4(),
         type: MessageType.ai,
@@ -268,10 +284,10 @@ class ScenarioProvider extends ChangeNotifier {
         timestamp: DateTime.now(),
       ));
       _error = 'Evaluation failed: ${e.toString()}';
+    } finally {
+      _isAiTyping = false;
+      notifyListeners();
     }
-
-    _isAiTyping = false;
-    notifyListeners();
   }
 
   /// Start a new scenario with optional difficulty adjustment.
@@ -353,23 +369,24 @@ class ScenarioProvider extends ChangeNotifier {
   }
 
   /// End the current session and mark as completed in Firestore.
+  /// Fire-and-forget — never block the UI on the write.
   Future<void> endSession() async {
     if (_uid != null && _conversationId != null) {
-      try {
-        await _firebase.saveConversation(
-          uid: _uid!,
-          conversationId: _conversationId!,
-          data: {
-            'status': 'completed',
-            'totalScore': averageScore,
-            'duration': sessionDurationMinutes,
-            'totalTurns': totalTurns,
-            'updatedAt': DateTime.now().toIso8601String(),
-          },
-        );
-      } catch (_) {}
+      unawaited(_firebase
+          .saveConversation(
+            uid: _uid!,
+            conversationId: _conversationId!,
+            data: {
+              'status': 'completed',
+              'totalScore': averageScore,
+              'duration': sessionDurationMinutes,
+              'totalTurns': totalTurns,
+              'updatedAt': DateTime.now().toIso8601String(),
+            },
+          )
+          .catchError((_) {}));
     }
-    await _local.clearActiveConversation();
+    unawaited(_local.clearActiveConversation());
   }
 
   /// Get session summary data for the summary screen.

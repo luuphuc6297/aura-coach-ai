@@ -236,7 +236,7 @@ class SessionSummaryScreen extends StatelessWidget {
             onTap: () async {
               await provider.startNewScenario();
               if (context.mounted) {
-                context.go('/scenario/chat');
+                context.go('/scenario');
               }
             },
             child: Container(

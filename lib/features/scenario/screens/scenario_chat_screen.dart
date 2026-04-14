@@ -77,7 +77,36 @@ class ScenarioChatScreen extends StatelessWidget {
           builder: (context, provider, _) {
             final scenario = provider.currentScenario;
             if (scenario == null) {
-              return const Center(child: Text('No scenario selected'));
+              if (provider.isLoading) {
+                return const Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 16),
+                      Text('Preparing your scenario...'),
+                    ],
+                  ),
+                );
+              }
+              return Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      provider.error ?? 'No scenario loaded',
+                      textAlign: TextAlign.center,
+                      style: AppTypography.bodyMd
+                          .copyWith(color: AppColors.warmMuted),
+                    ),
+                    const SizedBox(height: 16),
+                    TextButton(
+                      onPressed: () => context.go('/home'),
+                      child: const Text('Back to Home'),
+                    ),
+                  ],
+                ),
+              );
             }
 
             final topicEmojis = {

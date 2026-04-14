@@ -27,6 +27,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int _navIndex = 0;
   final PageController _modeController = PageController();
   int _currentMode = 0;
+  bool _isStartingRoleplay = false;
 
   @override
   void initState() {
@@ -38,6 +39,61 @@ class _HomeScreenState extends State<HomeScreen> {
         context.read<HomeProvider>().loadProfile(uid);
       }
     });
+  }
+
+  Future<void> _startRoleplay() async {
+    if (_isStartingRoleplay) return;
+    setState(() => _isStartingRoleplay = true);
+
+    final authProvider = context.read<AuthProvider>();
+    final profile = context.read<HomeProvider>().userProfile;
+    final scenarioProvider = context.read<ScenarioProvider>();
+    final uid = authProvider.currentUser?.uid ?? '';
+
+    try {
+      await scenarioProvider.init(
+        uid: uid,
+        tier: profile?.tier ?? 'free',
+        topics: profile?.selectedTopics ?? ['travel', 'business', 'food'],
+        level: profile?.proficiencyLevel ?? 'intermediate',
+      );
+
+      if (!scenarioProvider.canStartSession()) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Daily limit reached. Upgrade for more sessions.'),
+            ),
+          );
+        }
+        return;
+      }
+
+      await scenarioProvider.startSession();
+
+      if (!mounted) return;
+      if (scenarioProvider.error != null ||
+          scenarioProvider.currentScenario == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              scenarioProvider.error ?? 'Could not start session. Try again.',
+            ),
+          ),
+        );
+        return;
+      }
+
+      context.push('/scenario');
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to start: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isStartingRoleplay = false);
+    }
   }
 
   void _onModeScroll() {
@@ -92,6 +148,7 @@ class _HomeScreenState extends State<HomeScreen> {
         final mode = _modes[modeIndex];
         final deepDive = modeDeepDiveList[modeIndex];
 
+        final isRoleplay = mode.route == '/scenario';
         return ModeHorizontalPager(
           accentColor: mode.accentColor,
           overviewCard: ModeCard(
@@ -103,22 +160,12 @@ class _HomeScreenState extends State<HomeScreen> {
             ctaText: mode.ctaText,
             quotaText: mode.quotaText,
             tags: mode.tags,
+            isLoading: isRoleplay && _isStartingRoleplay,
             onTap: mode.route != null
-                ? () async {
-                    if (mode.route == '/scenario') {
-                      final authProvider = context.read<AuthProvider>();
-                      final profile =
-                          context.read<HomeProvider>().userProfile;
-                      final scenarioProvider =
-                          context.read<ScenarioProvider>();
-                      await scenarioProvider.init(
-                        uid: authProvider.currentUser?.uid ?? '',
-                        tier: profile?.tier ?? 'free',
-                        topics: profile?.selectedTopics ?? ['travel', 'business', 'food'],
-                        level: profile?.proficiencyLevel ?? 'intermediate',
-                      );
-                    }
-                    if (context.mounted) {
+                ? () {
+                    if (isRoleplay) {
+                      _startRoleplay();
+                    } else {
                       context.push(mode.route!);
                     }
                   }

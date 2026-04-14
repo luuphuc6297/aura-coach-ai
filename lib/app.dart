@@ -17,7 +17,6 @@ import 'features/auth/screens/auth_screen.dart';
 import 'features/onboarding/screens/onboarding_screen.dart';
 import 'features/home/screens/home_screen.dart';
 import 'features/scenario/providers/scenario_provider.dart';
-import 'features/scenario/screens/scenario_select_screen.dart';
 import 'features/scenario/screens/scenario_chat_screen.dart';
 import 'features/scenario/screens/session_summary_screen.dart';
 import 'features/scenario/screens/conversation_history_screen.dart';
@@ -88,8 +87,7 @@ class _AuraCoachAppState extends State<AuraCoachApp> {
         GoRoute(path: '/auth', builder: (_, __) => const AuthScreen()),
         GoRoute(path: '/onboarding', builder: (_, __) => const OnboardingScreen()),
         GoRoute(path: '/home', builder: (_, __) => const HomeScreen()),
-        GoRoute(path: '/scenario', builder: (_, __) => const ScenarioSelectScreen()),
-        GoRoute(path: '/scenario/chat', builder: (_, __) => const ScenarioChatScreen()),
+        GoRoute(path: '/scenario', builder: (_, __) => const ScenarioChatScreen()),
         GoRoute(path: '/scenario/summary', builder: (_, __) => const SessionSummaryScreen()),
         GoRoute(path: '/history', builder: (_, __) => const ConversationHistoryScreen()),
       ],
