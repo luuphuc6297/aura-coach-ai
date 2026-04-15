@@ -1,3 +1,11 @@
+import 'package:flutter/material.dart';
+import '../../../core/theme/app_colors.dart';
+
+/// AI-driven evaluation of a user's response. Matches the web assessment
+/// schema 1:1 on business-logic fields (scores, improvements, userTone,
+/// alternativeTones payload). Mobile wraps the web's flat string payload
+/// with a [ToneVariation] UI layer that assigns the Clay palette color per
+/// tone key — colors stay mobile-owned, never round-tripped to the AI.
 class AssessmentResult {
   final int score;
   final int accuracyScore;
@@ -39,7 +47,7 @@ class AssessmentResult {
       accuracyScore: (json['accuracyScore'] as num?)?.toInt() ?? 5,
       naturalnessScore: (json['naturalnessScore'] as num?)?.toInt() ?? 5,
       complexityScore: (json['complexityScore'] as num?)?.toInt() ?? 5,
-      feedback: json['feedback'] as String? ?? 'No feedback available.',
+      feedback: json['feedback'] as String? ?? '',
       correction: json['correction'] as String?,
       betterAlternative: json['betterAlternative'] as String?,
       analysis: json['analysis'] as String? ?? '',
@@ -48,16 +56,10 @@ class AssessmentResult {
       improvements: (json['improvements'] as List<dynamic>?)
               ?.map((e) => Improvement.fromJson(e as Map<String, dynamic>))
               .toList() ??
-          [],
+          const [],
       userTone: json['userTone'] as String? ?? 'Neutral',
-      alternativeTones: json['alternativeTones'] != null
-          ? AlternativeTones.fromJson(json['alternativeTones'] as Map<String, dynamic>)
-          : AlternativeTones(
-              formal: ToneVariation(text: '', color: '#6366F1'),
-              friendly: ToneVariation(text: '', color: '#9A7B3D'),
-              informal: ToneVariation(text: '', color: '#D98A8A'),
-              conversational: ToneVariation(text: '', color: '#7BC6A0'),
-            ),
+      alternativeTones: AlternativeTones.fromAiJson(
+          json['alternativeTones'] as Map<String, dynamic>?),
       nextAgentReply: json['nextAgentReply'] as String?,
       nextAgentReplyVietnamese: json['nextAgentReplyVietnamese'] as String?,
     );
@@ -77,9 +79,57 @@ class AssessmentResult {
         'improvements': improvements.map((e) => e.toJson()).toList(),
         'userTone': userTone,
         'alternativeTones': alternativeTones.toJson(),
+        'nextAgentReply': nextAgentReply,
+        'nextAgentReplyVietnamese': nextAgentReplyVietnamese,
       };
 }
 
+/// Classification of an [Improvement]. Matches web Improvement.type.
+/// SavedItems and Quiz mode use this to split grammar vs vocabulary drills.
+enum ImprovementType {
+  grammar,
+  vocabulary;
+
+  static ImprovementType fromString(String? value) {
+    return value == 'grammar'
+        ? ImprovementType.grammar
+        : ImprovementType.vocabulary;
+  }
+
+  String get value => name;
+}
+
+class Improvement {
+  final String original;
+  final String correction;
+  final ImprovementType type;
+  final String explanation;
+
+  const Improvement({
+    required this.original,
+    required this.correction,
+    required this.type,
+    required this.explanation,
+  });
+
+  factory Improvement.fromJson(Map<String, dynamic> json) => Improvement(
+        original: json['original'] as String? ?? '',
+        correction: json['correction'] as String? ?? '',
+        type: ImprovementType.fromString(json['type'] as String?),
+        explanation: json['explanation'] as String? ?? '',
+      );
+
+  Map<String, dynamic> toJson() => {
+        'original': original,
+        'correction': correction,
+        'type': type.value,
+        'explanation': explanation,
+      };
+}
+
+/// Four tonal variations surfaced in the Inline Assessment. AI contract
+/// (web schema) is a flat string map; mobile decorates each string with a
+/// palette color for widget rendering.
 class AlternativeTones {
   final ToneVariation formal;
   final ToneVariation friendly;
@@ -93,24 +143,37 @@ class AlternativeTones {
     required this.conversational,
   });
 
-  factory AlternativeTones.fromJson(Map<String, dynamic> json) {
+  /// Build from the AI flat string shape:
+  /// `{formal: "...", friendly: "...", informal: "...", conversational: "..."}`
+  factory AlternativeTones.fromAiJson(Map<String, dynamic>? json) {
+    String read(String key) => (json?[key] as String?) ?? '';
     return AlternativeTones(
-      formal: _parseTone(json['formal']),
-      friendly: _parseTone(json['friendly']),
-      informal: _parseTone(json['informal']),
-      conversational: _parseTone(json['conversational']),
+      formal: ToneVariation(text: read('formal'), color: AppColors.formalTone),
+      friendly:
+          ToneVariation(text: read('friendly'), color: AppColors.friendlyTone),
+      informal:
+          ToneVariation(text: read('informal'), color: AppColors.casualTone),
+      conversational: ToneVariation(
+          text: read('conversational'), color: AppColors.neutralTone),
     );
   }
 
-  static ToneVariation _parseTone(dynamic value) {
-    if (value is Map<String, dynamic>) {
-      return ToneVariation.fromJson(value);
-    }
-    if (value is String) {
-      return ToneVariation(text: value);
-    }
-    return const ToneVariation(text: '');
-  }
+  /// Build from persisted mobile shape (toJson output, e.g. Firestore cache).
+  factory AlternativeTones.fromJson(Map<String, dynamic> json) =>
+      AlternativeTones(
+        formal: ToneVariation.fromJson(
+            (json['formal'] as Map<String, dynamic>?) ?? const {},
+            fallbackColor: AppColors.formalTone),
+        friendly: ToneVariation.fromJson(
+            (json['friendly'] as Map<String, dynamic>?) ?? const {},
+            fallbackColor: AppColors.friendlyTone),
+        informal: ToneVariation.fromJson(
+            (json['informal'] as Map<String, dynamic>?) ?? const {},
+            fallbackColor: AppColors.casualTone),
+        conversational: ToneVariation.fromJson(
+            (json['conversational'] as Map<String, dynamic>?) ?? const {},
+            fallbackColor: AppColors.neutralTone),
+      );
 
   Map<String, dynamic> toJson() => {
         'formal': formal.toJson(),
@@ -122,48 +185,35 @@ class AlternativeTones {
 
 class ToneVariation {
   final String text;
-  final String? color;
+  final Color color;
 
-  const ToneVariation({
-    required this.text,
-    this.color,
-  });
+  const ToneVariation({required this.text, required this.color});
 
-  factory ToneVariation.fromJson(Map<String, dynamic> json) {
+  factory ToneVariation.fromJson(
+    Map<String, dynamic> json, {
+    required Color fallbackColor,
+  }) {
+    Color color = fallbackColor;
+    final raw = json['color'];
+    if (raw is String && raw.startsWith('#') && raw.length == 7) {
+      final value = int.tryParse(raw.substring(1), radix: 16);
+      if (value != null) color = Color(0xFF000000 | value);
+    }
     return ToneVariation(
       text: json['text'] as String? ?? '',
-      color: json['color'] as String?,
+      color: color,
     );
   }
 
-  Map<String, dynamic> toJson() => {
-        'text': text,
-        'color': color,
-      };
-}
-
-class Improvement {
-  final String original;
-  final String suggestion;
-  final String explanation;
-
-  const Improvement({
-    required this.original,
-    required this.suggestion,
-    required this.explanation,
-  });
-
-  factory Improvement.fromJson(Map<String, dynamic> json) {
-    return Improvement(
-      original: json['original'] as String? ?? '',
-      suggestion: json['suggestion'] as String? ?? '',
-      explanation: json['explanation'] as String? ?? '',
-    );
+  Map<String, dynamic> toJson() {
+    final hex = color.value
+        .toRadixString(16)
+        .padLeft(8, '0')
+        .substring(2)
+        .toUpperCase();
+    return {
+      'text': text,
+      'color': '#$hex',
+    };
   }
-
-  Map<String, dynamic> toJson() => {
-        'original': original,
-        'suggestion': suggestion,
-        'explanation': explanation,
-      };
 }

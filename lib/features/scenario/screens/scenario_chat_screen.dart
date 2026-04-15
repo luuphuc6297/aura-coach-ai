@@ -166,14 +166,14 @@ class ScenarioChatScreen extends StatelessWidget {
                 ),
                 LessonCard(
                   vietnameseSentence: provider.isVnToEn
-                      ? scenario.vietnameseSentence
-                      : scenario.englishTranslation,
+                      ? scenario.vietnamesePhrase
+                      : scenario.englishPhrase,
                   topic: scenario.topic,
                   difficulty: scenario.difficulty,
                   scenarioIndex: provider.scenarioIndex,
                   isVnToEn: provider.isVnToEn,
                   title: scenario.title,
-                  situation: scenario.context,
+                  situation: scenario.situation,
                   onHint: () => _showContextPanel(context),
                   onToggleDirection: () => provider.toggleDirection(),
                 ),

@@ -1,4 +1,6 @@
 /// Build the tone translation prompt for Tone Translator mode.
+/// Response must match the translation responseSchema: {original, tones{...},
+/// grammarAnalysis{sentence, components[], generalExplanation}}.
 String buildToneTranslationPrompt(String text) {
   return '''
 You are a bilingual English-Vietnamese language expert specializing in tone, register, and pragmatics.
@@ -12,36 +14,23 @@ You are a bilingual English-Vietnamese language expert specializing in tone, reg
 "$text"
 
 === TONE DEFINITIONS ===
-1. **Formal** — Business/professional register. Use complete sentences, no contractions, appropriate hedging (e.g., "I would appreciate it if...", "Could you kindly..."). Suitable for emails, meetings, official communication.
-2. **Friendly** — Warm and polite but approachable. Use light contractions, positive framing, softeners (e.g., "Hey, would you mind...", "That sounds great!"). Suitable for coworkers, acquaintances, friendly strangers.
-3. **Informal** — Casual/slang register. Use heavy contractions, phrasal verbs, filler words, slang (e.g., "gonna", "kinda", "no worries", "my bad"). Suitable for close friends, texting, social media.
-4. **Conversational** — Neutral everyday register. Natural but not overly casual or formal (e.g., "Can you help me with...?", "I think we should..."). Suitable for daily interactions with anyone.
+1. **Formal** — Business/professional register. Complete sentences, no contractions, polite hedging.
+2. **Friendly** — Warm and approachable. Light contractions, positive framing, softeners.
+3. **Informal** — Casual/slang. Heavy contractions, phrasal verbs, fillers, slang.
+4. **Conversational** — Neutral everyday register. Natural without being overly casual or formal.
 
 === RULES ===
-- Each variation MUST be meaningfully different in word choice, sentence structure, and tone — not just minor word swaps.
-- Preserve the original meaning and intent accurately across all 4 tones.
-- Use natural collocations and idiomatic phrasing for each register — avoid translationese.
-- If the input contains Vietnamese cultural context or idioms, adapt them to culturally equivalent English expressions rather than literal translation.
-- The Vietnamese 'quote' for each tone MUST reflect the specific nuance of that English variation (e.g., a formal English sentence should have a formal Vietnamese translation like "Kính gửi...", an informal one should be "Ê, ...").
-- For the grammar analysis, break down the sentence into components (subject, verb, object, etc.) and explain their roles.
+- Each variation MUST differ meaningfully in word choice, structure, and tone — not a minor swap.
+- Preserve the original meaning across all 4 tones.
+- Use natural collocations and idiomatic phrasing; avoid translationese.
+- Adapt Vietnamese cultural idioms to equivalent English expressions, not literal translations.
+- The Vietnamese 'quote' for each tone MUST reflect its specific nuance (formal → "Kính gửi...", informal → "Ê, ...").
+- Break the original sentence into grammatical components with a general explanation.
 
-Respond with ONLY a JSON object:
-{
-  "originalText": "$text",
-  "tones": {
-    "formal":          {"english": "Formal English version",        "vietnamese": "Formal Vietnamese quote",        "color": "#6366F1"},
-    "friendly":        {"english": "Friendly English version",      "vietnamese": "Friendly Vietnamese quote",      "color": "#9A7B3D"},
-    "informal":        {"english": "Informal English version",      "vietnamese": "Informal Vietnamese quote",      "color": "#D98A8A"},
-    "conversational":  {"english": "Conversational English version","vietnamese": "Conversational Vietnamese quote","color": "#7BC6A0"}
-  },
-  "grammarAnalysis": {
-    "components": [
-      {"part": "Subject", "text": "...", "explanation": "..."},
-      {"part": "Verb", "text": "...", "explanation": "..."},
-      {"part": "Object", "text": "...", "explanation": "..."}
-    ],
-    "summary": "Overall sentence structure explanation"
-  }
-}
+Respond with a JSON object matching the translation responseSchema. Keys:
+- original: echo the input text
+- tones: {formal, friendly, informal, conversational} — each is {text (English), quote (Vietnamese)}
+- grammarAnalysis: {sentence, components[{text, type, explanation}], generalExplanation}
+No colors, no extra fields, no markdown fences.
 ''';
 }

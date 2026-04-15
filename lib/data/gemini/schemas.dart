@@ -1,0 +1,376 @@
+import 'package:google_generative_ai/google_generative_ai.dart';
+
+/// Gemini responseSchema definitions. Ported 1:1 from
+/// aura-coach/services/gemini/schemas.ts so the AI contract matches the web
+/// platform exactly. Each schema is consumed by a specific endpoint in
+/// [GeminiService].
+class GeminiSchemas {
+  GeminiSchemas._();
+
+  // ---------- Assessment ----------
+  static final assessment = Schema.object(
+    properties: {
+      'score': Schema.number(
+          description: 'Overall score on a scale of 1-10 based on CEFR mapping.'),
+      'accuracyScore':
+          Schema.number(description: 'Score for grammatical accuracy (1-10).'),
+      'naturalnessScore':
+          Schema.number(description: 'Score for pragmatic naturalness (1-10).'),
+      'complexityScore':
+          Schema.number(description: 'Score for vocabulary complexity (1-10).'),
+      'feedback': Schema.string(description: 'General constructive feedback.'),
+      'grammarAnalysis': Schema.string(
+          description:
+              'Specific analysis of grammatical errors. Start with "Grammar Point:".'),
+      'vocabularyAnalysis': Schema.string(
+          description:
+              'Specific analysis of vocabulary choice. Start with "Vocabulary Point:".'),
+      'correction': Schema.string(
+          description:
+              'Corrected version if the user input is grammatically wrong. Null if correct.',
+          nullable: true),
+      'betterAlternative': Schema.string(
+          description:
+              'A more natural/native phrasing if correct but unnatural. Null if perfect.',
+          nullable: true),
+      'analysis':
+          Schema.string(description: 'Detailed summary of why this score was given.'),
+      'improvements': Schema.array(
+        items: Schema.object(
+          properties: {
+            'original': Schema.string(
+                description:
+                    'The exact substring from the user input that needs improvement.'),
+            'correction':
+                Schema.string(description: 'The corrected word or phrase.'),
+            'type': Schema.enumString(enumValues: ['grammar', 'vocabulary']),
+            'explanation': Schema.string(
+                description: 'Short explanation of why this change is needed.'),
+          },
+          requiredProperties: ['original', 'correction', 'type', 'explanation'],
+        ),
+      ),
+      'userTone': Schema.string(
+          description:
+              'The detected tone/register of the user input (e.g., "Too Formal", "Casual", "Rude", "Neutral").'),
+      'alternativeTones': Schema.object(
+        properties: {
+          'formal':
+              Schema.string(description: 'A formal/business appropriate version.'),
+          'friendly': Schema.string(description: 'A warm, friendly version.'),
+          'informal': Schema.string(description: 'A very casual or slang version.'),
+          'conversational': Schema.string(
+              description: 'A standard, neutral conversational version.'),
+        },
+        requiredProperties: ['formal', 'friendly', 'informal', 'conversational'],
+      ),
+      'nextAgentReply': Schema.string(
+          description:
+              'The next logical response from the Agent to continue the story conversation.',
+          nullable: true),
+      'nextAgentReplyVietnamese': Schema.string(
+          description: 'The Vietnamese translation of nextAgentReply.',
+          nullable: true),
+    },
+    requiredProperties: [
+      'score',
+      'accuracyScore',
+      'naturalnessScore',
+      'complexityScore',
+      'feedback',
+      'grammarAnalysis',
+      'vocabularyAnalysis',
+      'analysis',
+      'improvements',
+      'userTone',
+      'alternativeTones',
+    ],
+  );
+
+  // ---------- Lesson (Scenario Coach) ----------
+  static final lesson = Schema.object(
+    properties: {
+      'id': Schema.string(),
+      'title': Schema.string(),
+      'situation': Schema.string(),
+      'vietnamesePhrase': Schema.string(),
+      'englishPhrase': Schema.string(
+          description:
+              'The English translation of the Vietnamese phrase, matching the tone.'),
+      'difficulty':
+          Schema.enumString(enumValues: ['A1-A2', 'B1-B2', 'C1-C2']),
+      'hints': Schema.object(
+        properties: {
+          'level1': Schema.string(),
+          'level2': Schema.string(),
+          'level3': Schema.string(),
+        },
+        requiredProperties: ['level1', 'level2', 'level3'],
+      ),
+    },
+    requiredProperties: [
+      'id',
+      'title',
+      'situation',
+      'vietnamesePhrase',
+      'englishPhrase',
+      'difficulty',
+      'hints',
+    ],
+  );
+
+  // ---------- Story ----------
+  static final story = Schema.object(
+    properties: {
+      'id': Schema.string(),
+      'topic': Schema.string(),
+      'situation':
+          Schema.string(description: 'Detailed background of the conversation scene.'),
+      'agentName':
+          Schema.string(description: 'Name of the character the AI is playing.'),
+      'openingLine': Schema.string(
+          description: 'The first sentence spoken by the Agent (in English).'),
+      'openingLineVietnamese': Schema.string(
+          description: 'Vietnamese translation of the opening line.'),
+      'difficulty':
+          Schema.enumString(enumValues: ['A1-A2', 'B1-B2', 'C1-C2']),
+      'hints': Schema.object(
+        properties: {
+          'level1': Schema.string(
+              description: 'Hint about the meaning/intent of how to reply.'),
+          'level2':
+              Schema.string(description: 'Hint about the sentence structure.'),
+          'level3':
+              Schema.string(description: 'Hint about key vocabulary to use.'),
+        },
+        requiredProperties: ['level1', 'level2', 'level3'],
+      ),
+    },
+    requiredProperties: [
+      'id',
+      'topic',
+      'situation',
+      'agentName',
+      'openingLine',
+      'openingLineVietnamese',
+      'difficulty',
+      'hints',
+    ],
+  );
+
+  // ---------- Tone Translation ----------
+  static Schema _toneEntry() => Schema.object(
+        properties: {
+          'text': Schema.string(),
+          'quote':
+              Schema.string(description: 'Vietnamese translation of this tone.'),
+        },
+        requiredProperties: ['text', 'quote'],
+      );
+
+  static final translation = Schema.object(
+    properties: {
+      'original': Schema.string(),
+      'tones': Schema.object(
+        properties: {
+          'formal': _toneEntry(),
+          'friendly': _toneEntry(),
+          'informal': _toneEntry(),
+          'conversational': _toneEntry(),
+        },
+        requiredProperties: ['formal', 'friendly', 'informal', 'conversational'],
+      ),
+      'grammarAnalysis': Schema.object(
+        description: 'Grammar analysis of the original sentence.',
+        properties: {
+          'sentence':
+              Schema.string(description: 'The original sentence analyzed.'),
+          'components': Schema.array(
+            items: Schema.object(
+              properties: {
+                'text': Schema.string(description: 'The word or phrase.'),
+                'type': Schema.string(
+                    description:
+                        'Grammatical type (subject, verb, object, adjective, adverb, preposition, conjunction, other).'),
+                'explanation': Schema.string(
+                    description: 'Explanation of its role in the sentence.'),
+              },
+              requiredProperties: ['text', 'type', 'explanation'],
+            ),
+          ),
+          'generalExplanation': Schema.string(
+              description: 'Brief overall explanation of sentence structure.'),
+        },
+        requiredProperties: ['sentence', 'components', 'generalExplanation'],
+      ),
+    },
+    requiredProperties: ['original', 'tones', 'grammarAnalysis'],
+  );
+
+  // ---------- Dictionary ----------
+  static final dictionary = Schema.object(
+    properties: {
+      'partOfSpeech': Schema.string(),
+      'explanation': Schema.string(),
+      'examples': Schema.array(
+        items: Schema.object(
+          properties: {
+            'en': Schema.string(),
+            'vn': Schema.string(),
+          },
+          requiredProperties: ['en', 'vn'],
+        ),
+      ),
+    },
+    requiredProperties: ['partOfSpeech', 'explanation', 'examples'],
+  );
+
+  // ---------- Word Analysis ----------
+  static Schema _morpheme({bool withOrigin = false}) => Schema.object(
+        properties: {
+          'morpheme': Schema.string(),
+          'meaning': Schema.string(),
+          if (withOrigin) 'origin': Schema.string(),
+        },
+        requiredProperties: [
+          'morpheme',
+          'meaning',
+          if (withOrigin) 'origin',
+        ],
+      );
+
+  static Schema _exampleEnVn() => Schema.object(
+        properties: {
+          'en': Schema.string(),
+          'vn': Schema.string(),
+        },
+        requiredProperties: ['en', 'vn'],
+      );
+
+  static final wordAnalysis = Schema.object(
+    properties: {
+      'word': Schema.string(),
+      'phonetic': Schema.string(),
+      'translation': Schema.string(),
+      'morphology': Schema.object(
+        properties: {
+          'prefix': _morpheme(),
+          'root': _morpheme(withOrigin: true),
+          'suffix': _morpheme(),
+          'equation': Schema.string(),
+        },
+        requiredProperties: ['root', 'equation'],
+      ),
+      'contextualEmbedding': Schema.object(
+        properties: {
+          'positiveExample': _exampleEnVn(),
+          'negativeExample': _exampleEnVn(),
+          'collocations': Schema.array(items: Schema.string()),
+        },
+        requiredProperties: [
+          'positiveExample',
+          'negativeExample',
+          'collocations',
+        ],
+      ),
+      'derivatives': Schema.object(
+        properties: {
+          'noun': Schema.string(),
+          'verb': Schema.string(),
+          'adjective': Schema.string(),
+          'adverb': Schema.string(),
+        },
+        requiredProperties: [],
+      ),
+      'synonyms': Schema.array(items: Schema.string()),
+      'antonyms': Schema.array(items: Schema.string()),
+    },
+    requiredProperties: [
+      'word',
+      'phonetic',
+      'translation',
+      'morphology',
+      'contextualEmbedding',
+      'derivatives',
+      'synonyms',
+      'antonyms',
+    ],
+  );
+
+  // ---------- Mind Map ----------
+  static Map<String, Schema> _mindMapNodeProperties() => {
+        'id': Schema.string(),
+        'label': Schema.string(),
+        'type': Schema.enumString(enumValues: ['topic', 'category', 'word']),
+        'translation': Schema.string(),
+        'partOfSpeech': Schema.string(),
+        'context': Schema.string(),
+      };
+
+  static const List<String> _mindMapNodeRequired = [
+    'id',
+    'label',
+    'type',
+    'translation',
+    'partOfSpeech',
+    'context',
+  ];
+
+  static final mindMapRoot = Schema.object(
+    properties: {
+      ..._mindMapNodeProperties(),
+      'children': Schema.array(
+        items: Schema.object(
+          properties: _mindMapNodeProperties(),
+          requiredProperties: _mindMapNodeRequired,
+        ),
+      ),
+    },
+    requiredProperties: [..._mindMapNodeRequired, 'children'],
+  );
+
+  static final mindMapChildren = Schema.array(
+    items: Schema.object(
+      properties: _mindMapNodeProperties(),
+      requiredProperties: _mindMapNodeRequired,
+    ),
+  );
+
+  static final customNode = Schema.object(
+    properties: {
+      'status': Schema.enumString(enumValues: ['connected', 'unrelated']),
+      'parentNodeId': Schema.string(
+          description: 'The ID of the best parent node if connected.'),
+      'message': Schema.string(description: 'Explanation if unrelated.'),
+      'translation': Schema.string(),
+      'partOfSpeech': Schema.string(),
+      'context': Schema.string(),
+    },
+    requiredProperties: ['status'],
+  );
+
+  // ---------- Exercises ----------
+  static final exercises = Schema.array(
+    items: Schema.object(
+      properties: {
+        'id': Schema.string(),
+        'type': Schema.enumString(
+            enumValues: ['fill-in-the-blank', 'sentence-construction']),
+        'question': Schema.string(),
+        'options': Schema.array(items: Schema.string()),
+        'answer': Schema.string(),
+        'hint': Schema.string(),
+        'explanation': Schema.string(),
+        'targetWord': Schema.string(),
+      },
+      requiredProperties: [
+        'id',
+        'type',
+        'question',
+        'answer',
+        'explanation',
+        'targetWord',
+      ],
+    ),
+  );
+}

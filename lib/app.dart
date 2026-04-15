@@ -7,9 +7,10 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/theme/app_theme.dart';
+import 'data/cache/scenario_cache.dart';
 import 'data/datasources/firebase_datasource.dart';
-import 'data/datasources/gemini_datasource.dart';
 import 'data/datasources/local_datasource.dart';
+import 'data/gemini/gemini_service.dart';
 import 'features/auth/providers/auth_provider.dart' as app;
 import 'features/home/providers/home_provider.dart';
 import 'features/splash/screens/splash_screen.dart';
@@ -32,8 +33,9 @@ class AuraCoachApp extends StatefulWidget {
 
 class _AuraCoachAppState extends State<AuraCoachApp> {
   late final FirebaseDatasource _firebaseDatasource;
-  late final GeminiDatasource _geminiDatasource;
+  late final GeminiService _geminiService;
   late final LocalDatasource _localDatasource;
+  late final ScenarioCache _scenarioCache;
   late final app.AuthProvider _authProvider;
   late final HomeProvider _homeProvider;
   late final ScenarioProvider _scenarioProvider;
@@ -46,8 +48,9 @@ class _AuraCoachAppState extends State<AuraCoachApp> {
     final firestore = FirebaseFirestore.instance;
     final googleSignIn = GoogleSignIn();
     _firebaseDatasource = FirebaseDatasource(db: firestore);
-    _geminiDatasource = GeminiDatasource();
+    _geminiService = GeminiService();
     _localDatasource = LocalDatasource(prefs: widget.prefs);
+    _scenarioCache = ScenarioCache(prefs: widget.prefs);
 
     _authProvider = app.AuthProvider(
       auth: firebaseAuth,
@@ -58,9 +61,10 @@ class _AuraCoachAppState extends State<AuraCoachApp> {
 
     _homeProvider = HomeProvider(firebaseDatasource: _firebaseDatasource);
     _scenarioProvider = ScenarioProvider(
-      gemini: _geminiDatasource,
+      gemini: _geminiService,
       firebase: _firebaseDatasource,
       local: _localDatasource,
+      cache: _scenarioCache,
     );
 
     _router = GoRouter(

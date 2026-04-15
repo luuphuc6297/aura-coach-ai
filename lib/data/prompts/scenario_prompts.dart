@@ -132,29 +132,11 @@ Instructions:
    - Conversational
 7. Provide scores and detailed feedback.
 
-Respond with ONLY a JSON object, no markdown fences, no prose before or after:
-{
-  "score": 8,
-  "accuracyScore": 9,
-  "naturalnessScore": 8,
-  "complexityScore": 7,
-  "feedback": "Concise overall feedback in English",
-  "correction": "Corrected version of user input, or null if no correction needed",
-  "betterAlternative": "A more natural way to phrase it",
-  "analysis": "Overall analysis",
-  "grammarAnalysis": "Grammar-specific feedback",
-  "vocabularyAnalysis": "Vocabulary usage feedback",
-  "improvements": [
-    {"original": "exact substring from user input", "suggestion": "better version", "explanation": "why"}
-  ],
-  "userTone": "Neutral | Formal | Friendly | Informal | Conversational",
-  "alternativeTones": {
-    "formal": {"text": "Formal version", "color": "#6366F1"},
-    "friendly": {"text": "Friendly version", "color": "#9A7B3D"},
-    "informal": {"text": "Informal version", "color": "#D98A8A"},
-    "conversational": {"text": "Conversational version", "color": "#7BC6A0"}
-  }
-}
+Respond with a JSON object matching the response schema. Key fields:
+- improvements[] — each item: {original, correction, type: 'grammar' | 'vocabulary', explanation}
+- alternativeTones — flat map {formal, friendly, informal, conversational}; each value is the translated sentence as a plain string.
+- userTone — one of 'Neutral', 'Formal', 'Friendly', 'Informal', 'Conversational', 'Rude', 'Too Formal'.
+Do not invent extra fields. Do not emit markdown fences.
 ''';
 }
 

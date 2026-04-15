@@ -82,7 +82,7 @@ Respond with ONLY a JSON object:
   "feedback": "Overall feedback",
   "grammarAnalysis": "Grammar feedback",
   "improvements": [
-    {"original": "exact substring", "suggestion": "better version", "explanation": "why"}
+    {"original": "exact substring", "correction": "better version", "type": "grammar | vocabulary", "explanation": "why"}
   ],
   "nextAgentReply": "Agent's next line in English",
   "nextAgentReplyVietnamese": "Vietnamese translation of the agent's next line"

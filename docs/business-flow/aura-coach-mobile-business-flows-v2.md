@@ -398,13 +398,26 @@ dependencies:
 | Mind Map/day | 3 | 10 | Unlimited |
 | Audio TTS/day | 5 | 15 | Unlimited |
 
-### 6.3 HIGH — Missing AI Functions
+### 6.3 Missing AI Functions (status after Gemini layer refactor)
 
 | Function | Status | Impact |
 |----------|--------|--------|
-| `generateNativeSpeech` (TTS) | ❌ Not implemented | Audio buttons non-functional on 4+ screens |
-| `generateScenarioVideo` | ❌ Not implemented | Premium video feature broken |
-| `generateIllustration` | ❌ Not implemented | Word illustration missing |
+| `generateNextLesson` | ✅ Implemented (Flash, temp 0.9, `lessonSchema`) | Scenario Coach |
+| `evaluateResponse` | ✅ Implemented (Flash, temp 0.3, `assessmentSchema`) | Scenario Coach |
+| `generateProgressiveHints` | ✅ Implemented (Flash, temp 0.3) | Scenario Coach hint reveal |
+| `generateToneTranslations` | ✅ Implemented (Flash, temp 0.7, `translationSchema`) | Translator — UI pending |
+| `generateStoryScenario` | ✅ Implemented (Pro, temp 0.8, `storySchema`) | Story — UI pending |
+| `evaluateStoryTurn` | ✅ Implemented (Pro, temp 0.4, `assessmentSchema`) | Story — UI pending |
+| `evaluateQuizAnswer` | ✅ Implemented (Flash, temp 0.4, `assessmentSchema`) | Quiz — UI pending |
+| `generateExercises` | ✅ Implemented (Flash, temp 0.7, `exercisesSchema`) | Quiz — UI pending |
+| `generateDictionaryExplanation` | ✅ Implemented (Pro, temp 0.7, `dictionarySchema`) | Vocab Hub save |
+| `generateWordAnalysis` | ✅ Implemented (Flash, temp 0.2, `wordAnalysisSchema`) | Vocab Hub analyze |
+| `generateTopicMindMap` | ✅ Implemented (Flash, temp 0.2, `mindMapRootSchema`) | Vocab Hub mind map |
+| `expandMindMapNode` | ✅ Implemented (Flash, temp 0.2, `mindMapChildrenSchema`) | Vocab Hub mind map |
+| `analyzeCustomNode` | ✅ Implemented (Flash, temp 0.1, `customNodeSchema`) | Vocab Hub add word |
+| `generateNativeSpeech` (TTS) | ❌ Not implemented | Audio buttons non-functional |
+| `generateScenarioVideo` (Veo) | ❌ Prompt builder only | Premium video feature |
+| `generateIllustration` (Imagen) | ❌ Not implemented | Word illustration missing |
 
 ### 6.4 HIGH — Purchase Repository Bug
 
@@ -419,9 +432,48 @@ These screens use hardcoded sample data instead of provider data:
 - `conversation_history_screen.dart` — hardcoded history
 - `tone_translator_screen.dart` — hardcoded translations
 
-### 6.6 MEDIUM — Preview Model Names
+### 6.6 Gemini Layer Architecture (post-refactor)
 
-`api_constants.dart` uses `gemini-3-flash-preview` and `gemini-3.1-pro-preview`. Preview models can break without notice. Use stable GA model names when available.
+The mobile AI layer now mirrors the web `services/gemini/` structure so business logic stays platform-consistent. UI/design decisions remain mobile-owned.
+
+**File layout** (`lib/data/gemini/`):
+- `config.dart` — `GeminiConfig.flash(...)` / `GeminiConfig.pro(...)` factories. Hard-codes `responseMimeType: application/json` and accepts a `Schema?` per call.
+- `helpers.dart` — `retryOperation<T>()` (1 retry, exponential backoff on 429/503/`RESOURCE_EXHAUSTED`) and `parseJsonObject` / `parseJsonArray`.
+- `schemas.dart` — 10 `Schema` definitions (assessment, lesson, story, translation, dictionary, wordAnalysis, mindMapRoot, mindMapChildren, customNode, exercises). Ported 1:1 from web `schemas.ts`.
+- `types.dart` — `WordAnalysis`, `MindMapNode`, `CustomNodeResult`, `DictionaryResult`, `Exercise`, `StoryScenario`, `TranslationResult`, `ToneSet`, `GrammarAnalysis`. Plain Dart classes with `fromJson` factories.
+- `gemini_service.dart` — 13 public methods wiring model tier + temperature + schema + prompt + retry.
+
+**Model & temperature matrix**:
+
+| Endpoint | Model | Temp |
+|---|---|---|
+| `generateNextLesson` | Flash | 0.9 |
+| `evaluateResponse` | Flash | 0.3 |
+| `generateProgressiveHints` | Flash | 0.3 |
+| `generateToneTranslations` | Flash | 0.7 |
+| `generateStoryScenario` | Pro | 0.8 |
+| `evaluateStoryTurn` | Pro | 0.4 |
+| `evaluateQuizAnswer` | Flash | 0.4 |
+| `generateExercises` | Flash | 0.7 |
+| `generateDictionaryExplanation` | Pro | 0.7 |
+| `generateWordAnalysis` | Flash | 0.2 |
+| `generateTopicMindMap` | Flash | 0.2 |
+| `expandMindMapNode` | Flash | 0.2 |
+| `analyzeCustomNode` | Flash | 0.1 |
+
+**Fallback strategy** (cache + error, no mocks in production source):
+1. Call `GeminiService` with `retryOperation` wrapping the model call (1 retry on 429/503).
+2. On success → update `ScenarioCache` (SharedPreferences-backed last-good lesson and assessment) and show result as `ScenarioSource.live`.
+3. On failure → provider falls back to `ScenarioCache.getLastLesson()` with `ScenarioSource.cache` and surfaces a banner in the chat bubble: _"Showing your last cached lesson — AI is unavailable right now."_
+4. If cache is empty → error card with `Retry` button; no synthetic content rendered.
+
+**Mobile design boundaries**:
+- `AssessmentResult.alternativeTones` is a `{ToneVariation{text, color}}` object on the mobile side. The AI contract is a flat string map (matches web `assessmentSchema`); colors are assigned inside `AlternativeTones.fromAiJson` from the Clay palette (`AppColors.formalTone / friendlyTone / casualTone / neutralTone`). AI never returns hex codes.
+- `Improvement.type: ImprovementType{grammar, vocabulary}` is adopted from web and used for SavedItems filtering and the grammar/vocab badge in `_ImprovementTypeBadge`.
+- `Scenario` field names (`vietnamesePhrase`, `englishPhrase`, `situation`, `title`, `sentenceType`, `hints{level1,2,3}`) match web `LessonContext`; `vocabularyPrep` is the one mobile-specific optional extension surfaced in `ContextPanel`.
+
+**Model name strategy**:
+`api_constants.dart` ships preview `gemini-3-flash-preview` and `gemini-3.1-pro-preview` to match the web platform. Preview models can rotate — when Google promotes a GA successor, update in one place (`ApiConstants.modelFlash` / `modelPro`) and the whole layer picks it up.
 
 ### 6.7 MEDIUM — Guest Migration Not Implemented
 
@@ -498,11 +550,9 @@ Two different root collection names (`user_profiles` vs `users`). The `_checkOnb
 
 **Fix:** Standardize to `/users/{uid}` everywhere. Update AuthProvider and security rules to match.
 
-### 8.3 🟡 HIGH — GeminiDatasource Hardcodes Model Names
+### 8.3 ✅ RESOLVED — GeminiDatasource replaced by modular `lib/data/gemini/`
 
-**File:** `lib/data/datasources/gemini_datasource.dart`
-
-Models hardcoded as inline strings instead of using `ApiConstants.modelFlash` / `ApiConstants.modelPro`. If model names change, you have to find/replace across multiple strings instead of one constant.
+The monolithic `gemini_datasource.dart` has been deleted. All endpoints now live in `lib/data/gemini/gemini_service.dart`, route model and temperature through `GeminiConfig`, and consume `ApiConstants.modelFlash` / `modelPro` from a single source.
 
 ### 8.4 🟡 HIGH — No Paywall / Subscription Screen
 
