@@ -49,11 +49,14 @@ class _ClayPressableState extends State<ClayPressable>
   void _onTapDown(TapDownDetails details) {
     if (!_isActive) return;
     setState(() => _isPressed = true);
-    _controller.animateTo(
-      widget.scaleDown,
-      duration: AppAnimations.durationPress,
-      curve: Curves.easeOut,
-    );
+    final reduceMotion = AppAnimations.shouldReduceMotion(context);
+    if (!reduceMotion) {
+      _controller.animateTo(
+        widget.scaleDown,
+        duration: AppAnimations.durationPress,
+        curve: Curves.easeOut,
+      );
+    }
     if (widget.enableHaptic) {
       switch (widget.hapticType) {
         case ClayHapticType.light:
@@ -77,6 +80,10 @@ class _ClayPressableState extends State<ClayPressable>
   }
 
   void _springBack() {
+    if (AppAnimations.shouldReduceMotion(context)) {
+      _controller.value = 1.0;
+      return;
+    }
     final simulation = SpringSimulation(
       AppAnimations.springTap,
       _controller.value,

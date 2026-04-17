@@ -174,11 +174,13 @@ class _LessonCardState extends State<LessonCard>
   }
 
   Widget _buildCollapsibleSituation() {
-    return GestureDetector(
+    return ClayPressable(
       onTap: () => setState(() => _situationExpanded = !_situationExpanded),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      scaleDown: 0.98,
+      builder: (context, isPressed) {
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
         decoration: BoxDecoration(
           color: AppColors.cream,
           borderRadius: AppRadius.mdBorder,
@@ -199,12 +201,14 @@ class _LessonCardState extends State<LessonCard>
                   ),
                 ),
                 const SizedBox(width: 4),
-                Icon(
-                  _situationExpanded
-                      ? Icons.keyboard_arrow_up
-                      : Icons.keyboard_arrow_down,
-                  size: 18,
-                  color: AppColors.teal,
+                AnimatedRotation(
+                  turns: _situationExpanded ? 0.5 : 0.0,
+                  duration: AppAnimations.durationMedium,
+                  child: const Icon(
+                    Icons.keyboard_arrow_down,
+                    size: 18,
+                    color: AppColors.teal,
+                  ),
                 ),
                 const Spacer(),
               ],
@@ -230,7 +234,8 @@ class _LessonCardState extends State<LessonCard>
             ),
           ],
         ),
-      ),
+        );
+      },
     );
   }
 }

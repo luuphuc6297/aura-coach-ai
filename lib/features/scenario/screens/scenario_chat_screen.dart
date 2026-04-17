@@ -17,6 +17,7 @@ import '../widgets/chat_bubble_ai.dart';
 import '../widgets/assessment_card.dart';
 import '../widgets/chat_input_bar.dart';
 import '../widgets/context_panel.dart';
+import '../../../shared/widgets/message_entrance.dart';
 
 class ScenarioChatScreen extends StatelessWidget {
   const ScenarioChatScreen({super.key});
@@ -199,9 +200,12 @@ class ScenarioChatScreen extends StatelessWidget {
                         return _TypingIndicator();
                       }
                       final msg = provider.messages[index];
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: _buildMessage(context, msg, provider),
+                      return MessageEntrance(
+                        key: ValueKey(msg.id),
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: _buildMessage(context, msg, provider),
+                        ),
                       );
                     },
                   ),

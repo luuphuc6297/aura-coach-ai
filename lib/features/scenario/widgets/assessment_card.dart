@@ -8,6 +8,7 @@ import '../../../core/constants/cloudinary_assets.dart';
 import '../../../shared/widgets/cloud_image.dart';
 import '../../../shared/widgets/fluent_icon.dart';
 import '../models/assessment.dart';
+import '../../../core/theme/app_animations.dart';
 import '../../../shared/widgets/clay_pressable.dart';
 import 'score_circle.dart';
 import 'radar_score.dart';
@@ -222,10 +223,12 @@ class _AssessmentCardState extends State<AssessmentCard> {
   }
 
   Widget _buildBetterAlternativeSection() {
-    return GestureDetector(
+    return ClayPressable(
       onTap: () => setState(() => _showBetterWayExpanded = !_showBetterWayExpanded),
-      child: Container(
-        padding: const EdgeInsets.all(12),
+      scaleDown: 0.98,
+      builder: (context, isPressed) {
+        return Container(
+          padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: AppColors.teal.withValues(alpha: 0.08),
           borderRadius: AppRadius.mdBorder,
@@ -254,27 +257,39 @@ class _AssessmentCardState extends State<AssessmentCard> {
                     ),
                   ],
                 ),
-                Icon(
-                  _showBetterWayExpanded ? Icons.expand_less : Icons.expand_more,
-                  size: 18,
-                  color: AppColors.teal,
+                AnimatedRotation(
+                  turns: _showBetterWayExpanded ? 0.5 : 0.0,
+                  duration: AppAnimations.durationMedium,
+                  child: const Icon(
+                    Icons.expand_more,
+                    size: 18,
+                    color: AppColors.teal,
+                  ),
                 ),
               ],
             ),
-            if (_showBetterWayExpanded) ...[
-              const SizedBox(height: 8),
-              Text(
-                widget.assessment.betterAlternative!,
-                style: AppTypography.caption.copyWith(
-                  color: AppColors.warmDark,
-                  fontSize: 12,
-                  height: 1.4,
+            AnimatedCrossFade(
+              firstChild: Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  widget.assessment.betterAlternative!,
+                  style: AppTypography.caption.copyWith(
+                    color: AppColors.warmDark,
+                    fontSize: 12,
+                    height: 1.4,
+                  ),
                 ),
               ),
-            ],
+              secondChild: const SizedBox.shrink(),
+              crossFadeState: _showBetterWayExpanded
+                  ? CrossFadeState.showFirst
+                  : CrossFadeState.showSecond,
+              duration: AppAnimations.durationMedium,
+            ),
           ],
         ),
-      ),
+        );
+      },
     );
   }
 

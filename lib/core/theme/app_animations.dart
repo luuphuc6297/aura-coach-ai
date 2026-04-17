@@ -25,4 +25,13 @@ abstract final class AppAnimations {
     stiffness: 200,
     damping: 20,
   );
+
+  /// Whether animations should be reduced for accessibility.
+  ///
+  /// Returns true when the platform reports [disableAnimations] or
+  /// [reduceMotion]. Widgets should skip scale/slide/spring animations
+  /// and use instant transitions instead.
+  static bool shouldReduceMotion(BuildContext context) {
+    return MediaQuery.of(context).disableAnimations;
+  }
 }
