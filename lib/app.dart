@@ -7,6 +7,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/theme/app_theme.dart';
+import 'shared/widgets/bouncing_scroll_behavior.dart';
 import 'data/cache/scenario_cache.dart';
 import 'data/datasources/firebase_datasource.dart';
 import 'data/datasources/local_datasource.dart';
@@ -127,11 +128,14 @@ class _AuraCoachAppState extends State<AuraCoachApp> {
         ChangeNotifierProvider<LibraryProvider>.value(value: _libraryProvider),
         ChangeNotifierProvider<ScenarioProvider>.value(value: _scenarioProvider),
       ],
-      child: MaterialApp.router(
-        title: 'Aura Coach AI',
-        theme: AppTheme.light,
-        routerConfig: _router,
-        debugShowCheckedModeBanner: false,
+      child: ScrollConfiguration(
+        behavior: const BouncingScrollBehavior(),
+        child: MaterialApp.router(
+          title: 'Aura Coach AI',
+          theme: AppTheme.light,
+          routerConfig: _router,
+          debugShowCheckedModeBanner: false,
+        ),
       ),
     );
   }

@@ -6,6 +6,8 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../shared/widgets/cloud_image.dart';
 import '../../../shared/widgets/clay_badge.dart';
+import '../../../core/theme/app_animations.dart';
+import '../../../shared/widgets/clay_pressable.dart';
 
 class ModeCard extends StatelessWidget {
   final String title;
@@ -95,34 +97,41 @@ class ModeCard extends StatelessWidget {
             }).toList(),
           ),
           const SizedBox(height: AppSpacing.lg),
-          GestureDetector(
+          ClayPressable(
             onTap: isLoading ? null : onTap,
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.giant,
-                vertical: AppSpacing.mdd,
-              ),
-              decoration: BoxDecoration(
-                color: isLoading
-                    ? accentColor.withValues(alpha: 0.6)
-                    : accentColor,
-                borderRadius: AppRadius.lgBorder,
-                boxShadow: AppShadows.colored(accentColor),
-              ),
-              child: isLoading
-                  ? SizedBox(
-                      width: 22,
-                      height: 22,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.5,
-                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
-                      ),
-                    )
-                  : Text(
-                      '$ctaText \u{2192}',
-                      style: AppTypography.button,
-                    ),
-            ),
+            builder: (context, isPressed) {
+              return Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.giant,
+                  vertical: AppSpacing.mdd,
+                ),
+                decoration: BoxDecoration(
+                  color: isLoading
+                      ? accentColor.withValues(alpha: 0.6)
+                      : accentColor,
+                  borderRadius: AppRadius.lgBorder,
+                  boxShadow: AppShadows.colored(accentColor),
+                ),
+                child: AnimatedSwitcher(
+                  duration: AppAnimations.durationFast,
+                  child: isLoading
+                      ? SizedBox(
+                          key: const ValueKey('loading'),
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
+                          ),
+                        )
+                      : Text(
+                          key: const ValueKey('text'),
+                          '$ctaText \u{2192}',
+                          style: AppTypography.button,
+                        ),
+                ),
+              );
+            },
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(quotaText, style: AppTypography.caption),

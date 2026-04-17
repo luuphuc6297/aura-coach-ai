@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import '../../../core/constants/icon_constants.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_animations.dart';
+import '../../../shared/widgets/fluent_icon.dart';
+import '../../../shared/widgets/clay_pressable.dart';
 
 class LessonCard extends StatefulWidget {
   final String vietnameseSentence;
@@ -58,13 +61,9 @@ class _LessonCardState extends State<LessonCard>
   }
 
   Widget _buildSentenceBlock() {
-    final directionLabel = widget.isVnToEn
-        ? 'TRANSLATE TO ENGLISH'
-        : 'TRANSLATE TO VIETNAMESE';
-
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 12, 12, 14),
+      padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
       decoration: BoxDecoration(
         color: AppColors.cream,
         borderRadius: AppRadius.mdBorder,
@@ -73,48 +72,38 @@ class _LessonCardState extends State<LessonCard>
         ),
         boxShadow: AppShadows.soft,
       ),
-      child: Column(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            directionLabel,
-            style: AppTypography.sentenceLabel.copyWith(
-              color: AppColors.teal,
+          Expanded(
+            child: Text(
+              widget.vietnameseSentence,
+              style: widget.isVnToEn
+                  ? AppTypography.sentenceVi
+                  : AppTypography.sentence,
             ),
           ),
-          const SizedBox(height: 8),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Text(
-                  widget.vietnameseSentence,
-                  style: widget.isVnToEn
-                      ? AppTypography.sentenceVi
-                      : AppTypography.sentence,
-                ),
-              ),
-              if (widget.onListen != null) ...[
-                const SizedBox(width: 8),
-                Padding(
-                  padding: const EdgeInsets.only(top: 2),
-                  child: GestureDetector(
-                    onTap: () =>
-                        widget.onListen?.call(widget.vietnameseSentence),
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: AppColors.teal.withValues(alpha: 0.12),
-                        shape: BoxShape.circle,
-                      ),
-                      child:
-                          const Text('🔊', style: TextStyle(fontSize: 18)),
+          if (widget.onListen != null) ...[
+            const SizedBox(width: 8),
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: ClayPressable(
+                onTap: () =>
+                    widget.onListen?.call(widget.vietnameseSentence),
+                scaleDown: 0.90,
+                builder: (context, isPressed) {
+                  return Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.teal.withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
                     ),
-                  ),
-                ),
-              ],
-            ],
-          ),
+                    child: const FluentIcon(AppIcons.listen, size: 20),
+                  );
+                },
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -135,13 +124,19 @@ class _LessonCardState extends State<LessonCard>
                 width: 1.5,
               ),
             ),
-            child: Text(
-              '💡 Hints',
-              style: AppTypography.labelSm.copyWith(
-                color: const Color(0xFF9A7B3D),
-                fontWeight: FontWeight.w700,
-                fontSize: 12,
-              ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const FluentIcon(AppIcons.hint, size: 16),
+                const SizedBox(width: 4),
+                Text(
+                  'Hints',
+                  style: AppTypography.sentenceLabel.copyWith(
+                    color: const Color(0xFF9A7B3D),
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -158,13 +153,19 @@ class _LessonCardState extends State<LessonCard>
                 width: 1.5,
               ),
             ),
-            child: Text(
-              '🔄 ${widget.isVnToEn ? 'EN↔VN' : 'VN↔EN'}',
-              style: AppTypography.labelSm.copyWith(
-                color: AppColors.teal,
-                fontWeight: FontWeight.w700,
-                fontSize: 12,
-              ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const FluentIcon(AppIcons.toggle, size: 16),
+                const SizedBox(width: 4),
+                Text(
+                  widget.isVnToEn ? 'EN↔VN' : 'VN↔EN',
+                  style: AppTypography.sentenceLabel.copyWith(
+                    color: AppColors.teal,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -192,9 +193,9 @@ class _LessonCardState extends State<LessonCard>
               children: [
                 Text(
                   'Situation',
-                  style: AppTypography.bodySm.copyWith(
+                  // 15/700 — Section title tier
+                  style: AppTypography.sectionTitle.copyWith(
                     color: AppColors.teal,
-                    fontWeight: FontWeight.w800,
                   ),
                 ),
                 const SizedBox(width: 4),
@@ -213,9 +214,10 @@ class _LessonCardState extends State<LessonCard>
                 padding: const EdgeInsets.only(top: 6),
                 child: Text(
                   widget.situation,
-                  style: AppTypography.bodySm.copyWith(
+                  // 13/600 — Card body tier
+                  style: AppTypography.cardBody.copyWith(
                     color: AppColors.warmMuted,
-                    height: 1.5,
+                    height: 1.6,
                     fontStyle: FontStyle.italic,
                   ),
                 ),

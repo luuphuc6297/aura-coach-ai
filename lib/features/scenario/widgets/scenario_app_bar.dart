@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import '../../../core/constants/icon_constants.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../shared/widgets/fluent_icon.dart';
+import '../../../shared/widgets/clay_pressable.dart';
 
 class ScenarioAppBar extends StatelessWidget {
   final String title;
@@ -43,18 +46,22 @@ class ScenarioAppBar extends StatelessWidget {
         children: [
           Row(
             children: [
-              GestureDetector(
+              ClayPressable(
                 onTap: onBack,
-                child: const SizedBox(
-                  width: 44,
-                  height: 44,
-                  child: Center(
-                    child: Text(
-                      '\u{2039}',
-                      style: TextStyle(fontSize: 22),
+                scaleDown: 0.90,
+                builder: (context, isPressed) {
+                  return SizedBox(
+                    width: 44,
+                    height: 44,
+                    child: Center(
+                      child: Icon(
+                        Icons.arrow_back_ios_rounded,
+                        size: 20,
+                        color: AppColors.warmDark,
+                      ),
                     ),
-                  ),
-                ),
+                  );
+                },
               ),
               const SizedBox(width: AppSpacing.xs),
               Expanded(
@@ -70,8 +77,8 @@ class ScenarioAppBar extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              _actionIcon('\u{1F4CB}', onHistory),
-              _actionIcon('\u{1F4DA}', onMyLearning),
+              _actionButton(AppIcons.history, 18, onHistory),
+              _actionButton(AppIcons.myLearning, 18, onMyLearning),
             ],
           ),
           Padding(
@@ -79,7 +86,7 @@ class ScenarioAppBar extends StatelessWidget {
             child: Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                '$emoji $category \u{00B7} $level \u{00B7} Scenario #$scenarioIndex',
+                '$emoji $category · $level · Scenario #$scenarioIndex',
                 style: AppTypography.caption,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -102,16 +109,19 @@ class ScenarioAppBar extends StatelessWidget {
     );
   }
 
-  Widget _actionIcon(String emoji, VoidCallback? onTap) {
-    return GestureDetector(
+  Widget _actionButton(String iconUrl, double iconSize, VoidCallback? onTap) {
+    return ClayPressable(
       onTap: onTap,
-      child: SizedBox(
-        width: 44,
-        height: 44,
-        child: Center(
-          child: Text(emoji, style: const TextStyle(fontSize: 14)),
-        ),
-      ),
+      scaleDown: 0.90,
+      builder: (context, isPressed) {
+        return SizedBox(
+          width: 44,
+          height: 44,
+          child: Center(
+            child: FluentIcon(iconUrl, size: iconSize),
+          ),
+        );
+      },
     );
   }
 }

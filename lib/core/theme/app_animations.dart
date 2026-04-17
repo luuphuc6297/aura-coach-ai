@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/physics.dart';
 
 abstract final class AppAnimations {
   static const durationFast = Duration(milliseconds: 150);
@@ -6,5 +7,22 @@ abstract final class AppAnimations {
   static const durationNormal = Duration(milliseconds: 300);
   static const durationSlow = Duration(milliseconds: 500);
 
+  /// Duration for press-down scale (instant feel, no spring).
+  static const durationPress = Duration(milliseconds: 80);
+
   static const easeClay = Curves.easeInOut;
+
+  /// Spring for tap release — fast, slight overshoot, quick settle.
+  static const springTap = SpringDescription(
+    mass: 1,
+    stiffness: 400,
+    damping: 15,
+  );
+
+  /// Spring for gentle transitions — smooth, no overshoot.
+  static const springGentle = SpringDescription(
+    mass: 1,
+    stiffness: 200,
+    damping: 20,
+  );
 }

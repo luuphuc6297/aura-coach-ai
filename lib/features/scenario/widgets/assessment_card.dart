@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import '../../../core/constants/icon_constants.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/constants/cloudinary_assets.dart';
 import '../../../shared/widgets/cloud_image.dart';
+import '../../../shared/widgets/fluent_icon.dart';
 import '../models/assessment.dart';
+import '../../../shared/widgets/clay_pressable.dart';
 import 'score_circle.dart';
 import 'radar_score.dart';
 
@@ -192,7 +195,7 @@ class _AssessmentCardState extends State<AssessmentCard> {
         children: [
           Row(
             children: [
-              const Text('✏️', style: TextStyle(fontSize: 12)),
+              const FluentIcon(AppIcons.grammar, size: 14),
               const SizedBox(width: 6),
               Text(
                 'Correction',
@@ -239,7 +242,7 @@ class _AssessmentCardState extends State<AssessmentCard> {
               children: [
                 Row(
                   children: [
-                    const Text('💡', style: TextStyle(fontSize: 12)),
+                    const FluentIcon(AppIcons.hint, size: 14),
                     const SizedBox(width: 6),
                     Text(
                       'Better Way to Say It',
@@ -281,18 +284,16 @@ class _AssessmentCardState extends State<AssessmentCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Center(
-            child: RadarScore(
-              accuracyScore: widget.assessment.accuracyScore,
-              naturalnessScore: widget.assessment.naturalnessScore,
-              complexityScore: widget.assessment.complexityScore,
-              size: 140,
-            ),
+          RadarScore(
+            accuracyScore: widget.assessment.accuracyScore,
+            naturalnessScore: widget.assessment.naturalnessScore,
+            complexityScore: widget.assessment.complexityScore,
+            size: 130,
           ),
           const SizedBox(height: 16),
-          _buildAnalysisBlock('✏️', 'Grammar', widget.assessment.grammarAnalysis),
+          _buildAnalysisBlock(AppIcons.grammar, 'Grammar', widget.assessment.grammarAnalysis),
           const SizedBox(height: 10),
-          _buildAnalysisBlock('📖', 'Vocabulary', widget.assessment.vocabularyAnalysis),
+          _buildAnalysisBlock(AppIcons.vocabulary, 'Vocabulary', widget.assessment.vocabularyAnalysis),
           if (widget.assessment.improvements.isNotEmpty) ...[
             const SizedBox(height: 10),
             _buildImprovementsBlock(),
@@ -361,7 +362,7 @@ class _AssessmentCardState extends State<AssessmentCard> {
         children: [
           Row(
             children: [
-              Text(icon, style: const TextStyle(fontSize: 13)),
+              FluentIcon(icon, size: 16),
               const SizedBox(width: 6),
               Text(
                 title,
@@ -462,7 +463,7 @@ class _AssessmentCardState extends State<AssessmentCard> {
                           onTap: () => widget.onSaveImprovement?.call(imp),
                           child: const Padding(
                             padding: EdgeInsets.only(top: 2),
-                            child: Text('\u{1F516}', style: TextStyle(fontSize: 14)),
+                            child: FluentIcon(AppIcons.bookmark, size: 16),
                           ),
                         ),
                       ],
@@ -544,14 +545,20 @@ class _AssessmentCardState extends State<AssessmentCard> {
                     const SizedBox(width: 8),
                     Column(
                       children: [
-                        GestureDetector(
+                        ClayPressable(
                           onTap: () => widget.onListen?.call(toneVar.text),
-                          child: Text('🔊', style: const TextStyle(fontSize: 14)),
+                          scaleDown: 0.85,
+                          builder: (context, isPressed) {
+                            return const FluentIcon(AppIcons.listen, size: 18);
+                          },
                         ),
                         const SizedBox(height: 4),
-                        GestureDetector(
+                        ClayPressable(
                           onTap: () {},
-                          child: Text('🔖', style: const TextStyle(fontSize: 14)),
+                          scaleDown: 0.85,
+                          builder: (context, isPressed) {
+                            return const FluentIcon(AppIcons.bookmark, size: 18);
+                          },
                         ),
                       ],
                     ),
@@ -621,25 +628,28 @@ class _AssessmentCardState extends State<AssessmentCard> {
   }
 
   Widget _difficultyButton(String label, VoidCallback? onTap, Color color) {
-    return GestureDetector(
+    return ClayPressable(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
-          borderRadius: AppRadius.mdBorder,
-          border: Border.all(color: color.withValues(alpha: 0.4), width: 1.5),
-        ),
-        child: Text(
-          label,
-          textAlign: TextAlign.center,
-          style: AppTypography.caption.copyWith(
-            fontWeight: FontWeight.w600,
-            color: color,
-            fontSize: 11,
+      scaleDown: 0.95,
+      builder: (context, isPressed) {
+        return Container(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: AppRadius.mdBorder,
+            border: Border.all(color: color.withValues(alpha: 0.4), width: 1.5),
           ),
-        ),
-      ),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: AppTypography.caption.copyWith(
+              fontWeight: FontWeight.w600,
+              color: color,
+              fontSize: 11,
+            ),
+          ),
+        );
+      },
     );
   }
 
