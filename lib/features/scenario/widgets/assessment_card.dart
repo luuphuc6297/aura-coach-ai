@@ -14,6 +14,8 @@ class AssessmentCard extends StatefulWidget {
   final VoidCallback? onEasier;
   final VoidCallback? onSameDifficulty;
   final VoidCallback? onHarder;
+  final ValueChanged<String>? onListen;
+  final void Function(Improvement improvement)? onSaveImprovement;
 
   const AssessmentCard({
     super.key,
@@ -21,6 +23,8 @@ class AssessmentCard extends StatefulWidget {
     this.onEasier,
     this.onSameDifficulty,
     this.onHarder,
+    this.onListen,
+    this.onSaveImprovement,
   });
 
   @override
@@ -55,22 +59,6 @@ class _AssessmentCardState extends State<AssessmentCard> {
     }
     if (lower.contains('conversational')) return AppColors.teal;
     return AppColors.warmMuted;
-  }
-
-  Color _getToneColorFromString(String? colorString) {
-    if (colorString == null) return AppColors.teal;
-    try {
-      if (colorString.startsWith('#')) {
-        final hex = colorString.replaceFirst('#', '');
-        return Color(int.parse('0xFF$hex'));
-      }
-      if (colorString.startsWith('0x') || colorString.startsWith('0X')) {
-        return Color(int.parse(colorString));
-      }
-    } catch (_) {
-      return AppColors.teal;
-    }
-    return AppColors.teal;
   }
 
   @override
@@ -211,7 +199,7 @@ class _AssessmentCardState extends State<AssessmentCard> {
                 style: AppTypography.caption.copyWith(
                   fontWeight: FontWeight.w700,
                   color: const Color(0xFF9A7B3D),
-                  fontSize: 11,
+                  fontSize: 12,
                 ),
               ),
             ],
@@ -258,7 +246,7 @@ class _AssessmentCardState extends State<AssessmentCard> {
                       style: AppTypography.caption.copyWith(
                         fontWeight: FontWeight.w700,
                         color: AppColors.teal,
-                        fontSize: 11,
+                        fontSize: 12,
                       ),
                     ),
                   ],
@@ -314,7 +302,53 @@ class _AssessmentCardState extends State<AssessmentCard> {
     );
   }
 
+  List<InlineSpan> _parseEmphasis(String text, TextStyle baseStyle) {
+    final spans = <InlineSpan>[];
+    final regex = RegExp(r'\*\*(.+?)\*\*|\*(.+?)\*');
+    var lastEnd = 0;
+
+    for (final match in regex.allMatches(text)) {
+      if (match.start > lastEnd) {
+        spans.add(TextSpan(
+          text: text.substring(lastEnd, match.start),
+          style: baseStyle,
+        ));
+      }
+
+      if (match.group(1) != null) {
+        spans.add(TextSpan(
+          text: match.group(1),
+          style: baseStyle.copyWith(fontWeight: FontWeight.w700),
+        ));
+      } else if (match.group(2) != null) {
+        spans.add(TextSpan(
+          text: match.group(2),
+          style: baseStyle.copyWith(fontStyle: FontStyle.italic),
+        ));
+      }
+
+      lastEnd = match.end;
+    }
+
+    if (lastEnd < text.length) {
+      spans.add(TextSpan(text: text.substring(lastEnd), style: baseStyle));
+    }
+
+    if (spans.isEmpty) {
+      spans.add(TextSpan(text: text, style: baseStyle));
+    }
+
+    return spans;
+  }
+
   Widget _buildAnalysisBlock(String icon, String title, String content) {
+    final contentStyle = AppTypography.caption.copyWith(
+      color: AppColors.warmDark,
+      fontSize: 11,
+      height: 1.4,
+      letterSpacing: 0.2,
+    );
+
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
@@ -334,18 +368,15 @@ class _AssessmentCardState extends State<AssessmentCard> {
                 style: AppTypography.caption.copyWith(
                   fontWeight: FontWeight.w700,
                   color: AppColors.warmDark,
-                  fontSize: 11,
+                  fontSize: 12,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 6),
-          Text(
-            content,
-            style: AppTypography.caption.copyWith(
-              color: AppColors.warmDark,
-              fontSize: 11,
-              height: 1.4,
+          RichText(
+            text: TextSpan(
+              children: _parseEmphasis(content, contentStyle),
             ),
           ),
         ],
@@ -369,7 +400,7 @@ class _AssessmentCardState extends State<AssessmentCard> {
             style: AppTypography.caption.copyWith(
               fontWeight: FontWeight.w700,
               color: AppColors.purple,
-              fontSize: 11,
+              fontSize: 12,
             ),
           ),
           const SizedBox(height: 8),
@@ -426,6 +457,14 @@ class _AssessmentCardState extends State<AssessmentCard> {
                             ],
                           ),
                         ),
+                        const SizedBox(width: 4),
+                        GestureDetector(
+                          onTap: () => widget.onSaveImprovement?.call(imp),
+                          child: const Padding(
+                            padding: EdgeInsets.only(top: 2),
+                            child: Text('\u{1F516}', style: TextStyle(fontSize: 14)),
+                          ),
+                        ),
                       ],
                     ),
                   ],
@@ -456,13 +495,14 @@ class _AssessmentCardState extends State<AssessmentCard> {
             style: AppTypography.caption.copyWith(
               fontWeight: FontWeight.w700,
               color: AppColors.warmDark,
+              fontSize: 12,
             ),
           ),
           const SizedBox(height: 10),
           ...List.generate(tones.length, (i) {
             final toneName = tones[i].$1;
             final toneVar = tones[i].$2;
-            final toneColor = _getToneColorFromString(toneVar.color);
+            final toneColor = toneVar.color;
 
             return Padding(
               padding: EdgeInsets.only(bottom: i < tones.length - 1 ? 8 : 0),
@@ -485,7 +525,7 @@ class _AssessmentCardState extends State<AssessmentCard> {
                             style: AppTypography.caption.copyWith(
                               fontWeight: FontWeight.w700,
                               color: toneColor,
-                              fontSize: 11,
+                              fontSize: 12,
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -495,6 +535,7 @@ class _AssessmentCardState extends State<AssessmentCard> {
                               color: AppColors.warmDark,
                               fontSize: 11,
                               height: 1.3,
+                              letterSpacing: 0.15,
                             ),
                           ),
                         ],
@@ -504,7 +545,7 @@ class _AssessmentCardState extends State<AssessmentCard> {
                     Column(
                       children: [
                         GestureDetector(
-                          onTap: () {},
+                          onTap: () => widget.onListen?.call(toneVar.text),
                           child: Text('🔊', style: const TextStyle(fontSize: 14)),
                         ),
                         const SizedBox(height: 4),
@@ -543,7 +584,7 @@ class _AssessmentCardState extends State<AssessmentCard> {
             style: AppTypography.caption.copyWith(
               fontWeight: FontWeight.w700,
               color: AppColors.warmDark,
-              fontSize: 11,
+              fontSize: 12,
             ),
           ),
           const SizedBox(height: 10),

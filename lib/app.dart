@@ -17,6 +17,8 @@ import 'features/splash/screens/splash_screen.dart';
 import 'features/auth/screens/auth_screen.dart';
 import 'features/onboarding/screens/onboarding_screen.dart';
 import 'features/home/screens/home_screen.dart';
+import 'features/my_library/providers/library_provider.dart';
+import 'features/my_library/screens/my_library_screen.dart';
 import 'features/scenario/providers/scenario_provider.dart';
 import 'features/scenario/screens/scenario_chat_screen.dart';
 import 'features/scenario/screens/session_summary_screen.dart';
@@ -38,6 +40,7 @@ class _AuraCoachAppState extends State<AuraCoachApp> {
   late final ScenarioCache _scenarioCache;
   late final app.AuthProvider _authProvider;
   late final HomeProvider _homeProvider;
+  late final LibraryProvider _libraryProvider;
   late final ScenarioProvider _scenarioProvider;
   late final GoRouter _router;
 
@@ -60,6 +63,10 @@ class _AuraCoachAppState extends State<AuraCoachApp> {
     );
 
     _homeProvider = HomeProvider(firebaseDatasource: _firebaseDatasource);
+    _libraryProvider = LibraryProvider(
+      firebase: _firebaseDatasource,
+      gemini: _geminiService,
+    );
     _scenarioProvider = ScenarioProvider(
       gemini: _geminiService,
       firebase: _firebaseDatasource,
@@ -94,6 +101,7 @@ class _AuraCoachAppState extends State<AuraCoachApp> {
         GoRoute(path: '/scenario', builder: (_, __) => const ScenarioChatScreen()),
         GoRoute(path: '/scenario/summary', builder: (_, __) => const SessionSummaryScreen()),
         GoRoute(path: '/history', builder: (_, __) => const ConversationHistoryScreen()),
+        GoRoute(path: '/my-library', builder: (_, __) => const MyLibraryScreen()),
       ],
     );
   }
@@ -102,6 +110,7 @@ class _AuraCoachAppState extends State<AuraCoachApp> {
   void dispose() {
     _authProvider.dispose();
     _homeProvider.dispose();
+    _libraryProvider.dispose();
     _scenarioProvider.dispose();
     _router.dispose();
     super.dispose();
@@ -115,6 +124,7 @@ class _AuraCoachAppState extends State<AuraCoachApp> {
         Provider<LocalDatasource>.value(value: _localDatasource),
         ChangeNotifierProvider<app.AuthProvider>.value(value: _authProvider),
         ChangeNotifierProvider<HomeProvider>.value(value: _homeProvider),
+        ChangeNotifierProvider<LibraryProvider>.value(value: _libraryProvider),
         ChangeNotifierProvider<ScenarioProvider>.value(value: _scenarioProvider),
       ],
       child: MaterialApp.router(

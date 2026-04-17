@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_radius.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_shadows.dart';
 import '../../../shared/widgets/cloud_image.dart';
+import '../../../shared/widgets/clay_badge.dart';
+
 class ModeCard extends StatelessWidget {
   final String title;
   final String description;
@@ -32,7 +36,10 @@ class ModeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 20),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xxxl,
+        vertical: AppSpacing.xl,
+      ),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
@@ -44,7 +51,10 @@ class ModeCard extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg,
+              vertical: 6,
+            ),
             decoration: BoxDecoration(
               color: accentColor.withValues(alpha: 0.1),
               borderRadius: AppRadius.fullBorder,
@@ -58,83 +68,63 @@ class ModeCard extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppSpacing.xl),
           Container(
             width: 140,
             height: 140,
             decoration: BoxDecoration(
               color: accentColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(40),
+              borderRadius: AppRadius.xlBorder,
               border: Border.all(color: accentColor.withValues(alpha: 0.2), width: 2),
             ),
             child: Center(child: CloudImage(url: iconUrl, size: 100)),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppSpacing.xl),
           Text(title, style: AppTypography.h1, textAlign: TextAlign.center),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           Text(
             description,
             style: AppTypography.bodyMd.copyWith(color: AppColors.warmMuted),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.md),
           Wrap(
-            spacing: 8,
+            spacing: AppSpacing.sm,
             children: tags.map((tag) {
-              return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                decoration: BoxDecoration(
-                  color: accentColor.withValues(alpha: 0.1),
-                  borderRadius: AppRadius.fullBorder,
-                ),
-                child: Text(
-                  tag,
-                  style: AppTypography.labelSm.copyWith(
-                    color: accentColor,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              );
+              return ClayBadge(text: tag, accentColor: accentColor);
             }).toList(),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.lg),
           GestureDetector(
             onTap: isLoading ? null : onTap,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 14),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.giant,
+                vertical: AppSpacing.mdd,
+              ),
               decoration: BoxDecoration(
                 color: isLoading
                     ? accentColor.withValues(alpha: 0.6)
                     : accentColor,
                 borderRadius: AppRadius.lgBorder,
-                boxShadow: [
-                  BoxShadow(
-                    color: accentColor.withValues(alpha: 0.4),
-                    offset: const Offset(3, 3),
-                  ),
-                ],
+                boxShadow: AppShadows.colored(accentColor),
               ),
               child: isLoading
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 22,
                       height: 22,
                       child: CircularProgressIndicator(
                         strokeWidth: 2.5,
-                        valueColor:
-                            AlwaysStoppedAnimation<Color>(Colors.white),
+                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
                       ),
                     )
                   : Text(
-                      '$ctaText →',
-                      style: AppTypography.button.copyWith(
-                        fontFamily: 'Nunito',
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                      ),
+                      '$ctaText \u{2192}',
+                      style: AppTypography.button,
                     ),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           Text(quotaText, style: AppTypography.caption),
         ],
       ),

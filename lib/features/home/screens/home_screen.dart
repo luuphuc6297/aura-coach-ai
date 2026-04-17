@@ -8,12 +8,15 @@ import '../widgets/bottom_nav_bar.dart';
 import '../models/mode_deep_dive_data.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_shadows.dart';
 import '../../../core/constants/cloudinary_assets.dart';
 import '../../../shared/widgets/cloud_image.dart';
 import '../../../shared/widgets/aura_logo.dart';
 import '../../../shared/widgets/swipe_dots.dart';
 import '../../auth/providers/auth_provider.dart';
 import 'package:go_router/go_router.dart';
+import '../../my_library/providers/library_provider.dart';
 import '../../scenario/providers/scenario_provider.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -37,6 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
       final uid = context.read<AuthProvider>().currentUser?.uid;
       if (uid != null) {
         context.read<HomeProvider>().loadProfile(uid);
+        context.read<LibraryProvider>().init(uid);
       }
     });
   }
@@ -120,7 +124,7 @@ class _HomeScreenState extends State<HomeScreen> {
         bottom: false,
         child: Column(
           children: [
-            _TopBar(),
+            _TopBar(accentColor: _modes[_currentMode].accentColor),
             Expanded(
               child: Stack(
                 children: [
@@ -231,7 +235,7 @@ const _modes = [
     title: 'Vocab Hub',
     description: 'Deep-dive into any word. Get analysis, mind maps, examples & spaced repetition flashcards.',
     iconUrl: CloudinaryAssets.modeVocabHub,
-    accentColor: AppColors.purple,
+    accentColor: AppColors.coral,
     badgeText: 'BUILD SKILLS',
     ctaText: 'Explore Words',
     quotaText: 'Unlimited',
@@ -264,51 +268,51 @@ class _ModeConfig {
 }
 
 class _TopBar extends StatelessWidget {
+  final Color accentColor;
+
+  const _TopBar({required this.accentColor});
+
   @override
   Widget build(BuildContext context) {
     final homeProvider = context.watch<HomeProvider>();
     final profile = homeProvider.userProfile;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xl,
+        vertical: AppSpacing.xs,
+      ),
       child: Row(
         children: [
-          const AuraLogo(fontSize: 16, compact: true),
+          AuraLogo(fontSize: 16, compact: true, color: accentColor),
           const Spacer(),
           GestureDetector(
             onTap: () => context.push('/history'),
-            child: Container(
-              width: 32,
-              height: 32,
-              alignment: Alignment.center,
-              child: const Text('📋', style: TextStyle(fontSize: 18)),
+            child: const SizedBox(
+              width: 44,
+              height: 44,
+              child: Center(
+                child: Text('\u{1F4CB}', style: TextStyle(fontSize: 18)),
+              ),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppSpacing.sm),
           if (profile != null) ...[
             Text(
               'Hi, ${profile.name}',
               style: AppTypography.labelMd.copyWith(
-                fontSize: 13,
                 fontWeight: FontWeight.w600,
                 color: AppColors.warmDark,
-                fontFamily: 'Nunito',
               ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: AppSpacing.smd),
             Container(
               width: 36,
               height: 36,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: AppColors.teal, width: 2),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.clayShadow,
-                    offset: const Offset(3, 3),
-                    blurRadius: 0,
-                  ),
-                ],
+                border: Border.all(color: accentColor, width: 2),
+                boxShadow: AppShadows.clay,
               ),
               child: ClipOval(
                 child: CloudImage(url: profile.avatarUrl, size: 32),

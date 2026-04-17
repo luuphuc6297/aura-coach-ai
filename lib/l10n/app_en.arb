@@ -1,0 +1,38 @@
+{
+  "@@locale": "en",
+  "authSubtitle": "Your personal AI English coach.\nLearn naturally, speak confidently.",
+  "continueWithGoogle": "Continue with Google",
+  "continueWithApple": "Continue with Apple",
+  "tryAsGuest": "Try as Guest",
+  "termsNotice": "By continuing you agree to our\nTerms of Service and Privacy Policy",
+  "onboardingNameTitle": "What should we call you?",
+  "onboardingNameSubtitle": "Pick a name and choose your avatar",
+  "onboardingNameHint": "Enter your name",
+  "onboardingBuddyLabel": "CHOOSE YOUR BUDDY",
+  "onboardingLevelTitle": "What's your English level?",
+  "onboardingLevelSubtitle": "We'll personalize lessons just for you",
+  "onboardingGoalsTitle": "What are your goals?",
+  "onboardingGoalsSubtitle": "Select all that apply",
+  "onboardingTopicsTitle": "Pick your interests",
+  "onboardingTopicsSubtitle": "We'll tailor scenarios to what matters to you",
+  "onboardingTimeTitle": "How much time daily?",
+  "onboardingTimeSubtitle": "We'll build the right plan for you",
+  "addYourOwnTopic": "Add your own topic...",
+  "selectedTopicsCount": "Selected: {count} topics",
+  "@selectedTopicsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dailyLimitReached": "Daily limit reached. Upgrade for more sessions.",
+  "failedToStart": "Failed to start: {error}",
+  "@failedToStart": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  }
+}

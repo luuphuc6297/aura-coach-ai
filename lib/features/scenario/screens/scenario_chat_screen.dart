@@ -1,21 +1,65 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:uuid/uuid.dart';
+import '../../../core/services/tts_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_shadows.dart';
+import '../../my_library/providers/library_provider.dart';
+import '../../my_library/models/saved_item.dart';
 import '../providers/scenario_provider.dart';
 import '../models/chat_message.dart';
 import '../widgets/scenario_app_bar.dart';
-import '../widgets/translate_prompt.dart';
+import '../widgets/lesson_card.dart';
 import '../widgets/chat_bubble_user.dart';
 import '../widgets/chat_bubble_ai.dart';
-import '../widgets/inline_assessment.dart';
+import '../widgets/assessment_card.dart';
 import '../widgets/chat_input_bar.dart';
 import '../widgets/context_panel.dart';
 
 class ScenarioChatScreen extends StatelessWidget {
   const ScenarioChatScreen({super.key});
+
+  static final _tts = TtsService();
+
+  static const _topicEmojis = {
+    'travel': '✈️',
+    'business': '💼',
+    'social': '🥂',
+    'daily': '🏠',
+    'tech': '💻',
+    'food': '🍽️',
+    'medical': '🏥',
+    'shopping': '🛍️',
+    'entertainment': '🎬',
+    'sports': '⚽',
+    'education': '🎓',
+    'environment': '🌿',
+    'finance': '💰',
+    'relationships': '❤️',
+    'legal': '⚖️',
+    'property': '🔑',
+  };
+
+  static const _topicLabels = {
+    'travel': 'Travel',
+    'business': 'Business',
+    'social': 'Social',
+    'daily': 'Daily Life',
+    'tech': 'Technology',
+    'food': 'Food & Dining',
+    'medical': 'Medical',
+    'shopping': 'Shopping',
+    'entertainment': 'Entertainment',
+    'sports': 'Sports',
+    'education': 'Education',
+    'environment': 'Environment',
+    'finance': 'Finance',
+    'relationships': 'Relationships',
+    'legal': 'Legal',
+    'property': 'Property',
+  };
 
   void _showContextPanel(BuildContext context) {
     final provider = context.read<ScenarioProvider>();
@@ -109,46 +153,8 @@ class ScenarioChatScreen extends StatelessWidget {
               );
             }
 
-            final topicEmojis = {
-              'travel': '✈️',
-              'business': '💼',
-              'social': '🥂',
-              'daily': '🏠',
-              'tech': '💻',
-              'food': '🍽️',
-              'medical': '🏥',
-              'shopping': '🛍️',
-              'entertainment': '🎬',
-              'sports': '⚽',
-              'education': '🎓',
-              'environment': '🌿',
-              'finance': '💰',
-              'relationships': '❤️',
-              'legal': '⚖️',
-              'property': '🔑',
-            };
-
-            final topicLabels = {
-              'travel': 'Travel',
-              'business': 'Business',
-              'social': 'Social',
-              'daily': 'Daily Life',
-              'tech': 'Technology',
-              'food': 'Food & Dining',
-              'medical': 'Medical',
-              'shopping': 'Shopping',
-              'entertainment': 'Entertainment',
-              'sports': 'Sports',
-              'education': 'Education',
-              'environment': 'Environment',
-              'finance': 'Finance',
-              'relationships': 'Relationships',
-              'legal': 'Legal',
-              'property': 'Property',
-            };
-
-            final topicEmoji = topicEmojis[scenario.topic] ?? '📌';
-            final topicLabel = topicLabels[scenario.topic] ?? 'Scenario';
+            final topicEmoji = _topicEmojis[scenario.topic] ?? '📌';
+            final topicLabel = _topicLabels[scenario.topic] ?? 'Scenario';
 
             return Column(
               children: [
@@ -159,23 +165,27 @@ class ScenarioChatScreen extends StatelessWidget {
                   emoji: topicEmoji,
                   category: topicLabel,
                   level: scenario.difficulty,
+                  scenarioIndex: provider.scenarioIndex,
                   progress: 0.0,
                   onBack: () => _showEndSessionDialog(context, provider),
-                  onHint: () => _showContextPanel(context),
-                  onMore: () => _showContextPanel(context),
+                  onHistory: () => context.push('/history'),
+                  onMyLearning: () => context.push('/my-library'),
                 ),
                 LessonCard(
                   vietnameseSentence: provider.isVnToEn
                       ? scenario.vietnamesePhrase
                       : scenario.englishPhrase,
-                  topic: scenario.topic,
-                  difficulty: scenario.difficulty,
-                  scenarioIndex: provider.scenarioIndex,
                   isVnToEn: provider.isVnToEn,
-                  title: scenario.title,
                   situation: scenario.situation,
                   onHint: () => _showContextPanel(context),
                   onToggleDirection: () => provider.toggleDirection(),
+                  onListen: (text) {
+                    if (provider.isVnToEn) {
+                      _tts.speakVietnamese(text);
+                    } else {
+                      _tts.speakEnglish(text);
+                    }
+                  },
                 ),
                 Expanded(
                   child: ListView.builder(
@@ -212,14 +222,48 @@ class ScenarioChatScreen extends StatelessWidget {
     );
   }
 
+  void _saveSelectionToDictionary(
+      BuildContext context, String selectedText, String fullContext) {
+    final libraryProvider = context.read<LibraryProvider>();
+    libraryProvider.addItem(SavedItem(
+      id: const Uuid().v4(),
+      original: selectedText,
+      correction: selectedText,
+      type: 'vocabulary',
+      context: fullContext,
+      timestamp: DateTime.now().millisecondsSinceEpoch,
+      masteryScore: 0,
+      easeFactor: 2.5,
+      interval: 0,
+      reviewCount: 0,
+      nextReviewDate: DateTime.now().millisecondsSinceEpoch.toDouble(),
+    ));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Saved: $selectedText'),
+        duration: const Duration(seconds: 2),
+        backgroundColor: AppColors.teal,
+      ),
+    );
+  }
+
   Widget _buildMessage(
       BuildContext context, ChatMessage msg, ScenarioProvider provider) {
     switch (msg.type) {
       case MessageType.ai:
       case MessageType.system:
-        return ChatBubbleAi(text: msg.text);
+        return ChatBubbleAi(
+          text: msg.text,
+          onSaveSelection: (selectedText, fullContext) =>
+              _saveSelectionToDictionary(context, selectedText, fullContext),
+        );
       case MessageType.user:
-        return ChatBubbleUser(text: msg.text);
+        return ChatBubbleUser(
+          text: msg.text,
+          onListen: () => _tts.speakEnglish(msg.text),
+          onSaveSelection: (selectedText, fullContext) =>
+              _saveSelectionToDictionary(context, selectedText, fullContext),
+        );
       case MessageType.assessment:
         return AssessmentCard(
           assessment: msg.assessment!,
@@ -231,6 +275,24 @@ class ScenarioChatScreen extends StatelessWidget {
           },
           onHarder: () async {
             await provider.startNewScenario(difficulty: 'harder');
+          },
+          onListen: (text) => _tts.speakEnglish(text),
+          onSaveImprovement: (imp) {
+            final libraryProvider = context.read<LibraryProvider>();
+            libraryProvider.addItem(SavedItem.fromImprovement(
+              id: const Uuid().v4(),
+              original: imp.original,
+              correction: imp.correction,
+              type: imp.type.value,
+              context: '',
+            ));
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Saved: ${imp.correction}'),
+                duration: const Duration(seconds: 2),
+                backgroundColor: AppColors.teal,
+              ),
+            );
           },
         );
     }

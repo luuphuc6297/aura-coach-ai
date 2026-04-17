@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/theme/app_radius.dart';
+import '../../../core/theme/app_spacing.dart';
 
 class ScenarioAppBar extends StatelessWidget {
   final String title;
   final String emoji;
   final String category;
   final String level;
+  final int scenarioIndex;
   final double progress;
   final VoidCallback? onBack;
-  final VoidCallback? onHint;
-  final VoidCallback? onMore;
+  final VoidCallback? onHistory;
+  final VoidCallback? onMyLearning;
 
   const ScenarioAppBar({
     super.key,
@@ -18,16 +21,22 @@ class ScenarioAppBar extends StatelessWidget {
     required this.emoji,
     required this.category,
     required this.level,
+    required this.scenarioIndex,
     required this.progress,
     this.onBack,
-    this.onHint,
-    this.onMore,
+    this.onHistory,
+    this.onMyLearning,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.sm,
+        AppSpacing.md,
+        0,
+      ),
       color: AppColors.cream,
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -36,45 +45,50 @@ class ScenarioAppBar extends StatelessWidget {
             children: [
               GestureDetector(
                 onTap: onBack,
-                child: Container(
-                  width: 36,
-                  height: 36,
-                  alignment: Alignment.center,
-                  child: Text(
-                    '‹',
-                    style: AppTypography.h1.copyWith(fontSize: 22),
+                child: const SizedBox(
+                  width: 44,
+                  height: 44,
+                  child: Center(
+                    child: Text(
+                      '\u{2039}',
+                      style: TextStyle(fontSize: 22),
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: AppSpacing.xs),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: AppTypography.bodySm.copyWith(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.teal,
-                        fontFamily: 'Nunito',
-                      ),
-                    ),
-                    Text(
-                      '$emoji $category · $level',
-                      style: AppTypography.caption,
-                    ),
-                  ],
+                child: Text(
+                  title,
+                  style: AppTypography.bodySm.copyWith(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.teal,
+                    letterSpacing: 0.3,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-              _actionIcon('💡', onHint),
-              _actionIcon('🔊', null),
-              _actionIcon('⋯', onMore),
+              _actionIcon('\u{1F4CB}', onHistory),
+              _actionIcon('\u{1F4DA}', onMyLearning),
             ],
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: AppSpacing.massive),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                '$emoji $category \u{00B7} $level \u{00B7} Scenario #$scenarioIndex',
+                style: AppTypography.caption,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ),
           const SizedBox(height: 6),
           ClipRRect(
-            borderRadius: BorderRadius.circular(2),
+            borderRadius: AppRadius.xxsBorder,
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 3,
@@ -82,7 +96,7 @@ class ScenarioAppBar extends StatelessWidget {
               valueColor: AlwaysStoppedAnimation(AppColors.teal),
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppSpacing.xs),
         ],
       ),
     );
@@ -92,8 +106,8 @@ class ScenarioAppBar extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: SizedBox(
-        width: 32,
-        height: 32,
+        width: 44,
+        height: 44,
         child: Center(
           child: Text(emoji, style: const TextStyle(fontSize: 14)),
         ),
