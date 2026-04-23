@@ -1,16 +1,38 @@
 import 'package:flutter/material.dart';
+import '../../../core/constants/icon_constants.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_radius.dart';
+import '../../../core/theme/app_shadows.dart';
+import '../../../core/theme/app_animations.dart';
+import '../../../shared/widgets/app_icon.dart';
+import '../../../shared/widgets/clay_pressable.dart';
 
 class ChatInputBar extends StatefulWidget {
   final ValueChanged<String> onSend;
   final String placeholder;
 
+  /// Per-mode accent color. Defaults to Scenario's teal; Story passes purple,
+  /// Vocab will pass coral, etc. Controls the focused border, cursor, and
+  /// active send-button fill — the neutral chrome stays clay beige so all
+  /// modes remain visually consistent.
+  final Color accentColor;
+
+  /// When false, the text field and send button are disabled so the user
+  /// cannot type or spam sends while an AI response is in flight.
+  final bool enabled;
+
+  /// When provided, a stop button replaces the mic while the bar is
+  /// disabled — lets the user cancel an in-flight AI call.
+  final VoidCallback? onStop;
+
   const ChatInputBar({
     super.key,
     required this.onSend,
     this.placeholder = 'Type your translation...',
+    this.accentColor = AppColors.teal,
+    this.enabled = true,
+    this.onStop,
   });
 
   @override
@@ -19,7 +41,9 @@ class ChatInputBar extends StatefulWidget {
 
 class _ChatInputBarState extends State<ChatInputBar> {
   final _controller = TextEditingController();
+  final _focusNode = FocusNode();
   bool _hasText = false;
+  bool _isFocused = false;
 
   @override
   void initState() {
@@ -28,11 +52,17 @@ class _ChatInputBarState extends State<ChatInputBar> {
       final has = _controller.text.trim().isNotEmpty;
       if (has != _hasText) setState(() => _hasText = has);
     });
+    _focusNode.addListener(() {
+      if (_focusNode.hasFocus != _isFocused) {
+        setState(() => _isFocused = _focusNode.hasFocus);
+      }
+    });
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -45,67 +75,140 @@ class _ChatInputBarState extends State<ChatInputBar> {
 
   @override
   Widget build(BuildContext context) {
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+
     return Container(
-      decoration: BoxDecoration(
-        color: AppColors.clayWhite,
-        border: Border(
-          top: BorderSide(color: AppColors.clayBorder, width: 2),
-        ),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      child: Container(
+      color: AppColors.cream,
+      padding: EdgeInsets.fromLTRB(12, 8, 12, bottomPadding + 8),
+      child: AnimatedContainer(
+        duration: AppAnimations.durationFast,
+        curve: AppAnimations.easeClay,
         decoration: BoxDecoration(
-          color: AppColors.clayWhite,
-          border: Border.all(color: AppColors.clayBorder, width: 2),
+          color: AppColors.clayBeige,
           borderRadius: AppRadius.fullBorder,
+          border: Border.all(
+            color: _isFocused ? widget.accentColor : AppColors.clayBorder,
+            width: 2,
+          ),
+          boxShadow: AppShadows.clay,
         ),
-        padding: const EdgeInsets.fromLTRB(18, 6, 6, 6),
+        padding: const EdgeInsets.fromLTRB(20, 8, 8, 8),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Expanded(
               child: TextField(
                 controller: _controller,
-                style: AppTypography.bodySm,
+                focusNode: _focusNode,
+                enabled: widget.enabled,
+                style: AppTypography.input.copyWith(
+                  fontSize: 15,
+                  color:
+                      widget.enabled ? AppColors.warmDark : AppColors.warmMuted,
+                ),
+                cursorColor: widget.accentColor,
+                maxLines: 1,
+                textAlignVertical: TextAlignVertical.center,
+                scrollPhysics: const BouncingScrollPhysics(),
                 decoration: InputDecoration(
-                  hintText: widget.placeholder,
-                  hintStyle: AppTypography.bodySm.copyWith(
+                  hintText: widget.enabled
+                      ? widget.placeholder
+                      : 'Waiting for reply…',
+                  hintStyle: AppTypography.input.copyWith(
                     color: AppColors.warmLight,
+                    fontSize: 15,
                   ),
+                  filled: false,
                   border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  errorBorder: InputBorder.none,
+                  disabledBorder: InputBorder.none,
                   isDense: true,
-                  contentPadding: EdgeInsets.zero,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 10),
                 ),
                 textInputAction: TextInputAction.send,
                 onSubmitted: (_) => _send(),
               ),
             ),
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.error.withValues(alpha: 0.1),
+            const SizedBox(width: 8),
+            if (!widget.enabled && widget.onStop != null)
+              ClayPressable(
+                onTap: widget.onStop,
+                scaleDown: 0.85,
+                builder: (context, isPressed) {
+                  return Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: AppColors.error,
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: AppShadows.clayBold,
+                    ),
+                    child: const Center(
+                      child: Icon(
+                        Icons.stop_rounded,
+                        size: 22,
+                        color: Colors.white,
+                      ),
+                    ),
+                  );
+                },
+              )
+            else ...[
+              ClayPressable(
+                onTap: widget.enabled ? () {} : null,
+                scaleDown: 0.85,
+                builder: (context, isPressed) {
+                  return Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: AppColors.warmLight.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Center(
+                      child: AppIcon(
+                        iconId: AppIcons.mic,
+                        size: 22,
+                        color: widget.enabled
+                            ? AppColors.warmDark
+                            : AppColors.warmLight,
+                      ),
+                    ),
+                  );
+                },
               ),
-              child: const Center(
-                child: Text('🎤', style: TextStyle(fontSize: 12)),
+              const SizedBox(width: 6),
+              ClayPressable(
+                onTap: (_hasText && widget.enabled) ? _send : null,
+                scaleDown: 0.85,
+                builder: (context, isPressed) {
+                  final isActive = _hasText && widget.enabled;
+                  return AnimatedContainer(
+                    duration: AppAnimations.durationFast,
+                    curve: AppAnimations.easeClay,
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: isActive
+                          ? widget.accentColor
+                          : AppColors.warmLight.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: isActive ? AppShadows.clayBold : null,
+                    ),
+                    child: Center(
+                      child: AppIcon(
+                        iconId: AppIcons.send,
+                        size: 22,
+                        color:
+                            isActive ? AppColors.warmDark : AppColors.warmLight,
+                      ),
+                    ),
+                  );
+                },
               ),
-            ),
-            const SizedBox(width: 4),
-            GestureDetector(
-              onTap: _hasText ? _send : null,
-              child: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: _hasText ? AppColors.teal : AppColors.clayBorder,
-                ),
-                child: const Center(
-                  child: Text('➤',
-                      style: TextStyle(fontSize: 14, color: Colors.white)),
-                ),
-              ),
-            ),
+            ],
           ],
         ),
       ),

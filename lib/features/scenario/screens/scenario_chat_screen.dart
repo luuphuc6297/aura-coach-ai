@@ -5,7 +5,7 @@ import 'package:uuid/uuid.dart';
 import '../../../core/services/tts_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../core/theme/app_shadows.dart';
+import '../../../core/theme/app_animations.dart';
 import '../../my_library/providers/library_provider.dart';
 import '../../my_library/models/saved_item.dart';
 import '../providers/scenario_provider.dart';
@@ -17,6 +17,9 @@ import '../widgets/chat_bubble_ai.dart';
 import '../widgets/assessment_card.dart';
 import '../widgets/chat_input_bar.dart';
 import '../widgets/context_panel.dart';
+import '../../../shared/widgets/message_entrance.dart';
+import '../../../shared/widgets/end_session_dialog.dart';
+import '../../../shared/widgets/thinking_indicator.dart';
 
 class ScenarioChatScreen extends StatelessWidget {
   const ScenarioChatScreen({super.key});
@@ -81,34 +84,92 @@ class ScenarioChatScreen extends StatelessWidget {
     );
   }
 
-  void _showEndSessionDialog(BuildContext context, ScenarioProvider provider) {
-    showDialog(
+  Future<void> _onBackPressed(
+      BuildContext context, ScenarioProvider provider) async {
+    // No active scenario means nothing to end — just pop back.
+    if (provider.currentScenario == null) {
+      if (context.canPop()) {
+        context.pop();
+      } else {
+        context.go('/home');
+      }
+      return;
+    }
+
+    final confirmed = await showEndSessionDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: AppColors.clayWhite,
-        title: Text('End Session?', style: AppTypography.h2.copyWith(fontSize: 18)),
-        content: Text(
-          'Your progress will be saved.',
-          style: AppTypography.bodySm.copyWith(color: AppColors.warmMuted),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Continue', style: TextStyle(color: AppColors.warmMuted)),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              await provider.endSession();
-              if (context.mounted) {
-                context.go('/scenario/summary');
-              }
-            },
-            child: Text('End & Review', style: TextStyle(color: AppColors.teal)),
-          ),
-        ],
-      ),
+      accentColor: AppColors.teal,
+      stats: _buildStats(provider),
+      title: 'End this session?',
     );
+    if (!context.mounted) return;
+
+    if (confirmed == true) {
+      await provider.endSession();
+      if (!context.mounted) return;
+      context.push('/scenario/summary');
+    } else {
+      // Learner chose Keep going (or dismissed). Keep the session alive —
+      // they can resume simply by not leaving the screen. Back-nav still
+      // honours their intent if the dialog was dismissed explicitly.
+      if (context.canPop()) {
+        context.pop();
+      } else {
+        context.go('/home');
+      }
+    }
+  }
+
+  EndSessionStats _buildStats(ScenarioProvider provider) {
+    final turns = provider.totalTurns;
+    final avg = provider.averageScore;
+    final duration = provider.sessionDuration;
+
+    final usedToday = provider.roleplayUsedToday;
+    final limit = provider.roleplayLimitToday;
+    final remainingLabel = limit == -1
+        ? null
+        : '${(limit - usedToday).clamp(0, limit)}/$limit sessions left today';
+
+    String? highlight;
+    final best = _findBestUserLine(provider.messages);
+    if (best != null) {
+      final preview =
+          best.text.length > 48 ? '${best.text.substring(0, 48)}…' : best.text;
+      highlight = 'Best line: "$preview"';
+    }
+
+    return EndSessionStats(
+      turns: turns,
+      averageScore: turns == 0 || avg == 0 ? null : avg,
+      duration: (duration != null && duration.inSeconds > 5) ? duration : null,
+      highlight: highlight,
+      quotaReminder: remainingLabel,
+    );
+  }
+
+  /// Scenario stores user turns and their scores on separate messages:
+  /// a `MessageType.user` bubble is followed immediately by a
+  /// `MessageType.assessment`. Walk the list in order so each user bubble
+  /// can be paired with the very next assessment — then pick the one with
+  /// the highest score.
+  ChatMessage? _findBestUserLine(List<ChatMessage> messages) {
+    ChatMessage? best;
+    double bestScore = -1;
+    for (var i = 0; i < messages.length - 1; i++) {
+      final msg = messages[i];
+      if (msg.type != MessageType.user) continue;
+      final next = messages[i + 1];
+      if (next.type != MessageType.assessment || next.assessment == null) {
+        continue;
+      }
+      final score = next.assessment!.score.toDouble();
+      if (score > bestScore) {
+        bestScore = score;
+        best = msg;
+      }
+    }
+    return best;
   }
 
   @override
@@ -121,35 +182,39 @@ class ScenarioChatScreen extends StatelessWidget {
           builder: (context, provider, _) {
             final scenario = provider.currentScenario;
             if (scenario == null) {
-              if (provider.isLoading) {
-                return const Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      CircularProgressIndicator(),
-                      SizedBox(height: 16),
-                      Text('Preparing your scenario...'),
-                    ],
-                  ),
-                );
-              }
-              return Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      provider.error ?? 'No scenario loaded',
-                      textAlign: TextAlign.center,
-                      style: AppTypography.bodyMd
-                          .copyWith(color: AppColors.warmMuted),
-                    ),
-                    const SizedBox(height: 16),
-                    TextButton(
-                      onPressed: () => context.go('/home'),
-                      child: const Text('Back to Home'),
-                    ),
-                  ],
-                ),
+              return AnimatedSwitcher(
+                duration: AppAnimations.durationNormal,
+                child: provider.isLoading
+                    ? const Center(
+                        key: ValueKey('loading'),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            CircularProgressIndicator(),
+                            SizedBox(height: 16),
+                            Text('Preparing your scenario...'),
+                          ],
+                        ),
+                      )
+                    : Center(
+                        key: const ValueKey('error'),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              provider.error ?? 'No scenario loaded',
+                              textAlign: TextAlign.center,
+                              style: AppTypography.bodyMd
+                                  .copyWith(color: AppColors.warmMuted),
+                            ),
+                            const SizedBox(height: 16),
+                            TextButton(
+                              onPressed: () => context.go('/home'),
+                              child: const Text('Back to Home'),
+                            ),
+                          ],
+                        ),
+                      ),
               );
             }
 
@@ -159,15 +224,14 @@ class ScenarioChatScreen extends StatelessWidget {
             return Column(
               children: [
                 ScenarioAppBar(
-                  title: scenario.title.isNotEmpty
-                      ? scenario.title
-                      : topicLabel,
+                  title:
+                      scenario.title.isNotEmpty ? scenario.title : topicLabel,
                   emoji: topicEmoji,
                   category: topicLabel,
                   level: scenario.difficulty,
                   scenarioIndex: provider.scenarioIndex,
                   progress: 0.0,
-                  onBack: () => _showEndSessionDialog(context, provider),
+                  onBack: () => _onBackPressed(context, provider),
                   onHistory: () => context.push('/history'),
                   onMyLearning: () => context.push('/my-library'),
                 ),
@@ -196,12 +260,18 @@ class ScenarioChatScreen extends StatelessWidget {
                     itemBuilder: (context, index) {
                       if (index == provider.messages.length &&
                           provider.isAiTyping) {
-                        return _TypingIndicator();
+                        return const Padding(
+                          padding: EdgeInsets.only(bottom: 10),
+                          child: ThinkingIndicator(accentColor: AppColors.teal),
+                        );
                       }
                       final msg = provider.messages[index];
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: _buildMessage(context, msg, provider),
+                      return MessageEntrance(
+                        key: ValueKey(msg.id),
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: _buildMessage(context, msg, provider),
+                        ),
                       );
                     },
                   ),
@@ -209,6 +279,8 @@ class ScenarioChatScreen extends StatelessWidget {
                 SafeArea(
                   top: false,
                   child: ChatInputBar(
+                    enabled: !provider.isAiTyping,
+                    onStop: provider.cancelCurrentMessage,
                     onSend: (text) async {
                       await provider.sendUserMessage(text);
                     },
@@ -265,115 +337,77 @@ class ScenarioChatScreen extends StatelessWidget {
               _saveSelectionToDictionary(context, selectedText, fullContext),
         );
       case MessageType.assessment:
-        return AssessmentCard(
-          assessment: msg.assessment!,
-          onEasier: () async {
-            await provider.startNewScenario(difficulty: 'easier');
-          },
-          onSameDifficulty: () async {
-            await provider.startNewScenario(difficulty: 'same');
-          },
-          onHarder: () async {
-            await provider.startNewScenario(difficulty: 'harder');
-          },
-          onListen: (text) => _tts.speakEnglish(text),
-          onSaveImprovement: (imp) {
-            final libraryProvider = context.read<LibraryProvider>();
-            libraryProvider.addItem(SavedItem.fromImprovement(
-              id: const Uuid().v4(),
-              original: imp.original,
-              correction: imp.correction,
-              type: imp.type.value,
-              context: '',
-            ));
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Saved: ${imp.correction}'),
-                duration: const Duration(seconds: 2),
-                backgroundColor: AppColors.teal,
-              ),
-            );
-          },
+        // Belt-and-suspenders: the resume path drops orphan assessment turns,
+        // so this should never be null in practice. Guard anyway so a single
+        // malformed doc can never brick the chat again.
+        final assessment = msg.assessment;
+        if (assessment == null) return const SizedBox.shrink();
+        // Consumer so the saved-state badge updates live as the user taps
+        // through the Key Vocabulary list.
+        return Consumer<LibraryProvider>(
+          builder: (context, libraryProvider, _) => AssessmentCard(
+            assessment: assessment,
+            onEasier: () async {
+              await provider.startNewScenario(difficulty: 'easier');
+            },
+            onSameDifficulty: () async {
+              await provider.startNewScenario(difficulty: 'same');
+            },
+            onHarder: () async {
+              await provider.startNewScenario(difficulty: 'harder');
+            },
+            onListen: (text) => _tts.speakEnglish(text),
+            onSaveImprovement: (imp) {
+              libraryProvider.addItem(SavedItem.fromImprovement(
+                id: const Uuid().v4(),
+                original: imp.original,
+                correction: imp.correction,
+                type: imp.type.value,
+                context: '',
+              ));
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Saved: ${imp.correction}'),
+                  duration: const Duration(seconds: 2),
+                  backgroundColor: AppColors.teal,
+                ),
+              );
+            },
+            onSaveVocabulary: (vocab) {
+              libraryProvider.addItem(SavedItem(
+                id: const Uuid().v4(),
+                original: vocab.word,
+                correction: vocab.word,
+                type: 'vocabulary',
+                context: vocab.example,
+                timestamp: DateTime.now().millisecondsSinceEpoch,
+                masteryScore: 0,
+                partOfSpeech:
+                    vocab.partOfSpeech.isEmpty ? null : vocab.partOfSpeech,
+                explanation: vocab.meaning.isEmpty ? null : vocab.meaning,
+                examples: vocab.example.isEmpty
+                    ? null
+                    : [
+                        {'en': vocab.example, 'vn': vocab.meaning},
+                      ],
+                nextReviewDate:
+                    DateTime.now().millisecondsSinceEpoch.toDouble(),
+              ));
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Saved: ${vocab.word}'),
+                  duration: const Duration(seconds: 2),
+                  backgroundColor: AppColors.purple,
+                ),
+              );
+            },
+            isVocabularySaved: (vocab) {
+              final normalized = vocab.word.trim().toLowerCase();
+              return libraryProvider.allItems
+                  .any((i) => i.correction.trim().toLowerCase() == normalized);
+            },
+          ),
         );
     }
-  }
-}
-
-class _TypingIndicator extends StatefulWidget {
-  @override
-  State<_TypingIndicator> createState() => _TypingIndicatorState();
-}
-
-class _TypingIndicatorState extends State<_TypingIndicator>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 1400),
-      vsync: this,
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(width: 46),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-          decoration: BoxDecoration(
-            color: AppColors.clayWhite,
-            border: Border.all(color: AppColors.clayBorder, width: 1.5),
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(4),
-              topRight: Radius.circular(28),
-              bottomLeft: Radius.circular(28),
-              bottomRight: Radius.circular(28),
-            ),
-            boxShadow: AppShadows.card,
-          ),
-          child: AnimatedBuilder(
-            animation: _controller,
-            builder: (_, __) => Row(
-              mainAxisSize: MainAxisSize.min,
-              children: List.generate(3, (i) {
-                final delay = i * 0.2;
-                final t = (_controller.value - delay).clamp(0.0, 1.0);
-                final y = t < 0.3
-                    ? -6 * (t / 0.3)
-                    : t < 0.6
-                        ? -6 * (1 - (t - 0.3) / 0.3)
-                        : 0.0;
-                return Container(
-                  margin: EdgeInsets.only(right: i < 2 ? 4 : 0),
-                  child: Transform.translate(
-                    offset: Offset(0, y),
-                    child: Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.clayShadow
-                            .withValues(alpha: y < -2 ? 1 : 0.4),
-                      ),
-                    ),
-                  ),
-                );
-              }),
-            ),
-          ),
-        ),
-      ],
-    );
   }
 }

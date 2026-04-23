@@ -30,7 +30,8 @@ class ProgressDots extends StatelessWidget {
             width: isActive ? AppSpacing.xxl : AppSpacing.sm,
             height: AppSpacing.sm,
             decoration: BoxDecoration(
-              color: (isActive || isDone) ? AppColors.teal : AppColors.clayBorder,
+              color:
+                  (isActive || isDone) ? AppColors.teal : AppColors.clayBorder,
               borderRadius: AppRadius.xsBorder,
             ),
           );

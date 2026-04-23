@@ -13,6 +13,6 @@ class ApiConstants {
 
   static const topP = 0.95;
   static const topK = 40;
-  static const maxTokensFlash = 2048;
-  static const maxTokensPro = 4096;
+  static const maxTokensFlash = 8192;
+  static const maxTokensPro = 16384;
 }

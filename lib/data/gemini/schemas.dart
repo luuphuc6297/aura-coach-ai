@@ -11,7 +11,8 @@ class GeminiSchemas {
   static final assessment = Schema.object(
     properties: {
       'score': Schema.number(
-          description: 'Overall score on a scale of 1-10 based on CEFR mapping.'),
+          description:
+              'Overall score on a scale of 1-10 based on CEFR mapping.'),
       'accuracyScore':
           Schema.number(description: 'Score for grammatical accuracy (1-10).'),
       'naturalnessScore':
@@ -33,8 +34,8 @@ class GeminiSchemas {
           description:
               'A more natural/native phrasing if correct but unnatural. Null if perfect.',
           nullable: true),
-      'analysis':
-          Schema.string(description: 'Detailed summary of why this score was given.'),
+      'analysis': Schema.string(
+          description: 'Detailed summary of why this score was given.'),
       'improvements': Schema.array(
         items: Schema.object(
           properties: {
@@ -55,14 +56,20 @@ class GeminiSchemas {
               'The detected tone/register of the user input (e.g., "Too Formal", "Casual", "Rude", "Neutral").'),
       'alternativeTones': Schema.object(
         properties: {
-          'formal':
-              Schema.string(description: 'A formal/business appropriate version.'),
+          'formal': Schema.string(
+              description: 'A formal/business appropriate version.'),
           'friendly': Schema.string(description: 'A warm, friendly version.'),
-          'informal': Schema.string(description: 'A very casual or slang version.'),
+          'informal':
+              Schema.string(description: 'A very casual or slang version.'),
           'conversational': Schema.string(
               description: 'A standard, neutral conversational version.'),
         },
-        requiredProperties: ['formal', 'friendly', 'informal', 'conversational'],
+        requiredProperties: [
+          'formal',
+          'friendly',
+          'informal',
+          'conversational'
+        ],
       ),
       'nextAgentReply': Schema.string(
           description:
@@ -71,6 +78,25 @@ class GeminiSchemas {
       'nextAgentReplyVietnamese': Schema.string(
           description: 'The Vietnamese translation of nextAgentReply.',
           nullable: true),
+      'keyVocabulary': Schema.array(
+        description:
+            'Up to 5 noteworthy vocabulary words or phrases from the user input or the better alternative that the learner should save. Skip trivial function words.',
+        items: Schema.object(
+          properties: {
+            'word': Schema.string(
+                description: 'The vocabulary word or short phrase, lowercase.'),
+            'partOfSpeech': Schema.string(
+                description: 'Part of speech (noun, verb, adjective, etc.).'),
+            'meaning': Schema.string(
+                description:
+                    'Concise Vietnamese translation or bilingual meaning of the word.'),
+            'example': Schema.string(
+                description:
+                    'One short natural English example sentence using the word.'),
+          },
+          requiredProperties: ['word', 'partOfSpeech', 'meaning', 'example'],
+        ),
+      ),
     },
     requiredProperties: [
       'score',
@@ -84,6 +110,7 @@ class GeminiSchemas {
       'improvements',
       'userTone',
       'alternativeTones',
+      'keyVocabulary',
     ],
   );
 
@@ -97,8 +124,7 @@ class GeminiSchemas {
       'englishPhrase': Schema.string(
           description:
               'The English translation of the Vietnamese phrase, matching the tone.'),
-      'difficulty':
-          Schema.enumString(enumValues: ['A1-A2', 'B1-B2', 'C1-C2']),
+      'difficulty': Schema.enumString(enumValues: ['A1-A2', 'B1-B2', 'C1-C2']),
       'hints': Schema.object(
         properties: {
           'level1': Schema.string(),
@@ -124,16 +150,15 @@ class GeminiSchemas {
     properties: {
       'id': Schema.string(),
       'topic': Schema.string(),
-      'situation':
-          Schema.string(description: 'Detailed background of the conversation scene.'),
-      'agentName':
-          Schema.string(description: 'Name of the character the AI is playing.'),
+      'situation': Schema.string(
+          description: 'Detailed background of the conversation scene.'),
+      'agentName': Schema.string(
+          description: 'Name of the character the AI is playing.'),
       'openingLine': Schema.string(
           description: 'The first sentence spoken by the Agent (in English).'),
       'openingLineVietnamese': Schema.string(
           description: 'Vietnamese translation of the opening line.'),
-      'difficulty':
-          Schema.enumString(enumValues: ['A1-A2', 'B1-B2', 'C1-C2']),
+      'difficulty': Schema.enumString(enumValues: ['A1-A2', 'B1-B2', 'C1-C2']),
       'hints': Schema.object(
         properties: {
           'level1': Schema.string(
@@ -158,12 +183,40 @@ class GeminiSchemas {
     ],
   );
 
+  // ---------- Story Reply Hints (per-turn) ----------
+  /// Generated fresh for each AI turn to help the user compose a reply. Same
+  /// level1/level2/level3 shape as the opening-turn hints on [story], but
+  /// standalone so it can be invoked on-demand without re-running the whole
+  /// scenario generation.
+  static final storyReplyHints = Schema.object(
+    properties: {
+      'level1':
+          Schema.string(description: 'Meaning / intent hint in Vietnamese.'),
+      'level2':
+          Schema.string(description: 'English structure hint with a skeleton.'),
+      'level3': Schema.string(
+          description: 'Key vocabulary (English) with Vietnamese meanings.'),
+    },
+    requiredProperties: ['level1', 'level2', 'level3'],
+  );
+
+  // ---------- Simple Vietnamese translation ----------
+  /// On-demand English → Vietnamese translation used by the chat screens when
+  /// the user taps "Translate" on an AI bubble.
+  static final vietnameseTranslation = Schema.object(
+    properties: {
+      'translation': Schema.string(
+          description: 'Natural Vietnamese translation of the input text.'),
+    },
+    requiredProperties: ['translation'],
+  );
+
   // ---------- Tone Translation ----------
   static Schema _toneEntry() => Schema.object(
         properties: {
           'text': Schema.string(),
-          'quote':
-              Schema.string(description: 'Vietnamese translation of this tone.'),
+          'quote': Schema.string(
+              description: 'Vietnamese translation of this tone.'),
         },
         requiredProperties: ['text', 'quote'],
       );
@@ -178,7 +231,12 @@ class GeminiSchemas {
           'informal': _toneEntry(),
           'conversational': _toneEntry(),
         },
-        requiredProperties: ['formal', 'friendly', 'informal', 'conversational'],
+        requiredProperties: [
+          'formal',
+          'friendly',
+          'informal',
+          'conversational'
+        ],
       ),
       'grammarAnalysis': Schema.object(
         description: 'Grammar analysis of the original sentence.',

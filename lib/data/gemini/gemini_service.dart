@@ -1,4 +1,8 @@
+import 'dart:convert';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
+import '../../core/constants/api_constants.dart';
 import '../prompts/prompt_constants.dart';
 import '../prompts/scenario_prompts.dart';
 import '../prompts/story_prompts.dart';
@@ -27,15 +31,22 @@ class GeminiService {
   /// Generate the next Scenario Coach lesson. Returns raw JSON string so the
   /// caller can deserialize into the mobile [Scenario] model and enrich it
   /// with the topic / sentence type the prompt enforced.
+  ///
+  /// [excludeVietnamesePhrases] is populated by the provider only on a retry
+  /// after a client-side duplicate check rejected a previous generation —
+  /// the list reinforces the "avoid repetition" instruction so the LLM
+  /// actually produces a different sentence this time.
   Future<NextLessonOutcome> generateNextLesson({
     required CefrLevel userLevel,
     required List<String> userTopics,
     required List<String> previousTitles,
+    List<String> excludeVietnamesePhrases = const [],
   }) async {
     final built = buildGenerateNextLessonPrompt(
       userLevel: userLevel,
       userTopics: userTopics,
       previousTitles: previousTitles,
+      excludeVietnamesePhrases: excludeVietnamesePhrases,
     );
     final model = GeminiConfig.flash(
       temperature: 0.9,
@@ -109,11 +120,55 @@ class GeminiService {
       previousTitles: previousTitles,
       customContext: customContext,
     );
-    final model = GeminiConfig.pro(
+    // Use Flash instead of Pro for Story scenario generation: Pro preview
+    // models have been intermittently slow/unavailable, causing users to wait
+    // 45-90s on "Generate Story". Flash produces comparable quality for a
+    // conversation starter (title + opening line + 3 hints).
+    final model = GeminiConfig.flash(
       temperature: 0.8,
       responseSchema: GeminiSchemas.story,
     );
     return _run(model, prompt);
+  }
+
+  /// Generate fresh level1/level2/level3 hints to help the learner reply to
+  /// the agent's most recent message. Called on-demand from the Story chat
+  /// "Hint" affordance. Flash is plenty for a short JSON payload.
+  Future<String> generateStoryReplyHints({
+    required String situation,
+    required String agentName,
+    required String agentMessage,
+    required CefrLevel level,
+  }) async {
+    final prompt = buildStoryReplyHintsPrompt(
+      situation: situation,
+      agentName: agentName,
+      agentMessage: agentMessage,
+      level: level,
+    );
+    final model = GeminiConfig.flash(
+      temperature: 0.5,
+      responseSchema: GeminiSchemas.storyReplyHints,
+    );
+    return _run(model, prompt);
+  }
+
+  /// On-demand English → Vietnamese translation for a single chat message.
+  /// Returns the translated text (without JSON wrapping). Used by the AI
+  /// bubble's "Translate" pill in Story / Scenario chats.
+  Future<String> translateToVietnamese(String englishText) async {
+    final prompt = buildVietnameseTranslationPrompt(englishText);
+    final model = GeminiConfig.flash(
+      temperature: 0.2,
+      responseSchema: GeminiSchemas.vietnameseTranslation,
+    );
+    final raw = await _run(model, prompt);
+    final parsed = parseJsonObject(raw);
+    final translated = parsed['translation'] as String?;
+    if (translated == null || translated.trim().isEmpty) {
+      throw StateError('Empty translation from Gemini');
+    }
+    return translated.trim();
   }
 
   Future<String> evaluateStoryTurn({
@@ -130,7 +185,9 @@ class GeminiService {
       userReply: userReply,
       targetLevel: targetLevel,
     );
-    final model = GeminiConfig.pro(
+    // Use Flash for per-turn assessments too: latency compounds across turns
+    // and Flash is reliable enough for the INLINE assessment payload.
+    final model = GeminiConfig.flash(
       temperature: 0.4,
       responseSchema: GeminiSchemas.assessment,
     );
@@ -182,7 +239,10 @@ class GeminiService {
     required String context,
   }) async {
     final prompt = buildDictionaryPrompt(phrase: phrase, context: context);
-    final model = GeminiConfig.pro(
+    // Use Flash instead of Pro for dictionary: Pro preview models have been
+    // intermittently unavailable and dictionary enrichment must resolve
+    // quickly so library items don't sit on "Loading explanation..." forever.
+    final model = GeminiConfig.flash(
       temperature: 0.7,
       responseSchema: GeminiSchemas.dictionary,
     );
@@ -255,6 +315,108 @@ class GeminiService {
     return CustomNodeResult.fromJson(parseJsonObject(raw));
   }
 
+  // ---------- Image generation ----------
+
+  /// Generates a minimalist illustration PNG for a vocabulary item and
+  /// returns it as a data URI (`data:image/png;base64,...`). Returns null on
+  /// failure so callers can surface the item without blocking the save flow.
+  ///
+  /// Uses the REST endpoint directly because google_generative_ai 0.4.7 does
+  /// not expose [responseModalities] needed for image-output models.
+  Future<String?> generateIllustration({
+    required String word,
+    String? context,
+  }) async {
+    if (!GeminiConfig.isApiKeyConfigured) return null;
+
+    final prompt = _buildIllustrationPrompt(word: word, context: context);
+    final uri = Uri.parse(
+      'https://generativelanguage.googleapis.com/v1beta/models/'
+      '${ApiConstants.modelImage}:generateContent'
+      '?key=${ApiConstants.geminiApiKey}',
+    );
+
+    final body = jsonEncode({
+      'contents': [
+        {
+          'parts': [
+            {'text': prompt}
+          ]
+        }
+      ],
+      'generationConfig': {
+        'responseModalities': ['IMAGE', 'TEXT'],
+      },
+    });
+
+    HttpClient? client;
+    try {
+      client = HttpClient()..connectionTimeout = const Duration(seconds: 10);
+
+      final request = await client.postUrl(uri);
+      request.headers.contentType = ContentType.json;
+      request.write(body);
+
+      final response = await request.close().timeout(
+            const Duration(seconds: 45),
+            onTimeout: () =>
+                throw StateError('Illustration request timed out after 45s'),
+          );
+
+      if (response.statusCode != 200) {
+        final err = await response.transform(utf8.decoder).join();
+        debugPrint(
+            'GeminiService: illustration HTTP ${response.statusCode}: $err');
+        return null;
+      }
+
+      final raw = await response.transform(utf8.decoder).join();
+      final decoded = jsonDecode(raw) as Map<String, dynamic>;
+      final candidates = decoded['candidates'] as List<dynamic>?;
+      if (candidates == null || candidates.isEmpty) return null;
+
+      final parts = (candidates.first as Map<String, dynamic>)['content']
+          ?['parts'] as List<dynamic>?;
+      if (parts == null) return null;
+
+      for (final part in parts) {
+        final inline =
+            (part as Map<String, dynamic>)['inlineData'] ?? part['inline_data'];
+        if (inline is Map<String, dynamic>) {
+          final data = inline['data'] as String?;
+          final mime = (inline['mimeType'] ?? inline['mime_type']) as String? ??
+              'image/png';
+          if (data != null && data.isNotEmpty) {
+            return 'data:$mime;base64,$data';
+          }
+        }
+      }
+      return null;
+    } catch (e) {
+      debugPrint('GeminiService: illustration failed: $e');
+      return null;
+    } finally {
+      client?.close(force: true);
+    }
+  }
+
+  String _buildIllustrationPrompt({required String word, String? context}) {
+    final ctx = (context == null || context.trim().isEmpty)
+        ? ''
+        : '\nContext sentence: "$context"';
+    return '''
+Generate a single warm, friendly flat-illustration image that visually explains the English word or phrase: "$word".$ctx
+
+Style requirements:
+- Minimalist illustration, rounded shapes, claymorphism feel
+- Soft cream background (#FFF8F0)
+- Muted pastel palette — teal, coral, warm gold, purple accents
+- No text, letters, words, or captions anywhere in the image
+- Single focal subject, clearly conveys the meaning of the word
+- Centered composition, square aspect ratio
+- Do NOT include any logos or watermarks''';
+  }
+
   // ---------- Video prompt (passthrough, no Gemini call) ----------
 
   String buildVideoGenerationPrompt({
@@ -267,7 +429,11 @@ class GeminiService {
 
   Future<String> _run(GenerativeModel model, String prompt) {
     return retryOperation<String>(() async {
-      final response = await model.generateContent([Content.text(prompt)]);
+      final response =
+          await model.generateContent([Content.text(prompt)]).timeout(
+        const Duration(seconds: 45),
+        onTimeout: () => throw StateError('Gemini request timed out after 45s'),
+      );
       final text = response.text;
       if (text == null || text.isEmpty) {
         throw StateError('Empty response from Gemini');

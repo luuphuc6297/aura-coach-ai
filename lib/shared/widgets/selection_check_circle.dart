@@ -31,7 +31,7 @@ class SelectionCheckCircle extends StatelessWidget {
             ),
           ),
           child: isSelected
-              ? Icon(Icons.check, size: size * 0.5, color: AppColors.white)
+              ? Icon(Icons.check, size: size * 0.5, color: AppColors.warmDark)
               : null,
         ),
       ),

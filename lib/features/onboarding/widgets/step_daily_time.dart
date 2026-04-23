@@ -7,8 +7,9 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/clay_card.dart';
-import '../../../shared/widgets/cloud_image.dart';
+import '../../../shared/widgets/app_icon.dart';
 import '../../../shared/widgets/selection_check_circle.dart';
+import '../../../shared/widgets/staggered_entrance.dart';
 
 class StepDailyTime extends StatelessWidget {
   const StepDailyTime({super.key});
@@ -26,20 +27,16 @@ class StepDailyTime extends StatelessWidget {
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxxl),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: StaggeredEntrance(
         children: [
           Center(
-            child: CloudImage(
-              url: 'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Alarm%20Clock.png',
-              size: 80,
-            ),
+            child: AppIcon(iconId: 'clock', size: 80),
           ),
           const SizedBox(height: AppSpacing.xl),
           Center(
             child: Text(
               'How much time daily?',
-              style: AppTypography.displayMd.copyWith(fontSize: 26),
+              style: AppTypography.displayMd,
               textAlign: TextAlign.center,
             ),
           ),
@@ -74,7 +71,7 @@ class StepDailyTime extends StatelessWidget {
                         borderRadius: AppRadius.mdBorder,
                       ),
                       child: Center(
-                        child: CloudImage(url: option.emojiUrl, size: 32),
+                        child: AppIcon(iconId: option.iconId, size: 32),
                       ),
                     ),
                     const SizedBox(width: AppSpacing.mdd),
@@ -82,11 +79,16 @@ class StepDailyTime extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(option.label, style: AppTypography.labelLg.copyWith(fontSize: 17)),
+                          Text(
+                            option.label,
+                            style: AppTypography.title
+                                .copyWith(fontWeight: FontWeight.w600),
+                          ),
                           const SizedBox(height: AppSpacing.xxs),
                           Text(
                             option.description,
-                            style: AppTypography.bodySm.copyWith(color: AppColors.warmMuted),
+                            style: AppTypography.bodySm
+                                .copyWith(color: AppColors.warmMuted),
                           ),
                         ],
                       ),

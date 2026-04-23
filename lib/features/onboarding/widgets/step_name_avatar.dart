@@ -8,7 +8,9 @@ import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_animations.dart';
+import '../../../shared/widgets/clay_pressable.dart';
 import '../../../shared/widgets/cloud_image.dart';
+import '../../../shared/widgets/staggered_entrance.dart';
 
 class StepNameAvatar extends StatelessWidget {
   const StepNameAvatar({super.key});
@@ -19,8 +21,7 @@ class StepNameAvatar extends StatelessWidget {
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxxl),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: StaggeredEntrance(
         children: [
           Center(
             child: CloudImage(
@@ -31,7 +32,7 @@ class StepNameAvatar extends StatelessWidget {
           const SizedBox(height: AppSpacing.xxl),
           Text(
             'What should we call you?',
-            style: AppTypography.displayMd.copyWith(fontSize: 26),
+            style: AppTypography.displayMd,
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
@@ -40,23 +41,22 @@ class StepNameAvatar extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.xxl),
           Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.xl,
-              vertical: AppSpacing.xs,
-            ),
             decoration: BoxDecoration(
-              color: AppColors.clayBeige,
               borderRadius: AppRadius.lgBorder,
-              border: Border.all(color: AppColors.teal, width: 2),
+              boxShadow: AppShadows.clay,
             ),
             child: TextField(
               onChanged: provider.setName,
-              style: AppTypography.bodyMd,
-              decoration: InputDecoration(
+              textCapitalization: TextCapitalization.words,
+              style: AppTypography.input,
+              cursorColor: AppColors.teal,
+              decoration: const InputDecoration(
                 hintText: 'Enter your name',
-                hintStyle: AppTypography.bodyMd.copyWith(color: AppColors.warmLight),
-                border: InputBorder.none,
-                icon: const Icon(Icons.edit, size: 18, color: AppColors.warmMuted),
+                prefixIcon: Icon(
+                  Icons.person_outline,
+                  size: 22,
+                  color: AppColors.warmMuted,
+                ),
               ),
             ),
           ),
@@ -70,41 +70,47 @@ class StepNameAvatar extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 12,
+            runSpacing: 12,
             children: avatarOptions.map((avatar) {
               final isSelected = provider.selectedAvatarId == avatar.id;
-              return GestureDetector(
+              return ClayPressable(
                 onTap: () => provider.selectAvatar(avatar.id, avatar.url),
-                child: Transform.scale(
-                  scale: isSelected ? 1.15 : 1.0,
-                  child: AnimatedContainer(
-                    duration: AppAnimations.durationMedium,
-                    margin: const EdgeInsets.symmetric(horizontal: 6),
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: isSelected ? AppColors.teal : AppColors.clayBorder,
-                        width: 3,
+                scaleDown: 0.90,
+                builder: (context, isPressed) {
+                  return Transform.scale(
+                    scale: isSelected ? 1.15 : 1.0,
+                    child: AnimatedContainer(
+                      duration: AppAnimations.durationMedium,
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: isSelected
+                              ? AppColors.teal
+                              : AppColors.clayBorder,
+                          width: 3,
+                        ),
+                        boxShadow: isSelected
+                            ? [
+                                BoxShadow(
+                                  color: AppColors.teal.withValues(alpha: 0.25),
+                                  blurRadius: 0,
+                                  spreadRadius: 3,
+                                ),
+                                ...AppShadows.clay,
+                              ]
+                            : AppShadows.card,
                       ),
-                      boxShadow: isSelected
-                          ? [
-                              BoxShadow(
-                                color: AppColors.teal.withValues(alpha: 0.25),
-                                blurRadius: 0,
-                                spreadRadius: 3,
-                              ),
-                              ...AppShadows.clay,
-                            ]
-                          : AppShadows.card,
+                      child: ClipOval(
+                        child: CloudImage(url: avatar.url, size: 60),
+                      ),
                     ),
-                    child: ClipOval(
-                      child: CloudImage(url: avatar.url, size: 60),
-                    ),
-                  ),
-                ),
+                  );
+                },
               );
             }).toList(),
           ),

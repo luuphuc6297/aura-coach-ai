@@ -49,6 +49,51 @@ Respond with ONLY a JSON object:
 ''';
 }
 
+/// Build a standalone "help me reply" hint prompt for Story Mode. Produces
+/// the same level1/level2/level3 structure as the opening-turn hints so the
+/// UI can reuse the same progressive-reveal widget regardless of turn.
+String buildStoryReplyHintsPrompt({
+  required String situation,
+  required String agentName,
+  required String agentMessage,
+  required CefrLevel level,
+}) {
+  return '''
+Role: English conversation coach helping a Vietnamese learner reply to a chat partner.
+
+Context:
+- Scene: $situation
+- Agent name: $agentName
+- Agent just said: "$agentMessage"
+- Learner CEFR level: ${level.code}
+
+Task: Produce 3 progressive hints for how the learner should reply to the agent's message.
+
+Respond with ONLY a JSON object:
+{
+  "level1": "Meaning / intent hint, written in Vietnamese. Explain what the learner should say conceptually.",
+  "level2": "English structure hint with a skeleton pattern (e.g. 'I\\'ve been ___ for ___ because ___'). Keep under 18 words.",
+  "level3": "Key English vocabulary to use, each followed by the Vietnamese meaning in parentheses. Comma-separated."
+}
+''';
+}
+
+/// Build a simple English → Vietnamese translation prompt. Used when the
+/// learner taps "Translate" on an AI message in any chat mode.
+String buildVietnameseTranslationPrompt(String englishText) {
+  return '''
+Translate the following English sentence into natural, conversational Vietnamese.
+Keep the same tone and register. Do NOT add commentary.
+
+Sentence: "$englishText"
+
+Respond with ONLY a JSON object:
+{
+  "translation": "Vietnamese translation here"
+}
+''';
+}
+
 /// Build the per-turn evaluation prompt for Story Mode.
 String buildStoryTurnPrompt({
   required String situation,

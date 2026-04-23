@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Aura Coach — Profile Scope Options</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --cream: #FFF8F0;
+    --clay-white: #FEFCF9;
+    --clay-border: #E8DFD3;
+    --clay-shadow: 0 4px 14px rgba(45, 48, 71, 0.08), 0 1px 2px rgba(45, 48, 71, 0.04);
+    --clay-shadow-sm: 0 2px 6px rgba(45, 48, 71, 0.06);
+    --warm-dark: #2D3047;
+    --warm-muted: #6B6D7B;
+    --warm-light: #9B9DAB;
+    --teal: #7ECEC5;
+    --teal-deep: #5FB5AB;
+    --teal-soft: rgba(126, 206, 197, 0.14);
+    --purple: #A78BCA;
+    --purple-soft: rgba(167, 139, 202, 0.16);
+    --gold: #E8C77B;
+    --gold-soft: rgba(232, 199, 123, 0.2);
+    --gold-dark: #B6932F;
+    --coral: #E8927C;
+    --coral-soft: rgba(232, 146, 124, 0.16);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: #F3ECDF; font-family: 'Inter', sans-serif; color: var(--warm-dark); }
+  body {
+    min-height: 100vh;
+    padding: 40px 24px 64px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 28px;
+  }
+  .header {
+    max-width: 1180px;
+    width: 100%;
+    text-align: center;
+  }
+  .header h1 {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--warm-dark);
+    margin-bottom: 6px;
+  }
+  .header p {
+    color: var(--warm-muted);
+    font-size: 13px;
+    line-height: 1.55;
+  }
+
+  .options-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 28px;
+    width: 100%;
+    max-width: 1240px;
+    align-items: start;
+  }
+
+  .option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }
+  .option-tag {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--clay-white);
+    border: 1px solid var(--clay-border);
+    border-radius: 999px;
+    padding: 6px 14px;
+    box-shadow: var(--clay-shadow-sm);
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 12px;
+    color: var(--warm-dark);
+    letter-spacing: 0.4px;
+  }
+  .option-tag .num {
+    background: var(--teal);
+    color: #0f3f3b;
+    border-radius: 999px;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 800;
+  }
+  .option.opt-2 .num { background: var(--purple); color: white; }
+  .option.opt-3 .num { background: var(--gold); color: #5a4515; }
+
+  .option-title {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 16px;
+    color: var(--warm-dark);
+    text-align: center;
+  }
+  .option-sub {
+    font-size: 12px;
+    color: var(--warm-muted);
+    text-align: center;
+    max-width: 320px;
+    line-height: 1.5;
+  }
+
+  .phone {
+    width: 340px;
+    height: 720px;
+    background: var(--cream);
+    border-radius: 38px;
+    padding: 12px;
+    box-shadow:
+      0 24px 50px rgba(45, 48, 71, 0.18),
+      0 10px 20px rgba(45, 48, 71, 0.1);
+    border: 9px solid #1a1a24;
+    position: relative;
+  }
+  .phone::before {
+    content: '';
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 96px;
+    height: 24px;
+    background: #1a1a24;
+    border-radius: 0 0 16px 16px;
+    z-index: 5;
+  }
+  .screen {
+    background: var(--cream);
+    border-radius: 28px;
+    overflow: hidden;
+    height: 100%;
+    padding: 50px 16px 80px;
+    overflow-y: auto;
+    scrollbar-width: none;
+  }
+  .screen::-webkit-scrollbar { display: none; }
+
+  /* TopBar */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .topbar h2 {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 18px;
+  }
+  .topbar .icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    background: var(--clay-white);
+    border: 1px solid var(--clay-border);
+    box-shadow: var(--clay-shadow-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--warm-dark);
+  }
+
+  /* Avatar header (Profile) */
+  .avatar-header {
+    text-align: center;
+    margin-bottom: 16px;
+  }
+  .avatar-circle {
+    width: 78px;
+    height: 78px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #FFE7B8, #E8927C);
+    border: 3px solid var(--teal);
+    box-shadow: var(--clay-shadow);
+    margin: 0 auto 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+  }
+  .avatar-header .name {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 20px;
+    color: var(--warm-dark);
+  }
+  .tier-pill {
+    display: inline-block;
+    padding: 4px 12px;
+    background: var(--teal-soft);
+    color: var(--teal-deep);
+    border: 1px solid rgba(126, 206, 197, 0.3);
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 700;
+    margin-top: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+  .tier-pill.premium {
+    background: var(--gold-soft);
+    color: var(--gold-dark);
+    border-color: rgba(232, 199, 123, 0.4);
+  }
+
+  /* Info row */
+  .info-card {
+    background: var(--clay-white);
+    border: 1px solid var(--clay-border);
+    border-radius: 18px;
+    box-shadow: var(--clay-shadow);
+    padding: 14px 10px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    margin-bottom: 14px;
+  }
+  .info-cell {
+    text-align: center;
+    padding: 0 4px;
+    border-right: 1px solid var(--clay-border);
+  }
+  .info-cell:last-child { border-right: none; }
+  .info-cell .ico { font-size: 16px; margin-bottom: 4px; }
+  .info-cell .val {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 13px;
+    color: var(--warm-dark);
+    font-weight: 600;
+  }
+  .info-cell .lbl {
+    font-size: 9px;
+    color: var(--warm-light);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-top: 2px;
+    font-weight: 600;
+  }
+
+  /* Insights preview card (Option 1) */
+  .insights-preview {
+    background: linear-gradient(135deg, #FEFCF9 0%, #FAEED8 100%);
+    border: 1px solid var(--clay-border);
+    border-radius: 18px;
+    padding: 14px;
+    box-shadow: var(--clay-shadow);
+    margin-bottom: 14px;
+  }
+  .insights-preview .head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .insights-preview .head h4 {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 13px;
+    color: var(--warm-dark);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .insights-preview .head .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--teal-deep);
+  }
+  .insights-preview .head .more {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--teal-deep);
+  }
+  .insights-grid {
+    display: grid;
+    grid-template-columns: 64px 1fr;
+    gap: 12px;
+    align-items: center;
+  }
+  .ring-wrap {
+    position: relative;
+    width: 64px;
+    height: 64px;
+  }
+  .ring-wrap .ring-num {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .ring-wrap .ring-num strong {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 17px;
+    color: var(--warm-dark);
+    line-height: 1;
+  }
+  .ring-wrap .ring-num span {
+    font-size: 8px;
+    color: var(--warm-muted);
+    margin-top: 1px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .insights-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .insights-stat {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--warm-muted);
+  }
+  .insights-stat strong {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 14px;
+    color: var(--warm-dark);
+    margin-right: 4px;
+  }
+  .insights-stat .glyph {
+    font-size: 14px;
+    width: 18px;
+    text-align: center;
+  }
+  .insights-stat.weak strong {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    color: var(--coral);
+    font-weight: 700;
+  }
+
+  /* Tag section */
+  .tag-card {
+    background: var(--clay-white);
+    border: 1px solid var(--clay-border);
+    border-radius: 18px;
+    padding: 12px 14px;
+    box-shadow: var(--clay-shadow);
+    margin-bottom: 12px;
+  }
+  .tag-card .head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 12px;
+    color: var(--warm-dark);
+  }
+  .tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .chip {
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 700;
+    border: 1px solid;
+  }
+  .chip.teal {
+    background: var(--teal-soft);
+    color: var(--teal-deep);
+    border-color: rgba(126, 206, 197, 0.3);
+  }
+  .chip.purple {
+    background: var(--purple-soft);
+    color: var(--purple);
+    border-color: rgba(167, 139, 202, 0.3);
+  }
+
+  /* Action rows (Edit Profile, Settings, Subscription, Sign Out) */
+  .row {
+    background: var(--clay-white);
+    border: 1px solid var(--clay-border);
+    border-radius: 16px;
+    box-shadow: var(--clay-shadow-sm);
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .row .row-ico {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .row.edit .row-ico  { background: var(--teal-soft); color: var(--teal-deep); }
+  .row.set .row-ico   { background: var(--purple-soft); color: var(--purple); }
+  .row.sub .row-ico   { background: var(--gold-soft); color: var(--gold-dark); }
+  .row.danger .row-ico{ background: var(--coral-soft); color: #a8432a; }
+  .row .row-text { flex: 1; }
+  .row .row-text strong {
+    display: block;
+    font-size: 13px;
+    color: var(--warm-dark);
+    font-weight: 700;
+    line-height: 1.2;
+  }
+  .row .row-text span {
+    font-size: 10px;
+    color: var(--warm-muted);
+    margin-top: 2px;
+    display: block;
+  }
+  .row.danger .row-text strong { color: #a8432a; }
+  .row .chevron {
+    color: var(--warm-light);
+  }
+
+  /* Bottom nav */
+  .bottom-nav {
+    position: absolute;
+    bottom: 18px;
+    left: 18px;
+    right: 18px;
+    background: var(--clay-white);
+    border: 1px solid var(--clay-border);
+    border-radius: 20px;
+    padding: 8px 12px;
+    box-shadow: var(--clay-shadow);
+    display: grid;
+    gap: 4px;
+  }
+  .bottom-nav.three { grid-template-columns: repeat(3, 1fr); }
+  .bottom-nav.four  { grid-template-columns: repeat(4, 1fr); }
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 5px 0;
+    border-radius: 12px;
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--warm-muted);
+  }
+  .nav-item.active {
+    background: var(--teal-soft);
+    color: var(--teal-deep);
+  }
+
+  /* Insights tab (Option 2) */
+  .period {
+    background: var(--clay-white);
+    border: 1px solid var(--clay-border);
+    border-radius: 12px;
+    padding: 3px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2px;
+    box-shadow: var(--clay-shadow-sm);
+    margin-bottom: 14px;
+  }
+  .period button {
+    all: unset;
+    text-align: center;
+    padding: 6px 0;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700;
+    font-size: 10px;
+    color: var(--warm-muted);
+    border-radius: 9px;
+    cursor: pointer;
+  }
+  .period button.active {
+    background: var(--teal);
+    color: #0f3f3b;
+  }
+  .hero-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .hero-stat {
+    background: var(--clay-white);
+    border: 1px solid var(--clay-border);
+    border-radius: 14px;
+    padding: 10px 6px;
+    text-align: center;
+    box-shadow: var(--clay-shadow-sm);
+  }
+  .hero-stat .glyph { font-size: 16px; margin-bottom: 2px; }
+  .hero-stat .num {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 17px;
+    color: var(--warm-dark);
+  }
+  .hero-stat .lbl {
+    font-size: 8px;
+    color: var(--warm-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    font-weight: 700;
+    margin-top: 2px;
+  }
+  .mini-section-title {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 12px;
+    color: var(--warm-dark);
+    margin: 14px 0 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .mini-section-title .dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--teal);
+  }
+  .skill-card {
+    background: var(--clay-white);
+    border: 1px solid var(--clay-border);
+    border-radius: 16px;
+    padding: 12px;
+    box-shadow: var(--clay-shadow-sm);
+    margin-bottom: 12px;
+  }
+  .skill-row { display: flex; flex-direction: column; gap: 3px; }
+  .skill-row + .skill-row { margin-top: 8px; }
+  .skill-row .top {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--warm-dark);
+    font-weight: 600;
+  }
+  .skill-row .top span:last-child {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 11px;
+  }
+  .skill-bar {
+    height: 5px;
+    border-radius: 999px;
+    background: rgba(45, 48, 71, 0.06);
+    overflow: hidden;
+  }
+  /* Streak strip */
+  .streak-card {
+    background: var(--clay-white);
+    border: 1px solid var(--clay-border);
+    border-radius: 16px;
+    padding: 12px;
+    box-shadow: var(--clay-shadow-sm);
+    margin-bottom: 12px;
+  }
+  .streak-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .streak-head .ct {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--warm-muted);
+  }
+  .streak-head .ct strong {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 18px;
+    color: #c25f3d;
+  }
+  .heat-grid {
+    display: grid;
+    grid-template-columns: repeat(13, 1fr);
+    gap: 2px;
+  }
+  .heat-grid .cell {
+    aspect-ratio: 1;
+    border-radius: 2px;
+    background: rgba(45, 48, 71, 0.06);
+  }
+  .heat-grid .cell.l1 { background: rgba(232, 146, 124, 0.25); }
+  .heat-grid .cell.l2 { background: rgba(232, 146, 124, 0.5); }
+  .heat-grid .cell.l3 { background: rgba(232, 146, 124, 0.75); }
+  .heat-grid .cell.l4 { background: rgba(232, 146, 124, 1); }
+
+  .weak-card {
+    background: var(--clay-white);
+    border: 1px solid var(--clay-border);
+    border-radius: 16px;
+    padding: 10px 12px;
+    box-shadow: var(--clay-shadow-sm);
+  }
+  .weak-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+  }
+  .weak-row + .weak-row { border-top: 1px dashed var(--clay-border); }
+  .weak-row .word strong {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 12px;
+    color: var(--warm-dark);
+  }
+  .weak-row .word span {
+    display: block;
+    font-size: 9px;
+    color: var(--warm-muted);
+  }
+  .weak-row .word { flex: 1; }
+  .weak-row .score {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 12px;
+    color: var(--coral);
+  }
+
+  .verdict {
+    background: var(--clay-white);
+    border: 1px solid var(--clay-border);
+    border-radius: 18px;
+    padding: 16px;
+    margin-top: 18px;
+    box-shadow: var(--clay-shadow-sm);
+    max-width: 320px;
+  }
+  .verdict h5 {
+    font-family: 'Nunito', sans-serif;
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--warm-dark);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .verdict h5 .pro {
+    background: var(--teal-soft);
+    color: var(--teal-deep);
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 9px;
+  }
+  .verdict h5 .con {
+    background: var(--coral-soft);
+    color: #a8432a;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 9px;
+  }
+  .verdict ul {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 6px;
+  }
+  .verdict li {
+    font-size: 11px;
+    color: var(--warm-muted);
+    padding: 3px 0 3px 14px;
+    position: relative;
+    line-height: 1.45;
+  }
+  .verdict li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 9px;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--warm-light);
+  }
+</style>
+</head>
+<body>
+  <div class="header">
+    <h1>Profile Scope — 3 Options to Compare</h1>
+    <p>Mỗi cột là 1 lựa chọn cho scope Profile/Settings hiện tại. Insights tab (đã duyệt) sẽ là tab thứ 4 trong tương lai. Câu hỏi: <strong>bây giờ nên show progress như thế nào trên Profile?</strong></p>
+  </div>
+
+  <div class="options-row">
+
+    <!-- ============== OPTION 1 ============== -->
+    <div class="option opt-1">
+      <div class="option-tag"><span class="num">1</span>INSIGHTS PREVIEW CARD</div>
+      <div class="option-title">Profile có 1 card progress gọn</div>
+      <div class="option-sub">Card "Your progress" embedded vào Profile. Deep-link "View full →" sẽ mở Insights tab khi có ở phase sau.</div>
+
+      <div class="phone">
+        <div class="screen">
+          <div class="topbar">
+            <h2>Profile</h2>
+            <div class="icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </div>
+          </div>
+
+          <div class="avatar-header">
+            <div class="avatar-circle">🦁</div>
+            <div class="name">Luu</div>
+            <div class="tier-pill">Free Plan</div>
+          </div>
+
+          <div class="info-card">
+            <div class="info-cell"><div class="ico">🎯</div><div class="val">Inter.</div><div class="lbl">Level</div></div>
+            <div class="info-cell"><div class="ico">⏰</div><div class="val">15 min</div><div class="lbl">Daily</div></div>
+            <div class="info-cell"><div class="ico">👑</div><div class="val">Free</div><div class="lbl">Plan</div></div>
+          </div>
+
+          <!-- INSIGHTS PREVIEW CARD -->
+          <div class="insights-preview">
+            <div class="head">
+              <h4><span class="dot"></span>Your progress</h4>
+              <div class="more">View full →</div>
+            </div>
+            <div class="insights-grid">
+              <div class="ring-wrap">
+                <svg width="64" height="64" viewBox="0 0 64 64">
+                  <circle cx="32" cy="32" r="26" fill="none" stroke="rgba(167, 139, 202, 0.18)" stroke-width="6" />
+                  <circle cx="32" cy="32" r="26" fill="none" stroke="url(#g1)" stroke-width="6" stroke-linecap="round"
+                          stroke-dasharray="163.36" stroke-dashoffset="47.37" transform="rotate(-90 32 32)" />
+                  <defs>
+                    <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stop-color="#7ECEC5" />
+                      <stop offset="100%" stop-color="#A78BCA" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+                <div class="ring-num"><strong>71</strong><span>Fluency</span></div>
+              </div>
+              <div class="insights-stats">
+                <div class="insights-stat"><span class="glyph">🔥</span><strong>14</strong>day streak</div>
+                <div class="insights-stat"><span class="glyph">💬</span><strong>28</strong>sessions this week</div>
+                <div class="insights-stat weak"><span class="glyph">📌</span><strong>scrutinize</strong><span style="margin-left:auto;color:var(--warm-light);font-size:9px;">due</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tag-card">
+            <div class="head">🎯 Goals</div>
+            <div class="tag-list">
+              <span class="chip teal">Travel</span>
+              <span class="chip teal">Business</span>
+              <span class="chip teal">Confidence</span>
+            </div>
+          </div>
+
+          <div class="row edit">
+            <div class="row-ico">✏️</div>
+            <div class="row-text"><strong>Edit Profile</strong><span>Name, avatar, level, goals, topics</span></div>
+            <span class="chevron">›</span>
+          </div>
+          <div class="row set">
+            <div class="row-ico">⚙️</div>
+            <div class="row-text"><strong>Settings</strong><span>Notifications, audio, preferences</span></div>
+            <span class="chevron">›</span>
+          </div>
+          <div class="row sub">
+            <div class="row-ico">⭐</div>
+            <div class="row-text"><strong>Upgrade to Premium</strong><span>Unlock all modes & illustrations</span></div>
+            <span class="chevron">›</span>
+          </div>
+          <div class="row danger">
+            <div class="row-ico">🚪</div>
+            <div class="row-text"><strong>Sign Out</strong></div>
+            <span class="chevron">›</span>
+          </div>
+        </div>
+
+        <div class="bottom-nav three">
+          <div class="nav-item">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+            <span>Home</span>
+          </div>
+          <div class="nav-item">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            <span>Library</span>
+          </div>
+          <div class="nav-item active">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
+            <span>Profile</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="verdict">
+        <h5><span class="pro">PRO</span></h5>
+        <ul>
+          <li>Cho user thấy giá trị progress ngay từ phase này</li>
+          <li>Không cần tab Insights riêng, scope vẫn nhỏ</li>
+          <li>Tự nhiên migrate thành deep-link khi tab Insights ra mắt</li>
+        </ul>
+        <h5 style="margin-top:8px;"><span class="con">CON</span></h5>
+        <ul>
+          <li>Cần fetch + agg data ngay trong Profile</li>
+          <li>Card có thể trống nếu user chưa luyện tập</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ============== OPTION 2 ============== -->
+    <div class="option opt-2">
+      <div class="option-tag"><span class="num">2</span>LITE INSIGHTS TAB</div>
+      <div class="option-title">Insights là tab riêng (lite v1)</div>
+      <div class="option-sub">Profile sạch (chỉ account/preferences). Tab thứ 4 "Insights" chứa 3 widget: streak heatmap, skill bars, weak words.</div>
+
+      <div class="phone">
+        <div class="screen">
+          <div class="topbar">
+            <div>
+              <h2>Your Insights</h2>
+              <div style="font-size:10px;color:var(--warm-muted);">Apr 13 – 19</div>
+            </div>
+            <div class="icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </div>
+          </div>
+
+          <div class="period">
+            <button>Today</button>
+            <button class="active">Week</button>
+            <button>Month</button>
+            <button>All</button>
+          </div>
+
+          <div class="hero-row">
+            <div class="hero-stat"><div class="glyph">🔥</div><div class="num">14</div><div class="lbl">Streak</div></div>
+            <div class="hero-stat"><div class="glyph">⏱️</div><div class="num">4h12</div><div class="lbl">Practiced</div></div>
+            <div class="hero-stat"><div class="glyph">💬</div><div class="num">28</div><div class="lbl">Sessions</div></div>
+          </div>
+
+          <div class="mini-section-title"><span class="dot"></span>Consistency</div>
+          <div class="streak-card">
+            <div class="streak-head">
+              <div class="ct">🔥<strong>14</strong>day streak</div>
+              <div style="font-size:10px;color:var(--warm-muted);">best: 23</div>
+            </div>
+            <div class="heat-grid">
+              <!-- 7 rows × 13 cols flattened: 91 cells -->
+              <div class="cell l1"></div><div class="cell l2"></div><div class="cell"></div><div class="cell l3"></div><div class="cell l4"></div><div class="cell l2"></div><div class="cell l3"></div><div class="cell l1"></div><div class="cell l4"></div><div class="cell l3"></div><div class="cell l2"></div><div class="cell l3"></div><div class="cell l4"></div>
+              <div class="cell"></div><div class="cell l2"></div><div class="cell l1"></div><div class="cell l3"></div><div class="cell l4"></div><div class="cell l3"></div><div class="cell l2"></div><div class="cell l3"></div><div class="cell l4"></div><div class="cell l3"></div><div class="cell l1"></div><div class="cell l4"></div><div class="cell l4"></div>
+              <div class="cell l1"></div><div class="cell"></div><div class="cell l3"></div><div class="cell l2"></div><div class="cell l4"></div><div class="cell l2"></div><div class="cell l3"></div><div class="cell l2"></div><div class="cell l4"></div><div class="cell l4"></div><div class="cell l3"></div><div class="cell l2"></div><div class="cell l3"></div>
+              <div class="cell l2"></div><div class="cell l1"></div><div class="cell l2"></div><div class="cell l4"></div><div class="cell l3"></div><div class="cell l3"></div><div class="cell l1"></div><div class="cell l4"></div><div class="cell l3"></div><div class="cell l4"></div><div class="cell l2"></div><div class="cell l3"></div><div class="cell l4"></div>
+              <div class="cell l3"></div><div class="cell l2"></div><div class="cell l4"></div><div class="cell l3"></div><div class="cell l4"></div><div class="cell l4"></div><div class="cell l3"></div><div class="cell l2"></div><div class="cell l4"></div><div class="cell l3"></div><div class="cell l4"></div><div class="cell l3"></div><div class="cell l4"></div>
+              <div class="cell"></div><div class="cell l1"></div><div class="cell l2"></div><div class="cell"></div><div class="cell l2"></div><div class="cell l1"></div><div class="cell l3"></div><div class="cell l1"></div><div class="cell l2"></div><div class="cell l3"></div><div class="cell"></div><div class="cell l2"></div><div class="cell l3"></div>
+              <div class="cell l1"></div><div class="cell"></div><div class="cell l2"></div><div class="cell l1"></div><div class="cell l3"></div><div class="cell"></div><div class="cell l2"></div><div class="cell l2"></div><div class="cell l3"></div><div class="cell l1"></div><div class="cell l2"></div><div class="cell l3"></div><div class="cell l4"></div>
+            </div>
+          </div>
+
+          <div class="mini-section-title"><span class="dot"></span>Skill breakdown</div>
+          <div class="skill-card">
+            <div class="skill-row">
+              <div class="top"><span>Fluency</span><span>78</span></div>
+              <div class="skill-bar"><div style="height:100%;width:78%;background:#5FB5AB;border-radius:999px;"></div></div>
+            </div>
+            <div class="skill-row">
+              <div class="top"><span>Accuracy</span><span>65</span></div>
+              <div class="skill-bar"><div style="height:100%;width:65%;background:#A78BCA;border-radius:999px;"></div></div>
+            </div>
+            <div class="skill-row">
+              <div class="top"><span>Naturalness</span><span>72</span></div>
+              <div class="skill-bar"><div style="height:100%;width:72%;background:#E8C77B;border-radius:999px;"></div></div>
+            </div>
+            <div class="skill-row">
+              <div class="top"><span>Vocabulary</span><span>68</span></div>
+              <div class="skill-bar"><div style="height:100%;width:68%;background:#7ECEC5;border-radius:999px;"></div></div>
+            </div>
+          </div>
+
+          <div class="mini-section-title"><span class="dot"></span>Words to revisit</div>
+          <div class="weak-card">
+            <div class="weak-row">
+              <div class="word"><strong>scrutinize</strong><span>Missed · Business · 2d ago</span></div>
+              <div class="score">32</div>
+            </div>
+            <div class="weak-row">
+              <div class="word"><strong>meticulous</strong><span>4d ago · no recall</span></div>
+              <div class="score">41</div>
+            </div>
+            <div class="weak-row">
+              <div class="word"><strong>wane</strong><span>Due today</span></div>
+              <div class="score">48</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bottom-nav four">
+          <div class="nav-item">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+            <span>Home</span>
+          </div>
+          <div class="nav-item">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            <span>Library</span>
+          </div>
+          <div class="nav-item active">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 14l3-3 4 4 5-6"/></svg>
+            <span>Insights</span>
+          </div>
+          <div class="nav-item">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
+            <span>Profile</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="verdict">
+        <h5><span class="pro">PRO</span></h5>
+        <ul>
+          <li>Insights có chỗ riêng, dễ scale lên full vision</li>
+          <li>Profile thuần account → clear separation of concerns</li>
+          <li>3 widget v1 đã đủ giá trị (streak, skills, weak words)</li>
+        </ul>
+        <h5 style="margin-top:8px;"><span class="con">CON</span></h5>
+        <ul>
+          <li>Scope lớn nhất — cần build cả Profile + Settings + Insights tab cùng phase</li>
+          <li>Đổi BottomNav từ 3 → 4 tab</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ============== OPTION 3 ============== -->
+    <div class="option opt-3">
+      <div class="option-tag"><span class="num">3</span>PROFILE THUẦN ACCOUNT</div>
+      <div class="option-title">Không có progress trên Profile</div>
+      <div class="option-sub">Profile chỉ là account hub. Insights tab tách riêng phase sau khi đủ data + đủ thời gian build full vision.</div>
+
+      <div class="phone">
+        <div class="screen">
+          <div class="topbar">
+            <h2>Profile</h2>
+            <div class="icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </div>
+          </div>
+
+          <div class="avatar-header">
+            <div class="avatar-circle">🦁</div>
+            <div class="name">Luu</div>
+            <div class="tier-pill">Free Plan</div>
+          </div>
+
+          <div class="info-card">
+            <div class="info-cell"><div class="ico">🎯</div><div class="val">Inter.</div><div class="lbl">Level</div></div>
+            <div class="info-cell"><div class="ico">⏰</div><div class="val">15 min</div><div class="lbl">Daily</div></div>
+            <div class="info-cell"><div class="ico">👑</div><div class="val">Free</div><div class="lbl">Plan</div></div>
+          </div>
+
+          <div class="tag-card">
+            <div class="head">🎯 Goals</div>
+            <div class="tag-list">
+              <span class="chip teal">Travel</span>
+              <span class="chip teal">Business</span>
+              <span class="chip teal">Confidence</span>
+            </div>
+          </div>
+
+          <div class="tag-card">
+            <div class="head">📌 Topics</div>
+            <div class="tag-list">
+              <span class="chip purple">Food</span>
+              <span class="chip purple">Tech</span>
+              <span class="chip purple">Movies</span>
+              <span class="chip purple">Sports</span>
+            </div>
+          </div>
+
+          <div class="row edit">
+            <div class="row-ico">✏️</div>
+            <div class="row-text"><strong>Edit Profile</strong><span>Name, avatar, level, goals, topics</span></div>
+            <span class="chevron">›</span>
+          </div>
+          <div class="row set">
+            <div class="row-ico">⚙️</div>
+            <div class="row-text"><strong>Settings</strong><span>Notifications, audio, preferences</span></div>
+            <span class="chevron">›</span>
+          </div>
+          <div class="row sub">
+            <div class="row-ico">⭐</div>
+            <div class="row-text"><strong>Upgrade to Premium</strong><span>Unlock all modes & illustrations</span></div>
+            <span class="chevron">›</span>
+          </div>
+          <div class="row danger">
+            <div class="row-ico">🚪</div>
+            <div class="row-text"><strong>Sign Out</strong></div>
+            <span class="chevron">›</span>
+          </div>
+        </div>
+
+        <div class="bottom-nav three">
+          <div class="nav-item">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+            <span>Home</span>
+          </div>
+          <div class="nav-item">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            <span>Library</span>
+          </div>
+          <div class="nav-item active">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
+            <span>Profile</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="verdict">
+        <h5><span class="pro">PRO</span></h5>
+        <ul>
+          <li>Scope nhỏ nhất, ship nhanh</li>
+          <li>Khi build Insights sau, không phải migrate gì cả</li>
+          <li>Profile rõ ràng = account hub</li>
+        </ul>
+        <h5 style="margin-top:8px;"><span class="con">CON</span></h5>
+        <ul>
+          <li>User không thấy được giá trị "tracking" trong giai đoạn này</li>
+          <li>Profile screen có thể hơi tĩnh, ít động cơ vào</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

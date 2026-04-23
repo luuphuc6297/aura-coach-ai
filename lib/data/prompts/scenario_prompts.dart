@@ -17,14 +17,19 @@ class NextLessonPrompt {
 
 /// Build the prompt that asks Gemini to generate ONE micro-scenario matching
 /// the student's CEFR level and topic domain. [previousTitles] is used to
-/// enforce uniqueness across recent generations.
+/// enforce uniqueness across recent generations. [excludeVietnamesePhrases]
+/// is only non-empty on a retry after a duplicate was detected locally —
+/// the list goes into an extra "AVOID REPETITION" block so the LLM stops
+/// regenerating the exact same Vietnamese sentence it just produced.
 NextLessonPrompt buildGenerateNextLessonPrompt({
   required CefrLevel userLevel,
   required List<String> userTopics,
   required List<String> previousTitles,
+  List<String> excludeVietnamesePhrases = const [],
 }) {
-  final recentContext =
-      previousTitles.length > 20 ? previousTitles.sublist(previousTitles.length - 20) : previousTitles;
+  final recentContext = previousTitles.length > 20
+      ? previousTitles.sublist(previousTitles.length - 20)
+      : previousTitles;
   final recentContextStr = recentContext.join(' | ');
 
   final targetSpec = kLevelSpecs[userLevel]!;
@@ -32,6 +37,13 @@ NextLessonPrompt buildGenerateNextLessonPrompt({
   final levelGuidance = kEnglishLevelGuidance[userLevel]!;
   final chosenTopic = userTopics.isEmpty ? 'General' : pickRandom(userTopics);
   final chosenType = pickRandom(kSentenceTypes);
+
+  final avoidBlock = excludeVietnamesePhrases.isEmpty
+      ? ''
+      : '''
+6. **AVOID REPETITION**: The Vietnamese sentences below were just generated but duplicate content the student has already practiced. Produce a Vietnamese sentence that is semantically AND lexically different — different verbs, different nouns, different situation:
+${excludeVietnamesePhrases.map((s) => '   - "$s"').join('\n')}
+''';
 
   final prompt = '''
 You are a creative scenario designer for a Vietnamese English learner. Your goal is to produce ONE hyper-specific, culturally grounded micro-scenario that feels like a real moment from daily life — not a textbook exercise.
@@ -56,7 +68,7 @@ You are a creative scenario designer for a Vietnamese English learner. Your goal
    - For ${userLevel.code}: $levelGuidance.
 4. **Sentence type**: Generate a **$chosenType**. Do NOT fall back to a plain declarative statement.
 5. **STRICT UNIQUENESS**: These scenarios were already generated — you MUST create something completely different in sub-topic, setting, characters, and sentence structure: [$recentContextStr]
-
+$avoidBlock
 === HINT DESIGN RULES ===
 - level1 (Meaning): Describe the communicative intent in Vietnamese (e.g., "Bạn muốn hỏi lý do tại sao..."). Do NOT reveal any English words.
 - level2 (Structure): Give the sentence skeleton with blanks (e.g., "Why didn't you ___ the ___?"). Reveal structure, not vocabulary.
@@ -130,12 +142,14 @@ Instructions:
    - Friendly
    - Informal
    - Conversational
-7. Provide scores and detailed feedback.
+7. **Key Vocabulary**: Extract up to 5 noteworthy content words or short phrases from the user's input OR the better alternative that a Vietnamese learner should save for review. Skip trivial function words (articles, pronouns, simple verbs like "be", "have", "do" unless idiomatic). For each item return {word, partOfSpeech, meaning (Vietnamese), example (one short English sentence)}.
+8. Provide scores and detailed feedback.
 
 Respond with a JSON object matching the response schema. Key fields:
 - improvements[] — each item: {original, correction, type: 'grammar' | 'vocabulary', explanation}
 - alternativeTones — flat map {formal, friendly, informal, conversational}; each value is the translated sentence as a plain string.
 - userTone — one of 'Neutral', 'Formal', 'Friendly', 'Informal', 'Conversational', 'Rude', 'Too Formal'.
+- keyVocabulary — array of {word, partOfSpeech, meaning, example}. May be empty if the input has no meaningful content words.
 Do not invent extra fields. Do not emit markdown fences.
 ''';
 }

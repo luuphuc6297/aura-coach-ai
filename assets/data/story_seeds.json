@@ -1,0 +1,546 @@
+[
+  {
+    "id": "seed_a1_daily_coffee",
+    "title": "Order Your First Coffee",
+    "topic": "daily",
+    "level": "A1",
+    "situation": "You walk into a small coffee shop in London on a rainy morning. The barista smiles and waits for your order at the counter.",
+    "character": {
+      "name": "Sam",
+      "role": "Barista",
+      "personality": "warm, patient, chatty",
+      "initial": "S",
+      "gradient": "gold-peach"
+    },
+    "suggestedTurns": 5,
+    "thumbnailIcon": "☕",
+    "order": 1
+  },
+  {
+    "id": "seed_a1_travel_directions",
+    "title": "Lost in the City",
+    "topic": "travel",
+    "level": "A1",
+    "situation": "You are a tourist in New York and need directions to Times Square. You stop a friendly local at a crosswalk to ask for help.",
+    "character": {
+      "name": "Mia",
+      "role": "Local resident",
+      "personality": "helpful, cheerful",
+      "initial": "M",
+      "gradient": "teal-gold"
+    },
+    "suggestedTurns": 5,
+    "thumbnailIcon": "🗺️",
+    "order": 2
+  },
+  {
+    "id": "seed_a1_social_greeting",
+    "title": "Greet a New Coworker",
+    "topic": "social",
+    "level": "A1",
+    "situation": "It is your first day in a small office. A friendly coworker walks up to your desk to say hello and ask your name.",
+    "character": {
+      "name": "Lily",
+      "role": "Coworker",
+      "personality": "smiling, simple, kind",
+      "initial": "L",
+      "gradient": "purple-pink"
+    },
+    "suggestedTurns": 5,
+    "thumbnailIcon": "👋",
+    "order": 3
+  },
+  {
+    "id": "seed_a1_daily_groceries",
+    "title": "At the Grocery Store",
+    "topic": "daily",
+    "level": "A1",
+    "situation": "You are at a small neighborhood grocery store. You bring your basket to the cashier to pay for milk, bread, and eggs.",
+    "character": {
+      "name": "Tom",
+      "role": "Cashier",
+      "personality": "polite, calm",
+      "initial": "T",
+      "gradient": "teal-purple"
+    },
+    "suggestedTurns": 5,
+    "thumbnailIcon": "🛒",
+    "order": 4
+  },
+  {
+    "id": "seed_a1_health_pharmacy",
+    "title": "At the Pharmacy",
+    "topic": "health",
+    "level": "A1",
+    "situation": "You have a small headache and walk into a pharmacy to ask for simple medicine. The pharmacist greets you at the counter.",
+    "character": {
+      "name": "Nina",
+      "role": "Pharmacist",
+      "personality": "soft, careful",
+      "initial": "N",
+      "gradient": "gold-peach"
+    },
+    "suggestedTurns": 5,
+    "thumbnailIcon": "💊",
+    "order": 5
+  },
+  {
+    "id": "seed_a1_family_phone_call",
+    "title": "Quick Call Home",
+    "topic": "family",
+    "level": "A1",
+    "situation": "You call your mom for a short check-in. She picks up and asks how you are doing today.",
+    "character": {
+      "name": "Mom",
+      "role": "Mother",
+      "personality": "warm, simple, loving",
+      "initial": "M",
+      "gradient": "teal-gold"
+    },
+    "suggestedTurns": 5,
+    "thumbnailIcon": "📞",
+    "order": 6
+  },
+  {
+    "id": "seed_a2_social_neighbor",
+    "title": "Meet Your New Neighbor",
+    "topic": "social",
+    "level": "A2",
+    "situation": "A neighbor from the apartment next door knocks to welcome you to the building and introduce themselves.",
+    "character": {
+      "name": "Chris",
+      "role": "Neighbor",
+      "personality": "friendly, curious",
+      "initial": "C",
+      "gradient": "teal-purple"
+    },
+    "suggestedTurns": 6,
+    "thumbnailIcon": "🏠",
+    "order": 7
+  },
+  {
+    "id": "seed_a2_health_booking",
+    "title": "Book a Doctor Visit",
+    "topic": "health",
+    "level": "A2",
+    "situation": "You call a clinic to book a general check-up for next week. The receptionist answers and asks about your availability.",
+    "character": {
+      "name": "Ann",
+      "role": "Clinic receptionist",
+      "personality": "polite, efficient",
+      "initial": "A",
+      "gradient": "purple-pink"
+    },
+    "suggestedTurns": 6,
+    "thumbnailIcon": "🩺",
+    "order": 8
+  },
+  {
+    "id": "seed_a2_travel_taxi",
+    "title": "Take a Taxi",
+    "topic": "travel",
+    "level": "A2",
+    "situation": "You step into a taxi after a long flight and need to give the driver the address of your hotel and confirm the fare.",
+    "character": {
+      "name": "Raj",
+      "role": "Taxi driver",
+      "personality": "chatty, kind",
+      "initial": "R",
+      "gradient": "gold-peach"
+    },
+    "suggestedTurns": 6,
+    "thumbnailIcon": "🚖",
+    "order": 9
+  },
+  {
+    "id": "seed_a2_work_break",
+    "title": "Coffee Break Chat",
+    "topic": "work",
+    "level": "A2",
+    "situation": "A coworker joins you in the office kitchen during the morning coffee break and starts a small chat about the weekend.",
+    "character": {
+      "name": "Ben",
+      "role": "Coworker",
+      "personality": "easygoing, talkative",
+      "initial": "B",
+      "gradient": "teal-gold"
+    },
+    "suggestedTurns": 6,
+    "thumbnailIcon": "☕",
+    "order": 10
+  },
+  {
+    "id": "seed_a2_hobby_gym",
+    "title": "Sign Up for a Gym",
+    "topic": "hobby",
+    "level": "A2",
+    "situation": "You walk into a local gym to ask about a monthly membership. A staff member at the front desk greets you and explains the options.",
+    "character": {
+      "name": "Kate",
+      "role": "Gym staff",
+      "personality": "energetic, helpful",
+      "initial": "K",
+      "gradient": "teal-purple"
+    },
+    "suggestedTurns": 6,
+    "thumbnailIcon": "🏋️",
+    "order": 11
+  },
+  {
+    "id": "seed_a2_dating_app_match",
+    "title": "First Message Back",
+    "topic": "dating",
+    "level": "A2",
+    "situation": "You matched with someone on a dating app yesterday. They just sent a friendly first message asking about your hobbies and weekend plans.",
+    "character": {
+      "name": "Riley",
+      "role": "App match",
+      "personality": "playful, curious",
+      "initial": "R",
+      "gradient": "purple-pink"
+    },
+    "suggestedTurns": 6,
+    "thumbnailIcon": "💬",
+    "order": 12
+  },
+  {
+    "id": "seed_b1_work_first_day",
+    "title": "First Day at the Office",
+    "topic": "work",
+    "level": "B1",
+    "situation": "Your new manager stops by your desk on your first day to welcome you, ask how your morning went, and set expectations for the first week.",
+    "character": {
+      "name": "David",
+      "role": "Team lead",
+      "personality": "warm, direct",
+      "initial": "D",
+      "gradient": "teal-purple"
+    },
+    "suggestedTurns": 7,
+    "thumbnailIcon": "💼",
+    "order": 13
+  },
+  {
+    "id": "seed_b1_hobby_hiking",
+    "title": "Join the Hiking Club",
+    "topic": "hobby",
+    "level": "B1",
+    "situation": "You show up at a weekend hiking meetup in the park and introduce yourself to the group leader before the walk starts.",
+    "character": {
+      "name": "Emma",
+      "role": "Group organizer",
+      "personality": "energetic, welcoming",
+      "initial": "E",
+      "gradient": "teal-gold"
+    },
+    "suggestedTurns": 7,
+    "thumbnailIcon": "🥾",
+    "order": 14
+  },
+  {
+    "id": "seed_b1_family_grandparents",
+    "title": "Call Your Grandparents",
+    "topic": "family",
+    "level": "B1",
+    "situation": "You video call your grandparents to share what you did last weekend and ask how they have been.",
+    "character": {
+      "name": "Grandma Rose",
+      "role": "Grandmother",
+      "personality": "warm, curious, a little worried",
+      "initial": "R",
+      "gradient": "gold-peach"
+    },
+    "suggestedTurns": 7,
+    "thumbnailIcon": "👵",
+    "order": 15
+  },
+  {
+    "id": "seed_b1_travel_lost_bag",
+    "title": "Lost Luggage at the Airport",
+    "topic": "travel",
+    "level": "B1",
+    "situation": "Your suitcase did not arrive on the carousel after a long international flight. You walk over to the airline's lost-baggage counter to file a claim.",
+    "character": {
+      "name": "Olivia",
+      "role": "Airline agent",
+      "personality": "calm, professional",
+      "initial": "O",
+      "gradient": "purple-pink"
+    },
+    "suggestedTurns": 7,
+    "thumbnailIcon": "🧳",
+    "order": 16
+  },
+  {
+    "id": "seed_b1_health_dentist",
+    "title": "Toothache at the Dentist",
+    "topic": "health",
+    "level": "B1",
+    "situation": "You have a sharp toothache and walk into a dental clinic without an appointment. The dentist asks where the pain is and how long it has been going on.",
+    "character": {
+      "name": "Dr. Park",
+      "role": "Dentist",
+      "personality": "patient, reassuring",
+      "initial": "P",
+      "gradient": "teal-purple"
+    },
+    "suggestedTurns": 7,
+    "thumbnailIcon": "🦷",
+    "order": 17
+  },
+  {
+    "id": "seed_b2_dating_first_date",
+    "title": "Coffee With a Match",
+    "topic": "dating",
+    "level": "B2",
+    "situation": "You meet someone for the first time at a café after matching on a dating app. They arrive a little early and wave you over.",
+    "character": {
+      "name": "Jordan",
+      "role": "Date",
+      "personality": "easygoing, witty",
+      "initial": "J",
+      "gradient": "purple-pink"
+    },
+    "suggestedTurns": 8,
+    "thumbnailIcon": "❤️",
+    "order": 18
+  },
+  {
+    "id": "seed_b2_travel_hotel_mixup",
+    "title": "Hotel Reservation Mix-up",
+    "topic": "travel",
+    "level": "B2",
+    "situation": "You arrive at a hotel close to midnight to check in and learn your room was given to another guest by mistake. You need to sort it out calmly.",
+    "character": {
+      "name": "Marco",
+      "role": "Front-desk clerk",
+      "personality": "apologetic, professional",
+      "initial": "M",
+      "gradient": "teal-gold"
+    },
+    "suggestedTurns": 8,
+    "thumbnailIcon": "🏨",
+    "order": 19
+  },
+  {
+    "id": "seed_b2_work_standup_pushback",
+    "title": "Push Back in Stand-up",
+    "topic": "work",
+    "level": "B2",
+    "situation": "In a morning stand-up, a teammate proposes a plan you think is risky. You want to push back politely and suggest a safer alternative.",
+    "character": {
+      "name": "Priya",
+      "role": "Teammate",
+      "personality": "direct, confident",
+      "initial": "P",
+      "gradient": "teal-purple"
+    },
+    "suggestedTurns": 8,
+    "thumbnailIcon": "📅",
+    "order": 20
+  },
+  {
+    "id": "seed_b2_health_second_opinion",
+    "title": "Asking for a Second Opinion",
+    "topic": "health",
+    "level": "B2",
+    "situation": "You sit down with a new doctor to ask for a second opinion on a treatment plan another doctor proposed. You want to explain your worries clearly.",
+    "character": {
+      "name": "Dr. Cole",
+      "role": "Doctor",
+      "personality": "thoughtful, honest",
+      "initial": "C",
+      "gradient": "gold-peach"
+    },
+    "suggestedTurns": 8,
+    "thumbnailIcon": "🩻",
+    "order": 21
+  },
+  {
+    "id": "seed_b2_family_disagreement",
+    "title": "A Difficult Family Talk",
+    "topic": "family",
+    "level": "B2",
+    "situation": "Your sibling made a decision that affects the whole family. You want to share your concerns honestly without starting a fight.",
+    "character": {
+      "name": "Daniel",
+      "role": "Sibling",
+      "personality": "defensive, emotional",
+      "initial": "D",
+      "gradient": "purple-pink"
+    },
+    "suggestedTurns": 8,
+    "thumbnailIcon": "👨‍👩‍👧",
+    "order": 22
+  },
+  {
+    "id": "seed_c1_social_networking",
+    "title": "Networking Night",
+    "topic": "social",
+    "level": "C1",
+    "situation": "You are at an industry mixer and strike up a conversation with a senior professional at the bar. They ask what you have been working on lately.",
+    "character": {
+      "name": "Alex",
+      "role": "Senior product manager",
+      "personality": "curious, thoughtful",
+      "initial": "A",
+      "gradient": "purple-pink"
+    },
+    "suggestedTurns": 9,
+    "thumbnailIcon": "🍸",
+    "order": 23
+  },
+  {
+    "id": "seed_c1_work_raise",
+    "title": "Negotiate Your Raise",
+    "topic": "work",
+    "level": "C1",
+    "situation": "You sit down with your manager for your year-end review to make the case for a raise, backed by your impact over the last twelve months.",
+    "character": {
+      "name": "Helen",
+      "role": "Manager",
+      "personality": "thoughtful, fair, a little guarded",
+      "initial": "H",
+      "gradient": "teal-purple"
+    },
+    "suggestedTurns": 9,
+    "thumbnailIcon": "💰",
+    "order": 24
+  },
+  {
+    "id": "seed_c1_dating_honest_talk",
+    "title": "An Honest Talk",
+    "topic": "dating",
+    "level": "C1",
+    "situation": "You are a few months into dating someone and want to bring up where the relationship is going. They sit down across from you, sensing something is on your mind.",
+    "character": {
+      "name": "Sasha",
+      "role": "Partner",
+      "personality": "calm, observant, open",
+      "initial": "S",
+      "gradient": "gold-peach"
+    },
+    "suggestedTurns": 9,
+    "thumbnailIcon": "💞",
+    "order": 25
+  },
+  {
+    "id": "seed_c1_travel_hotel_complaint",
+    "title": "Complain to the Manager",
+    "topic": "travel",
+    "level": "C1",
+    "situation": "Your weekend stay was ruined by noise, dirty linens, and a broken air conditioner. You ask to speak with the hotel manager to lay out the issues and request fair compensation.",
+    "character": {
+      "name": "Mr. Lang",
+      "role": "Hotel manager",
+      "personality": "polished, defensive at first",
+      "initial": "L",
+      "gradient": "teal-gold"
+    },
+    "suggestedTurns": 9,
+    "thumbnailIcon": "🛎️",
+    "order": 26
+  },
+  {
+    "id": "seed_c1_hobby_book_club",
+    "title": "Defend Your Take",
+    "topic": "hobby",
+    "level": "C1",
+    "situation": "At a book club meeting, your reading of the novel disagrees with the host's. You want to make your case clearly and listen well to theirs.",
+    "character": {
+      "name": "Iris",
+      "role": "Book club host",
+      "personality": "sharp, well-read, fair",
+      "initial": "I",
+      "gradient": "purple-pink"
+    },
+    "suggestedTurns": 9,
+    "thumbnailIcon": "📖",
+    "order": 27
+  },
+  {
+    "id": "seed_c2_work_keynote",
+    "title": "Pre-Keynote Pep Talk",
+    "topic": "work",
+    "level": "C2",
+    "situation": "Five minutes before delivering a keynote, your senior advisor pulls you aside backstage to challenge your framing and push you to sharpen the closing argument.",
+    "character": {
+      "name": "Dr. Hayes",
+      "role": "Senior advisor",
+      "personality": "incisive, demanding, supportive",
+      "initial": "H",
+      "gradient": "teal-purple"
+    },
+    "suggestedTurns": 10,
+    "thumbnailIcon": "🎤",
+    "order": 28
+  },
+  {
+    "id": "seed_c2_social_panel",
+    "title": "On the Panel",
+    "topic": "social",
+    "level": "C2",
+    "situation": "You are a panelist at a high-profile conference. The moderator throws a sharp, contested question at you in front of a packed auditorium and a live stream.",
+    "character": {
+      "name": "Moderator Quinn",
+      "role": "Panel moderator",
+      "personality": "skeptical, articulate, pressing",
+      "initial": "Q",
+      "gradient": "gold-peach"
+    },
+    "suggestedTurns": 10,
+    "thumbnailIcon": "🎙️",
+    "order": 29
+  },
+  {
+    "id": "seed_c2_dating_long_distance",
+    "title": "The Future Together",
+    "topic": "dating",
+    "level": "C2",
+    "situation": "After two years of long-distance dating, you sit down with your partner to talk through whether one of you should move, and what you each truly want from the next chapter.",
+    "character": {
+      "name": "Noor",
+      "role": "Long-term partner",
+      "personality": "thoughtful, vulnerable, candid",
+      "initial": "N",
+      "gradient": "purple-pink"
+    },
+    "suggestedTurns": 10,
+    "thumbnailIcon": "✈️",
+    "order": 30
+  },
+  {
+    "id": "seed_c2_family_inheritance",
+    "title": "Family Legacy Talk",
+    "topic": "family",
+    "level": "C2",
+    "situation": "Your aging parent calls a family meeting to discuss the will, the family business, and how responsibilities should be shared. Tensions sit just under the surface.",
+    "character": {
+      "name": "Father",
+      "role": "Aging parent",
+      "personality": "proud, careful, hopeful",
+      "initial": "F",
+      "gradient": "teal-gold"
+    },
+    "suggestedTurns": 10,
+    "thumbnailIcon": "🏛️",
+    "order": 31
+  },
+  {
+    "id": "seed_c2_health_diagnosis",
+    "title": "Discussing a Diagnosis",
+    "topic": "health",
+    "level": "C2",
+    "situation": "A specialist sits down with you to walk through a complex diagnosis, treatment options, and the trade-offs of each path. You need to ask precise, informed questions.",
+    "character": {
+      "name": "Dr. Rivers",
+      "role": "Specialist",
+      "personality": "measured, candid, empathetic",
+      "initial": "R",
+      "gradient": "teal-purple"
+    },
+    "suggestedTurns": 10,
+    "thumbnailIcon": "🧬",
+    "order": 32
+  }
+]

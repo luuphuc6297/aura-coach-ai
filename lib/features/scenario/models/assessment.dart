@@ -18,6 +18,7 @@ class AssessmentResult {
   final String grammarAnalysis;
   final String vocabularyAnalysis;
   final List<Improvement> improvements;
+  final List<KeyVocabulary> keyVocabulary;
   final String userTone;
   final AlternativeTones alternativeTones;
   final String? nextAgentReply;
@@ -35,6 +36,7 @@ class AssessmentResult {
     required this.grammarAnalysis,
     required this.vocabularyAnalysis,
     required this.improvements,
+    this.keyVocabulary = const [],
     required this.userTone,
     required this.alternativeTones,
     this.nextAgentReply,
@@ -57,12 +59,28 @@ class AssessmentResult {
               ?.map((e) => Improvement.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const [],
+      keyVocabulary: (json['keyVocabulary'] as List<dynamic>?)
+              ?.map((e) => KeyVocabulary.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
       userTone: json['userTone'] as String? ?? 'Neutral',
-      alternativeTones: AlternativeTones.fromAiJson(
-          json['alternativeTones'] as Map<String, dynamic>?),
+      alternativeTones: _readAlternativeTones(json['alternativeTones']),
       nextAgentReply: json['nextAgentReply'] as String?,
       nextAgentReplyVietnamese: json['nextAgentReplyVietnamese'] as String?,
     );
+  }
+
+  /// Firestore round-trips use [toJson]/[fromJson]. Live AI responses arrive
+  /// in the web's flat-string shape for `alternativeTones` — persisted docs
+  /// store the mobile nested shape. Dispatch to the right factory by sniffing
+  /// the first tone value so resumed conversations don't crash the chat.
+  static AlternativeTones _readAlternativeTones(dynamic raw) {
+    if (raw is! Map) return AlternativeTones.fromAiJson(null);
+    final map = Map<String, dynamic>.from(raw);
+    final isPersistedShape = map.values.any((v) => v is Map);
+    return isPersistedShape
+        ? AlternativeTones.fromJson(map)
+        : AlternativeTones.fromAiJson(map);
   }
 
   Map<String, dynamic> toJson() => {
@@ -77,10 +95,42 @@ class AssessmentResult {
         'grammarAnalysis': grammarAnalysis,
         'vocabularyAnalysis': vocabularyAnalysis,
         'improvements': improvements.map((e) => e.toJson()).toList(),
+        'keyVocabulary': keyVocabulary.map((e) => e.toJson()).toList(),
         'userTone': userTone,
         'alternativeTones': alternativeTones.toJson(),
         'nextAgentReply': nextAgentReply,
         'nextAgentReplyVietnamese': nextAgentReplyVietnamese,
+      };
+}
+
+/// A noteworthy vocabulary item the AI surfaced from the user's response or
+/// the better alternative so the learner can one-tap save it to their
+/// dictionary.
+class KeyVocabulary {
+  final String word;
+  final String partOfSpeech;
+  final String meaning;
+  final String example;
+
+  const KeyVocabulary({
+    required this.word,
+    required this.partOfSpeech,
+    required this.meaning,
+    this.example = '',
+  });
+
+  factory KeyVocabulary.fromJson(Map<String, dynamic> json) => KeyVocabulary(
+        word: (json['word'] as String?)?.trim() ?? '',
+        partOfSpeech: (json['partOfSpeech'] as String?)?.trim() ?? '',
+        meaning: (json['meaning'] as String?)?.trim() ?? '',
+        example: (json['example'] as String?)?.trim() ?? '',
+      );
+
+  Map<String, dynamic> toJson() => {
+        'word': word,
+        'partOfSpeech': partOfSpeech,
+        'meaning': meaning,
+        'example': example,
       };
 }
 

@@ -54,8 +54,7 @@ class ScenarioCache {
       final prefs = await _prefs;
       final raw = prefs.getString(_kAssessmentKey);
       if (raw == null || raw.isEmpty) return null;
-      return AssessmentResult.fromJson(
-          jsonDecode(raw) as Map<String, dynamic>);
+      return AssessmentResult.fromJson(jsonDecode(raw) as Map<String, dynamic>);
     } catch (e) {
       debugPrint('[ScenarioCache] getLastAssessment failed: $e');
       return null;

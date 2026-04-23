@@ -15,7 +15,7 @@ abstract final class AppTheme {
           tertiary: AppColors.gold,
           surface: AppColors.cream,
           error: AppColors.error,
-          onPrimary: AppColors.white,
+          onPrimary: AppColors.warmDark,
           onSurface: AppColors.warmDark,
         ),
         appBarTheme: AppBarTheme(
@@ -23,7 +23,7 @@ abstract final class AppTheme {
           foregroundColor: AppColors.warmDark,
           elevation: 0,
           centerTitle: false,
-          titleTextStyle: AppTypography.h3,
+          titleTextStyle: AppTypography.title,
           systemOverlayStyle: SystemUiOverlayStyle.dark,
         ),
         textTheme: TextTheme(
@@ -42,7 +42,7 @@ abstract final class AppTheme {
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.teal,
-            foregroundColor: AppColors.white,
+            foregroundColor: AppColors.warmDark,
             textStyle: AppTypography.button,
             shape: RoundedRectangleBorder(
               borderRadius: AppRadius.lgBorder,
@@ -54,8 +54,10 @@ abstract final class AppTheme {
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
           fillColor: AppColors.clayBeige,
-          hintStyle: AppTypography.bodyMd.copyWith(color: AppColors.warmLight),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          hintStyle: AppTypography.input.copyWith(color: AppColors.warmLight),
+          labelStyle: AppTypography.input.copyWith(color: AppColors.warmMuted),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           border: OutlineInputBorder(
             borderRadius: AppRadius.lgBorder,
             borderSide: const BorderSide(color: AppColors.clayBorder, width: 2),
@@ -73,19 +75,19 @@ abstract final class AppTheme {
             borderSide: const BorderSide(color: AppColors.error, width: 2),
           ),
         ),
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           color: AppColors.clayWhite,
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: AppRadius.lgBorder,
           ),
         ),
-        dialogTheme: DialogTheme(
+        dialogTheme: DialogThemeData(
           backgroundColor: AppColors.cream,
           shape: RoundedRectangleBorder(
             borderRadius: AppRadius.lgBorder,
           ),
-          titleTextStyle: AppTypography.h2,
+          titleTextStyle: AppTypography.title,
           contentTextStyle: AppTypography.bodyMd,
         ),
         bottomNavigationBarTheme: const BottomNavigationBarThemeData(

@@ -10,7 +10,8 @@ class AuraLogo extends StatelessWidget {
   final bool compact;
   final Color? color;
 
-  const AuraLogo({super.key, this.fontSize = 28, this.compact = false, this.color});
+  const AuraLogo(
+      {super.key, this.fontSize = 28, this.compact = false, this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -31,10 +32,13 @@ class AuraLogo extends StatelessWidget {
           SizedBox(
             width: orbSize - AppSpacing.lg,
             height: orbSize,
-            child: CloudImage(url: CloudinaryAssets.auraOrbLarge, size: orbSize),
+            child:
+                CloudImage(url: CloudinaryAssets.auraOrbLarge, size: orbSize),
           ),
           Text('ACH', style: style.copyWith(color: effectiveColor)),
-          Text('.AI', style: style.copyWith(color: AppColors.warmDark, letterSpacing: 0)),
+          Text('.AI',
+              style:
+                  style.copyWith(color: AppColors.warmDark, letterSpacing: 0)),
         ],
       );
     }
@@ -51,12 +55,15 @@ class AuraLogo extends StatelessWidget {
             SizedBox(
               width: orbSize - AppSpacing.giant,
               height: orbSize,
-              child: CloudImage(url: CloudinaryAssets.auraOrbLarge, size: orbSize),
+              child:
+                  CloudImage(url: CloudinaryAssets.auraOrbLarge, size: orbSize),
             ),
             Text('ACH', style: style.copyWith(color: effectiveColor)),
             Padding(
               padding: const EdgeInsets.only(left: AppSpacing.xs),
-              child: Text('.AI', style: style.copyWith(color: AppColors.warmDark, letterSpacing: 0)),
+              child: Text('.AI',
+                  style: style.copyWith(
+                      color: AppColors.warmDark, letterSpacing: 0)),
             ),
           ],
         ),

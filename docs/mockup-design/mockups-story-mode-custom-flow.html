@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aura Coach AI — Story Mode Custom Flow Options</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700;800&family=Nunito:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --cream: #FFF8F0;
+      --clay-white: #FEFCF9;
+      --clay-beige: #F5EDE3;
+      --clay-border: #E8DFD3;
+      --clay-shadow: #D4C9BB;
+      --warm-dark: #2D3047;
+      --warm-muted: #6B6D7B;
+      --warm-light: #9B9DAB;
+      --teal: #7ECEC5;
+      --teal-deep: #5FB5AB;
+      --purple: #A78BCA;
+      --purple-deep: #8A6FB0;
+      --gold: #E8C77B;
+      --gold-deep: #D4AF5F;
+      --success: #7BC6A0;
+      --error: #D98A8A;
+      --shadow-clay: 3px 3px 0px #D4C9BB;
+      --shadow-card: 0 2px 8px rgba(45,48,71,0.04);
+      --shadow-soft: 0 4px 12px rgba(45,48,71,0.06);
+      --r-sm: 8px; --r-md: 12px; --r-lg: 20px; --r-xl: 28px; --r-full: 9999px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { font-family: 'Inter', sans-serif; background: #EEEAE5; min-height: 100vh; }
+
+    .page-header { text-align: center; padding: 48px 20px 24px; }
+    .page-header h1 { font-family: 'Fredoka', sans-serif; font-size: 32px; font-weight: 800; color: var(--warm-dark); }
+    .page-header p { color: var(--warm-muted); font-size: 14px; margin-top: 6px; max-width: 720px; margin-left: auto; margin-right: auto; }
+    .page-header .label { font-size: 12px; color: var(--warm-light); text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; }
+
+    .screens-row {
+      display: flex; gap: 32px; padding: 24px 40px 60px;
+      justify-content: center; flex-wrap: wrap;
+    }
+
+    .column {
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .column-header {
+      background: var(--clay-white);
+      border: 2px solid var(--clay-border);
+      box-shadow: var(--shadow-clay);
+      border-radius: var(--r-lg);
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      width: 375px;
+      text-align: center;
+    }
+    .column-header .opt-tag {
+      display: inline-block;
+      color: var(--warm-dark);
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: var(--r-full);
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+    .column-header h2 {
+      font-family: 'Fredoka', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--warm-dark);
+    }
+    .column-header p {
+      font-size: 12px;
+      color: var(--warm-muted);
+      margin-top: 4px;
+    }
+
+    /* Phone */
+    .phone {
+      flex-shrink: 0;
+      width: 375px; height: 720px;
+      background: var(--cream); border-radius: 44px;
+      border: 3px solid var(--clay-border);
+      box-shadow: 0 8px 32px rgba(45,48,71,0.08), 0 2px 8px rgba(45,48,71,0.04);
+      overflow: hidden; display: flex; flex-direction: column;
+      position: relative;
+    }
+    .phone-status {
+      height: 38px; display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 24px 0; font-size: 12px; color: var(--warm-muted); font-weight: 600; flex-shrink: 0;
+    }
+    .phone-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+    .phone-home-bar { height: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .phone-home-bar::after { content: ''; width: 120px; height: 4px; background: var(--warm-dark); border-radius: 2px; opacity: 0.3; }
+
+    /* App bar */
+    .app-bar {
+      height: 56px; display: flex; align-items: center; justify-content: space-between;
+      padding: 0 20px; flex-shrink: 0;
+    }
+    .app-bar-left { display: flex; align-items: center; gap: 12px; }
+    .icon-btn {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: var(--clay-white);
+      border: 1.5px solid var(--clay-border);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--warm-dark); font-size: 18px;
+    }
+    .app-title {
+      font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 20px;
+      color: var(--warm-dark);
+    }
+    .quota-pill {
+      background: var(--gold);
+      padding: 4px 12px; border-radius: var(--r-full);
+      font-size: 11px; font-weight: 700; color: var(--warm-dark);
+      font-family: 'Nunito', sans-serif;
+    }
+
+    /* Scroll */
+    .scroll-content { flex: 1; overflow-y: auto; padding: 12px 20px 20px; }
+    .scroll-content::-webkit-scrollbar { width: 4px; }
+    .scroll-content::-webkit-scrollbar-thumb { background: var(--clay-shadow); border-radius: 2px; }
+
+    /* Hero (dimmed for modal options) */
+    .hero-create {
+      background: linear-gradient(135deg, var(--teal) 0%, var(--purple) 100%);
+      border: 2px solid var(--warm-dark);
+      box-shadow: var(--shadow-clay);
+      border-radius: var(--r-lg);
+      padding: 20px;
+      color: white;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    .hero-create h3 {
+      font-family: 'Fredoka', sans-serif; font-size: 20px; font-weight: 700;
+      margin-bottom: 6px; padding-right: 40px;
+    }
+    .hero-create p { font-size: 12px; opacity: 0.92; margin-bottom: 12px; }
+    .hero-create .cta {
+      background: var(--clay-white); color: var(--warm-dark);
+      padding: 8px 16px; border-radius: var(--r-full);
+      font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 12px;
+      display: inline-block;
+    }
+
+    /* Story cards bg (partial library below) */
+    .story-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px; }
+    .story-card {
+      background: var(--clay-white); border: 1.5px solid var(--clay-border);
+      border-radius: var(--r-md); overflow: hidden; box-shadow: var(--shadow-card);
+    }
+    .story-thumb { height: 64px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+    .thumb-teal { background: linear-gradient(135deg, #A8E0D8, #7ECEC5); }
+    .thumb-purple { background: linear-gradient(135deg, #C9B6E3, #A78BCA); }
+    .thumb-gold { background: linear-gradient(135deg, #F2D98A, #E8C77B); }
+    .thumb-peach { background: linear-gradient(135deg, #F8C6AE, #E8A080); }
+    .story-body { padding: 8px 10px; }
+    .story-title { font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 12px; color: var(--warm-dark); line-height: 1.3; }
+    .story-meta { display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--warm-muted); margin-top: 2px; }
+    .level-badge { padding: 1px 6px; border-radius: var(--r-full); font-size: 9px; font-weight: 700; color: var(--warm-dark); }
+    .lv-a { background: #D6EBC7; }
+    .lv-b { background: #C7DDEB; }
+
+    /* Modal overlay (Option A) */
+    .modal-scrim {
+      position: absolute; inset: 0; background: rgba(45,48,71,0.5);
+      z-index: 10;
+    }
+    .bottom-sheet {
+      position: absolute; left: 0; right: 0; bottom: 0;
+      background: var(--cream);
+      border-top-left-radius: 28px; border-top-right-radius: 28px;
+      border-top: 2px solid var(--clay-border);
+      box-shadow: 0 -8px 32px rgba(0,0,0,0.15);
+      z-index: 11;
+      padding: 12px 20px 28px;
+      max-height: 70%;
+      overflow-y: auto;
+    }
+    .sheet-handle {
+      width: 40px; height: 4px; background: var(--clay-shadow); border-radius: 2px;
+      margin: 0 auto 14px;
+    }
+    .sheet-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .sheet-title {
+      font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 18px;
+      color: var(--warm-dark);
+    }
+    .sheet-close {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--clay-beige); display: flex; align-items: center; justify-content: center;
+      font-size: 16px; color: var(--warm-muted);
+    }
+
+    /* Form elements */
+    .form-label {
+      font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 12px;
+      color: var(--warm-dark); margin-bottom: 8px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .form-label .opt-tag-sm { font-size: 10px; color: var(--warm-light); font-weight: 500; }
+    .form-input {
+      background: var(--clay-white);
+      border: 1.5px solid var(--clay-border);
+      border-radius: var(--r-md);
+      padding: 10px 12px;
+      font-size: 13px; color: var(--warm-dark);
+      width: 100%;
+      font-family: 'Inter', sans-serif;
+    }
+    .form-input-placeholder { color: var(--warm-light); }
+    .topic-chips {
+      display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px;
+    }
+    .chip {
+      background: var(--clay-beige);
+      padding: 6px 12px; border-radius: var(--r-full);
+      font-size: 12px; font-weight: 600; color: var(--warm-dark);
+      font-family: 'Nunito', sans-serif;
+      border: 1.5px solid transparent;
+    }
+    .chip.active {
+      background: var(--teal);
+      border-color: var(--warm-dark);
+    }
+    .level-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 12px;
+      background: var(--clay-white);
+      border: 1.5px solid var(--clay-border);
+      border-radius: var(--r-md);
+      font-size: 12px; color: var(--warm-dark);
+      margin-bottom: 14px;
+    }
+    .level-row strong { font-family: 'Nunito', sans-serif; color: var(--warm-dark); }
+    .level-row .muted { color: var(--warm-muted); margin-left: auto; font-size: 11px; }
+
+    .context-expand {
+      background: var(--clay-white);
+      border: 1.5px dashed var(--clay-border);
+      border-radius: var(--r-md);
+      padding: 10px 12px;
+      font-size: 12px; color: var(--warm-muted);
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 14px;
+    }
+    .context-expand .plus { color: var(--teal-deep); font-weight: 700; }
+
+    .primary-btn {
+      background: var(--teal);
+      border: 2px solid var(--warm-dark);
+      box-shadow: 3px 3px 0px var(--warm-dark);
+      padding: 14px 16px; border-radius: var(--r-md);
+      font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 15px;
+      color: var(--warm-dark); text-align: center;
+      width: 100%;
+      margin-top: 4px;
+    }
+    .primary-btn.disabled { opacity: 0.5; }
+
+    /* Full screen form step indicator (Option B) */
+    .stepper {
+      display: flex; align-items: center; gap: 6px; padding: 0 20px; margin-bottom: 12px;
+    }
+    .step-dot {
+      flex: 1; height: 4px; background: var(--clay-border); border-radius: 2px;
+    }
+    .step-dot.done { background: var(--teal); }
+    .step-dot.active { background: var(--warm-dark); }
+
+    /* Inline expand (Option C) — enlarged hero */
+    .hero-expanded {
+      background: linear-gradient(135deg, var(--teal) 0%, var(--purple) 100%);
+      border: 2px solid var(--warm-dark);
+      box-shadow: var(--shadow-clay);
+      border-radius: var(--r-lg);
+      padding: 18px 16px;
+      color: white;
+      margin-bottom: 16px;
+    }
+    .hero-expanded h3 {
+      font-family: 'Fredoka', sans-serif; font-size: 18px; font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .hero-expanded .sub { font-size: 11px; opacity: 0.9; margin-bottom: 12px; }
+    .hero-expanded .chip {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: 1.5px solid rgba(255,255,255,0.3);
+    }
+    .hero-expanded .chip.active {
+      background: white;
+      color: var(--warm-dark);
+      border-color: white;
+    }
+    .hero-expanded .generate {
+      background: white; color: var(--warm-dark);
+      padding: 10px 16px; border-radius: var(--r-full);
+      font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 13px;
+      display: inline-flex; align-items: center; gap: 6px;
+      margin-top: 8px;
+    }
+
+    /* Summary table */
+    .summary-wrap {
+      max-width: 900px; margin: 0 auto 60px; padding: 24px;
+      background: var(--clay-white); border: 2px solid var(--clay-border);
+      border-radius: var(--r-lg); box-shadow: var(--shadow-clay);
+    }
+    .summary-wrap h3 { font-family: 'Fredoka', sans-serif; color: var(--warm-dark); margin-bottom: 12px; }
+    .summary-wrap table { width: 100%; border-collapse: collapse; font-size: 13px; color: var(--warm-dark); }
+    .summary-wrap th { text-align: left; padding: 8px 12px; font-family: 'Nunito', sans-serif; }
+    .summary-wrap td { padding: 8px 12px; }
+    .summary-wrap tr { border-bottom: 1px solid var(--clay-border); }
+    .summary-wrap tr:last-child { border-bottom: none; }
+    .summary-wrap td.muted { color: var(--warm-muted); }
+  </style>
+</head>
+<body>
+  <div class="page-header">
+    <h1>Story Mode — Custom Flow Options</h1>
+    <p>Sau khi user tap hero "Create Your Own Story" từ Home. 3 phương án xử lý topic/level/context input.</p>
+    <div class="label">Aura Coach AI · Clay Design · 2026-04-19</div>
+  </div>
+
+  <div class="screens-row">
+
+    <!-- ═══ OPTION A — Bottom sheet ═══ -->
+    <div class="column">
+      <div class="column-header">
+        <span class="opt-tag" style="background:var(--teal);">Option A</span>
+        <h2>Bottom Sheet · 2 fields</h2>
+        <p>Modal trượt lên trên Home. Không leave context.</p>
+      </div>
+      <div class="phone">
+        <div class="phone-status">
+          <span>9:41</span>
+          <span>● ● ● ●</span>
+        </div>
+        <div class="phone-content">
+          <!-- Dimmed home behind -->
+          <div class="app-bar">
+            <div class="app-bar-left">
+              <div class="icon-btn">←</div>
+              <div class="app-title">Story Mode</div>
+            </div>
+            <div class="quota-pill">2/3 today</div>
+          </div>
+          <div class="scroll-content" style="filter:blur(1px);opacity:0.6;">
+            <div class="hero-create">
+              <h3>Create Your Own Story</h3>
+              <p>Pick any topic — AI generates a personalized dialogue for your level.</p>
+              <div class="cta">Start creating →</div>
+            </div>
+            <div class="story-grid">
+              <div class="story-card"><div class="story-thumb thumb-teal">☕</div><div class="story-body"><div class="story-title">Ordering at a Café</div></div></div>
+              <div class="story-card"><div class="story-thumb thumb-purple">🎓</div><div class="story-body"><div class="story-title">Job Interview</div></div></div>
+            </div>
+          </div>
+          <!-- Scrim -->
+          <div class="modal-scrim"></div>
+          <!-- Bottom sheet -->
+          <div class="bottom-sheet">
+            <div class="sheet-handle"></div>
+            <div class="sheet-header">
+              <div class="sheet-title">Create Your Story</div>
+              <div class="sheet-close">✕</div>
+            </div>
+            <div class="form-label">
+              Topic
+              <span class="opt-tag-sm">required</span>
+            </div>
+            <div class="topic-chips">
+              <div class="chip">Work</div>
+              <div class="chip active">Travel</div>
+              <div class="chip">Dating</div>
+              <div class="chip">Family</div>
+              <div class="chip">Health</div>
+              <div class="chip">Hobby</div>
+            </div>
+            <input class="form-input form-input-placeholder" placeholder="Or type your own topic…" style="margin-bottom:14px;" />
+            <div class="level-row">
+              <span>🎯</span>
+              <strong>B1 Intermediate</strong>
+              <span class="muted">from profile</span>
+            </div>
+            <div class="context-expand">
+              <span class="plus">+</span>
+              <span>Add specific context (optional)</span>
+            </div>
+            <div class="primary-btn">Generate story →</div>
+          </div>
+        </div>
+        <div class="phone-home-bar"></div>
+      </div>
+    </div>
+
+    <!-- ═══ OPTION B — Full screen form ═══ -->
+    <div class="column">
+      <div class="column-header">
+        <span class="opt-tag" style="background:var(--gold);">Option B</span>
+        <h2>Full Screen · 4 fields</h2>
+        <p>Route riêng với stepper. Control nhiều hơn.</p>
+      </div>
+      <div class="phone">
+        <div class="phone-status">
+          <span>9:41</span>
+          <span>● ● ● ●</span>
+        </div>
+        <div class="phone-content">
+          <div class="app-bar">
+            <div class="app-bar-left">
+              <div class="icon-btn">←</div>
+              <div class="app-title">Custom Story</div>
+            </div>
+            <div class="quota-pill">2/3 today</div>
+          </div>
+          <div class="stepper">
+            <div class="step-dot active"></div>
+            <div class="step-dot"></div>
+            <div class="step-dot"></div>
+            <div class="step-dot"></div>
+          </div>
+          <div class="scroll-content">
+            <div class="form-label">Topic <span class="opt-tag-sm">Step 1 of 4</span></div>
+            <div class="topic-chips">
+              <div class="chip">Work</div>
+              <div class="chip active">Travel</div>
+              <div class="chip">Dating</div>
+              <div class="chip">Family</div>
+              <div class="chip">Health</div>
+              <div class="chip">Hobby</div>
+            </div>
+            <input class="form-input form-input-placeholder" placeholder="Or type your own topic…" style="margin-bottom:20px;" />
+            <div class="form-label">Your level</div>
+            <div class="topic-chips">
+              <div class="chip">A1 Beginner</div>
+              <div class="chip">A2 Elementary</div>
+              <div class="chip active">B1 Intermediate</div>
+              <div class="chip">B2 Upper-Int.</div>
+              <div class="chip">C1 Advanced</div>
+            </div>
+            <div class="form-label">Character preference</div>
+            <div class="topic-chips">
+              <div class="chip active">Any</div>
+              <div class="chip">Male</div>
+              <div class="chip">Female</div>
+              <div class="chip">Young</div>
+              <div class="chip">Older</div>
+            </div>
+            <div class="form-label">Specific context <span class="opt-tag-sm">optional</span></div>
+            <textarea class="form-input form-input-placeholder" rows="3" placeholder="e.g. 'At a beach resort in Bali, checking in late at night'">At a beach resort in Bali, checking in late at night</textarea>
+            <div class="primary-btn" style="margin-top:16px;">Next →</div>
+          </div>
+        </div>
+        <div class="phone-home-bar"></div>
+      </div>
+    </div>
+
+    <!-- ═══ OPTION C — Inline expand ═══ -->
+    <div class="column">
+      <div class="column-header">
+        <span class="opt-tag" style="background:var(--purple);color:white;">Option C</span>
+        <h2>Inline Expand · Stay on Home</h2>
+        <p>Hero card expand thành form ngay trên Home.</p>
+      </div>
+      <div class="phone">
+        <div class="phone-status">
+          <span>9:41</span>
+          <span>● ● ● ●</span>
+        </div>
+        <div class="phone-content">
+          <div class="app-bar">
+            <div class="app-bar-left">
+              <div class="icon-btn">←</div>
+              <div class="app-title">Story Mode</div>
+            </div>
+            <div class="quota-pill">2/3 today</div>
+          </div>
+          <div class="scroll-content">
+            <div class="hero-expanded">
+              <h3>Create Your Own Story</h3>
+              <div class="sub">Pick a topic — we'll tailor it to your B1 level.</div>
+              <div class="topic-chips" style="margin-bottom:8px;">
+                <div class="chip">Work</div>
+                <div class="chip active">Travel</div>
+                <div class="chip">Dating</div>
+                <div class="chip">Family</div>
+                <div class="chip">Health</div>
+                <div class="chip">Hobby</div>
+              </div>
+              <div class="generate">Generate story ✨</div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+              <span style="font-family:'Fredoka',sans-serif;font-weight:700;font-size:15px;color:var(--warm-dark);">Featured Stories</span>
+              <span style="font-size:11px;color:var(--warm-muted);">12 · B1</span>
+            </div>
+            <div class="story-grid">
+              <div class="story-card"><div class="story-thumb thumb-teal">☕</div><div class="story-body"><div class="story-title">Ordering at a Café</div><div class="story-meta"><span class="level-badge lv-a">A2</span><span>· 5–7 turns</span></div></div></div>
+              <div class="story-card"><div class="story-thumb thumb-purple">🎓</div><div class="story-body"><div class="story-title">Job Interview</div><div class="story-meta"><span class="level-badge lv-b">B1</span><span>· 6–8 turns</span></div></div></div>
+              <div class="story-card"><div class="story-thumb thumb-gold">✈️</div><div class="story-body"><div class="story-title">Airport Check-in</div><div class="story-meta"><span class="level-badge lv-a">A2</span><span>· 4–6 turns</span></div></div></div>
+              <div class="story-card"><div class="story-thumb thumb-peach">🏥</div><div class="story-body"><div class="story-title">Doctor Visit</div><div class="story-meta"><span class="level-badge lv-b">B1</span><span>· 5–7 turns</span></div></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="phone-home-bar"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="summary-wrap">
+    <h3>Trade-off summary</h3>
+    <table>
+      <tr>
+        <th>Aspect</th>
+        <th style="color:var(--teal-deep);">A. Bottom Sheet</th>
+        <th style="color:var(--gold-deep);">B. Full Screen</th>
+        <th style="color:var(--purple-deep);">C. Inline Expand</th>
+      </tr>
+      <tr><td class="muted">Friction / taps to generate</td><td>2 taps (chip + Generate)</td><td>4+ taps (steps + Next)</td><td>2 taps (chip + Generate)</td></tr>
+      <tr><td class="muted">Custom context support</td><td>Optional expand</td><td>Dedicated field</td><td>Not available</td></tr>
+      <tr><td class="muted">Level override</td><td>No (uses profile)</td><td>Yes (picker)</td><td>No (uses profile)</td></tr>
+      <tr><td class="muted">Character preference</td><td>No</td><td>Yes</td><td>No</td></tr>
+      <tr><td class="muted">Context preservation</td><td>High (modal over home)</td><td>Low (leaves home)</td><td>Highest (same screen)</td></tr>
+      <tr><td class="muted">Dismiss cost</td><td>Swipe down</td><td>Back nav</td><td>N/A (no dismiss)</td></tr>
+      <tr><td class="muted">Impl effort</td><td>showModalBottomSheet</td><td>New route + form state</td><td>Stateful expand on Home</td></tr>
+      <tr><td class="muted">Best when…</td><td>Fast, low-friction, balanced</td><td>Advanced users need control</td><td>Feature heavily used, minimal</td></tr>
+    </table>
+  </div>
+</body>
+</html>

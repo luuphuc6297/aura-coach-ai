@@ -6,13 +6,36 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_shadows.dart';
+import '../../../core/theme/app_animations.dart';
+import '../../../shared/widgets/celebration_overlay.dart';
+import '../../../shared/widgets/clay_pressable.dart';
 import '../providers/scenario_provider.dart';
 import '../widgets/score_circle.dart';
 import '../widgets/radar_score.dart';
 import '../models/assessment.dart';
 
-class SessionSummaryScreen extends StatelessWidget {
+class SessionSummaryScreen extends StatefulWidget {
   const SessionSummaryScreen({super.key});
+
+  @override
+  State<SessionSummaryScreen> createState() => _SessionSummaryScreenState();
+}
+
+class _SessionSummaryScreenState extends State<SessionSummaryScreen> {
+  bool _showCelebration = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final provider = context.read<ScenarioProvider>();
+      final summary = provider.getSessionSummary();
+      final avgScore = summary['averageScore'] as double;
+      if (avgScore >= 6) {
+        setState(() => _showCelebration = true);
+      }
+    });
+  }
 
   Color _getScoreColor(double score) {
     if (score < 5) return AppColors.error;
@@ -30,27 +53,37 @@ class SessionSummaryScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppColors.cream,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildAppBar(context),
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  _buildScoreHeader(summary, avgScore, scoreColor),
-                  const SizedBox(height: 16),
-                  _buildStatsRow(summary),
-                  const SizedBox(height: 16),
-                  if (assessments.isNotEmpty)
-                    _buildAverageRadar(assessments),
-                  const SizedBox(height: 24),
-                  _buildActionButtons(context, provider),
-                ],
+      body: Stack(
+        children: [
+          SafeArea(
+            child: Column(
+              children: [
+                _buildAppBar(context),
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.all(16),
+                    children: [
+                      _buildScoreHeader(summary, avgScore, scoreColor),
+                      const SizedBox(height: 16),
+                      _buildStatsRow(summary),
+                      const SizedBox(height: 16),
+                      if (assessments.isNotEmpty)
+                        _buildAverageRadar(assessments),
+                      const SizedBox(height: 24),
+                      _buildActionButtons(context, provider),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (_showCelebration)
+            const Positioned.fill(
+              child: IgnorePointer(
+                child: CelebrationOverlay(),
               ),
             ),
-          ],
-        ),
+        ],
       ),
     );
   }
@@ -60,22 +93,23 @@ class SessionSummaryScreen extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
       child: Row(
         children: [
-          GestureDetector(
+          ClayPressable(
             onTap: () => context.go('/home'),
-            child: Container(
-              width: 36,
-              height: 36,
-              alignment: Alignment.center,
-              child: Text('✕', style: AppTypography.h2.copyWith(fontSize: 18)),
-            ),
+            scaleDown: 0.90,
+            builder: (context, isPressed) {
+              return Container(
+                width: 36,
+                height: 36,
+                alignment: Alignment.center,
+                child:
+                    Text('✕', style: AppTypography.h2.copyWith(fontSize: 18)),
+              );
+            },
           ),
           const SizedBox(width: 8),
           Text(
             'Session Summary',
-            style: AppTypography.h2.copyWith(
-              fontSize: 18,
-              color: AppColors.teal,
-            ),
+            style: AppTypography.title.copyWith(color: AppColors.teal),
           ),
         ],
       ),
@@ -106,10 +140,7 @@ class SessionSummaryScreen extends StatelessWidget {
                 : avgScore >= 6
                     ? 'Good Progress!'
                     : 'Keep Practicing!',
-            style: AppTypography.h2.copyWith(
-              fontSize: 20,
-              color: color,
-            ),
+            style: AppTypography.title.copyWith(color: color),
           ),
           const SizedBox(height: 4),
           Text(
@@ -207,59 +238,63 @@ class SessionSummaryScreen extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: GestureDetector(
+          child: ClayPressable(
             onTap: () {
               provider.endSession();
               context.go('/home');
             },
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              decoration: BoxDecoration(
-                color: AppColors.clayWhite,
-                borderRadius: AppRadius.mdBorder,
-                border: Border.all(color: AppColors.clayBorder, width: 2),
-              ),
-              child: Text(
-                'Back to Home',
-                textAlign: TextAlign.center,
-                style: AppTypography.labelMd.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.warmDark,
+            builder: (context, isPressed) {
+              return Container(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                decoration: BoxDecoration(
+                  color: AppColors.clayWhite,
+                  borderRadius: AppRadius.mdBorder,
+                  border: Border.all(color: AppColors.clayBorder, width: 2),
                 ),
-              ),
-            ),
+                child: Text(
+                  'Back to Home',
+                  textAlign: TextAlign.center,
+                  style: AppTypography.labelMd.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.warmDark,
+                  ),
+                ),
+              );
+            },
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: GestureDetector(
+          child: ClayPressable(
             onTap: () async {
               await provider.startNewScenario();
               if (context.mounted) {
                 context.go('/scenario');
               }
             },
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              decoration: BoxDecoration(
-                color: AppColors.teal,
-                borderRadius: AppRadius.mdBorder,
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.teal.withValues(alpha: 0.3),
-                    offset: const Offset(3, 3),
-                  ),
-                ],
-              ),
-              child: Text(
-                'New Scenario',
-                textAlign: TextAlign.center,
-                style: AppTypography.labelMd.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
+            builder: (context, isPressed) {
+              return Container(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                decoration: BoxDecoration(
+                  color: AppColors.teal,
+                  borderRadius: AppRadius.mdBorder,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.teal.withValues(alpha: 0.3),
+                      offset: const Offset(3, 3),
+                    ),
+                  ],
                 ),
-              ),
-            ),
+                child: Text(
+                  'New Scenario',
+                  textAlign: TextAlign.center,
+                  style: AppTypography.labelMd.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.warmDark,
+                  ),
+                ),
+              );
+            },
           ),
         ),
       ],

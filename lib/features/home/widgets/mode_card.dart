@@ -6,6 +6,8 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../shared/widgets/cloud_image.dart';
 import '../../../shared/widgets/clay_badge.dart';
+import '../../../core/theme/app_animations.dart';
+import '../../../shared/widgets/clay_pressable.dart';
 
 class ModeCard extends StatelessWidget {
   final String title;
@@ -69,15 +71,9 @@ class ModeCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.xl),
-          Container(
-            width: 140,
-            height: 140,
-            decoration: BoxDecoration(
-              color: accentColor.withValues(alpha: 0.1),
-              borderRadius: AppRadius.xlBorder,
-              border: Border.all(color: accentColor.withValues(alpha: 0.2), width: 2),
-            ),
-            child: Center(child: CloudImage(url: iconUrl, size: 100)),
+          _FloatingIcon(
+            accentColor: accentColor,
+            iconUrl: iconUrl,
           ),
           const SizedBox(height: AppSpacing.xl),
           Text(title, style: AppTypography.h1, textAlign: TextAlign.center),
@@ -95,39 +91,126 @@ class ModeCard extends StatelessWidget {
             }).toList(),
           ),
           const SizedBox(height: AppSpacing.lg),
-          GestureDetector(
+          ClayPressable(
             onTap: isLoading ? null : onTap,
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.giant,
-                vertical: AppSpacing.mdd,
-              ),
-              decoration: BoxDecoration(
-                color: isLoading
-                    ? accentColor.withValues(alpha: 0.6)
-                    : accentColor,
-                borderRadius: AppRadius.lgBorder,
-                boxShadow: AppShadows.colored(accentColor),
-              ),
-              child: isLoading
-                  ? SizedBox(
-                      width: 22,
-                      height: 22,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.5,
-                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
-                      ),
-                    )
-                  : Text(
-                      '$ctaText \u{2192}',
-                      style: AppTypography.button,
-                    ),
-            ),
+            builder: (context, isPressed) {
+              return Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.giant,
+                  vertical: AppSpacing.mdd,
+                ),
+                decoration: BoxDecoration(
+                  color: isLoading
+                      ? accentColor.withValues(alpha: 0.6)
+                      : accentColor,
+                  borderRadius: AppRadius.lgBorder,
+                  boxShadow: AppShadows.colored(accentColor),
+                ),
+                child: AnimatedSwitcher(
+                  duration: AppAnimations.durationFast,
+                  child: isLoading
+                      ? Stack(
+                          key: const ValueKey('loading'),
+                          alignment: Alignment.center,
+                          children: [
+                            Opacity(
+                              opacity: 0,
+                              child: Text(
+                                '$ctaText \u{2192}',
+                                style: AppTypography.button,
+                              ),
+                            ),
+                            SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                    AppColors.warmDark),
+                              ),
+                            ),
+                          ],
+                        )
+                      : Text(
+                          key: const ValueKey('text'),
+                          '$ctaText \u{2192}',
+                          style: AppTypography.button,
+                        ),
+                ),
+              );
+            },
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(quotaText, style: AppTypography.caption),
         ],
       ),
+    );
+  }
+}
+
+class _FloatingIcon extends StatefulWidget {
+  final Color accentColor;
+  final String iconUrl;
+
+  const _FloatingIcon({required this.accentColor, required this.iconUrl});
+
+  @override
+  State<_FloatingIcon> createState() => _FloatingIconState();
+}
+
+class _FloatingIconState extends State<_FloatingIcon>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _floatAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: AppAnimations.durationFloat,
+    )..repeat(reverse: true);
+
+    _floatAnimation = Tween<double>(begin: 0, end: -6).animate(
+      CurvedAnimation(parent: _controller, curve: AppAnimations.easeClay),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final reduceMotion = AppAnimations.shouldReduceMotion(context);
+
+    final container = Container(
+      width: 140,
+      height: 140,
+      decoration: BoxDecoration(
+        color: widget.accentColor.withValues(alpha: 0.1),
+        borderRadius: AppRadius.xlBorder,
+        border: Border.all(
+          color: widget.accentColor.withValues(alpha: 0.2),
+          width: 2,
+        ),
+      ),
+      child: Center(child: CloudImage(url: widget.iconUrl, size: 100)),
+    );
+
+    if (reduceMotion) return container;
+
+    return AnimatedBuilder(
+      animation: _floatAnimation,
+      builder: (context, child) {
+        return Transform.translate(
+          offset: Offset(0, _floatAnimation.value),
+          child: child,
+        );
+      },
+      child: container,
     );
   }
 }

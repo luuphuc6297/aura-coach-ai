@@ -15,6 +15,30 @@ class QuotaConstants {
   static const proMindMapQuota = 10;
   static const proTtsQuota = 15;
 
+  /// Aggregate cap on conversations a user may keep across all modes.
+  /// Prevents unbounded per-user Firestore growth from heavy daily use.
+  static const storageCapFree = 20;
+  static const storageCapPro = 200;
+  static const storageCapPremium = 500;
+
+  /// Fraction of the cap at which the soft-warning banner kicks in.
+  static const storageWarningThreshold = 0.80;
+
+  /// Storage cap for a given subscription tier. Unknown tiers fall back to
+  /// the free cap — matches the fail-closed posture we use for daily
+  /// quotas and avoids paid behaviour leaking via an unexpected tier string.
+  static int getStorageCap(String tier) {
+    switch (tier) {
+      case 'pro':
+        return storageCapPro;
+      case 'premium':
+        return storageCapPremium;
+      case 'free':
+      default:
+        return storageCapFree;
+    }
+  }
+
   static int getLimit(String tier, String feature) {
     final limits = {
       'free': {

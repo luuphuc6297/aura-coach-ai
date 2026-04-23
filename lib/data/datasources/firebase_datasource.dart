@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/entities/user_profile.dart';
+import '../../features/my_library/models/saved_item.dart';
+import '../../features/story/models/story.dart';
 
 class FirebaseDatasource {
   final FirebaseFirestore _db;
@@ -54,12 +56,13 @@ class FirebaseDatasource {
         .collection('conversations')
         .doc(conversationId)
         .update({
-          'turns': FieldValue.arrayUnion([message]),
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
+      'turns': FieldValue.arrayUnion([message]),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
   }
 
-  Future<List<Map<String, dynamic>>> getConversations(String uid) async {
+  Future<List<Map<String, dynamic>>> getConversations(String uid,
+      {String? mode}) async {
     final snapshot = await _db
         .collection('users')
         .doc(uid)
@@ -67,7 +70,12 @@ class FirebaseDatasource {
         .orderBy('createdAt', descending: true)
         .limit(50)
         .get();
-    return snapshot.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList();
+    var results =
+        snapshot.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList();
+    if (mode != null) {
+      results = results.where((doc) => doc['mode'] == mode).toList();
+    }
+    return results;
   }
 
   Future<Map<String, dynamic>?> getConversation(
@@ -80,6 +88,78 @@ class FirebaseDatasource {
         .get();
     if (!doc.exists) return null;
     return {'id': doc.id, ...doc.data()!};
+  }
+
+  Future<void> renameConversation({
+    required String uid,
+    required String conversationId,
+    required String newTitle,
+  }) async {
+    await _db
+        .collection('users')
+        .doc(uid)
+        .collection('conversations')
+        .doc(conversationId)
+        .update({
+      'title': newTitle,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Future<void> deleteConversation({
+    required String uid,
+    required String conversationId,
+  }) async {
+    await _db
+        .collection('users')
+        .doc(uid)
+        .collection('conversations')
+        .doc(conversationId)
+        .delete();
+  }
+
+  /// Total number of conversation docs the user has stored, regardless of
+  /// mode or status. Uses Firestore's `count()` aggregation — billed as one
+  /// aggregate read, not a per-doc read, so this stays cheap even for
+  /// long-term power users.
+  ///
+  /// Returns 0 on failure so the storage-quota gate fails open (prefer
+  /// letting the user create a session over blocking them on a transient
+  /// Firestore hiccup).
+  Future<int> countConversations(String uid) async {
+    try {
+      final aggregate = await _db
+          .collection('users')
+          .doc(uid)
+          .collection('conversations')
+          .count()
+          .get();
+      return aggregate.count ?? 0;
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  /// Per-mode breakdown used by the storage banner. Walks the list of
+  /// conversations once and tallies by the `mode` field. For users with
+  /// thousands of docs this is the expensive path — the banner reads it
+  /// lazily (only when storage is in warning or cap state).
+  Future<Map<String, int>> breakdownConversationsByMode(String uid) async {
+    try {
+      final snapshot = await _db
+          .collection('users')
+          .doc(uid)
+          .collection('conversations')
+          .get();
+      final counts = <String, int>{};
+      for (final doc in snapshot.docs) {
+        final mode = (doc.data()['mode'] as String?) ?? 'other';
+        counts[mode] = (counts[mode] ?? 0) + 1;
+      }
+      return counts;
+    } catch (_) {
+      return const {};
+    }
   }
 
   // --- Daily usage tracking ---
@@ -115,17 +195,102 @@ class FirebaseDatasource {
   Future<void> incrementDailyUsage(
       String uid, String date, String feature) async {
     final fieldName = '${feature}Count';
+    await _db.collection('users').doc(uid).collection('usage').doc(date).set(
+      {
+        fieldName: FieldValue.increment(1),
+        'updatedAt': FieldValue.serverTimestamp(),
+      },
+      SetOptions(merge: true),
+    );
+  }
+
+  Future<List<SavedItem>> getSavedItems(String uid) async {
+    final snapshot = await _db
+        .collection('users')
+        .doc(uid)
+        .collection('savedItems')
+        .orderBy('timestamp', descending: true)
+        .limit(200)
+        .get();
+    return snapshot.docs
+        .map((doc) => SavedItem.fromJson({'id': doc.id, ...doc.data()}))
+        .toList();
+  }
+
+  Future<void> saveSavedItem(String uid, SavedItem item) async {
     await _db
         .collection('users')
         .doc(uid)
-        .collection('usage')
-        .doc(date)
+        .collection('savedItems')
+        .doc(item.id)
+        .set(item.toJson(), SetOptions(merge: true));
+  }
+
+  Future<void> deleteSavedItem(String uid, String itemId) async {
+    await _db
+        .collection('users')
+        .doc(uid)
+        .collection('savedItems')
+        .doc(itemId)
+        .delete();
+  }
+
+  // --- Story library ---
+
+  Future<List<Story>> getFeaturedStories({String? level}) async {
+    Query<Map<String, dynamic>> q = _db.collection('stories').orderBy('order');
+    if (level != null && level.isNotEmpty) {
+      q = q.where('level', isEqualTo: level);
+    }
+    final snapshot = await q.limit(20).get();
+    return snapshot.docs
+        .map((doc) => Story.fromJson({'id': doc.id, ...doc.data()}))
+        .toList();
+  }
+
+  Future<Story?> getStoryById(String storyId) async {
+    final doc = await _db.collection('stories').doc(storyId).get();
+    if (!doc.exists) return null;
+    return Story.fromJson({'id': doc.id, ...doc.data()!});
+  }
+
+  // --- Seen-sentence dedup (Scenario Coach uniqueness guarantee) ---
+
+  /// Returns the set of hash doc IDs under `users/{uid}/seenSentences`. Each
+  /// doc ID is the SHA-1 of a normalized Vietnamese phrase the user has
+  /// already been asked to translate. Only IDs are fetched (no field reads)
+  /// to keep this cheap on cold-start — a user with years of history still
+  /// costs a single list operation.
+  Future<Set<String>> listSeenSentenceHashes(String uid) async {
+    final snapshot = await _db
+        .collection('users')
+        .doc(uid)
+        .collection('seenSentences')
+        .get();
+    return snapshot.docs.map((d) => d.id).toSet();
+  }
+
+  /// Persists a single seen sentence. Using [hash] as the doc ID makes the
+  /// write idempotent — re-saving the same hash is a no-op at the Firestore
+  /// level, so the caller never has to check before writing.
+  Future<void> saveSeenSentence({
+    required String uid,
+    required String hash,
+    required String text,
+    required String conversationId,
+  }) async {
+    await _db
+        .collection('users')
+        .doc(uid)
+        .collection('seenSentences')
+        .doc(hash)
         .set(
-          {
-            fieldName: FieldValue.increment(1),
-            'updatedAt': FieldValue.serverTimestamp(),
-          },
-          SetOptions(merge: true),
-        );
+      {
+        'text': text,
+        'conversationId': conversationId,
+        'createdAt': FieldValue.serverTimestamp(),
+      },
+      SetOptions(merge: true),
+    );
   }
 }

@@ -49,7 +49,7 @@ bool _isTransient(Object error) {
 /// "AI failed" from "AI returned garbage".
 Map<String, dynamic> parseJsonObject(String text) {
   final cleaned = _stripFences(text);
-  final decoded = jsonDecode(cleaned);
+  final decoded = _decodeWithContext(cleaned);
   if (decoded is! Map<String, dynamic>) {
     throw FormatException('Expected JSON object, got ${decoded.runtimeType}');
   }
@@ -59,11 +59,24 @@ Map<String, dynamic> parseJsonObject(String text) {
 /// Parse a JSON array response (used by mindmap expansion, exercises).
 List<dynamic> parseJsonArray(String text) {
   final cleaned = _stripFences(text);
-  final decoded = jsonDecode(cleaned);
+  final decoded = _decodeWithContext(cleaned);
   if (decoded is! List) {
     throw FormatException('Expected JSON array, got ${decoded.runtimeType}');
   }
   return decoded;
+}
+
+dynamic _decodeWithContext(String cleaned) {
+  try {
+    return jsonDecode(cleaned);
+  } on FormatException catch (e) {
+    final preview = cleaned.length > 500
+        ? '${cleaned.substring(0, 500)}... [truncated ${cleaned.length - 500} chars]'
+        : cleaned;
+    throw FormatException(
+      '${e.message} | payload (${cleaned.length} chars): $preview',
+    );
+  }
 }
 
 String _stripFences(String text) {

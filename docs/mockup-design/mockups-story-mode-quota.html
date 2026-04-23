@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aura Coach AI — Story Mode Quota Unit Options</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700;800&family=Nunito:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --cream: #FFF8F0;
+      --clay-white: #FEFCF9;
+      --clay-beige: #F5EDE3;
+      --clay-border: #E8DFD3;
+      --clay-shadow: #D4C9BB;
+      --warm-dark: #2D3047;
+      --warm-muted: #6B6D7B;
+      --warm-light: #9B9DAB;
+      --teal: #7ECEC5;
+      --teal-deep: #5FB5AB;
+      --purple: #A78BCA;
+      --purple-deep: #8A6FB0;
+      --gold: #E8C77B;
+      --gold-deep: #D4AF5F;
+      --success: #7BC6A0;
+      --error: #D98A8A;
+      --shadow-clay: 3px 3px 0px #D4C9BB;
+      --shadow-card: 0 2px 8px rgba(45,48,71,0.04);
+      --shadow-soft: 0 4px 12px rgba(45,48,71,0.06);
+      --r-sm: 8px; --r-md: 12px; --r-lg: 20px; --r-xl: 28px; --r-full: 9999px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { font-family: 'Inter', sans-serif; background: #EEEAE5; min-height: 100vh; }
+
+    .page-header { text-align: center; padding: 48px 20px 24px; }
+    .page-header h1 { font-family: 'Fredoka', sans-serif; font-size: 32px; font-weight: 800; color: var(--warm-dark); }
+    .page-header p { color: var(--warm-muted); font-size: 14px; margin-top: 6px; max-width: 720px; margin-left: auto; margin-right: auto; }
+    .page-header .label { font-size: 12px; color: var(--warm-light); text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; }
+
+    .screens-row {
+      display: flex; gap: 32px; padding: 24px 40px 60px;
+      justify-content: center; flex-wrap: wrap;
+    }
+
+    .column { display: flex; flex-direction: column; align-items: center; }
+    .column-header {
+      background: var(--clay-white);
+      border: 2px solid var(--clay-border);
+      box-shadow: var(--shadow-clay);
+      border-radius: var(--r-lg);
+      padding: 16px 20px; margin-bottom: 20px;
+      width: 375px; text-align: center;
+    }
+    .column-header .opt-tag {
+      display: inline-block; color: var(--warm-dark);
+      font-family: 'Fredoka', sans-serif; font-weight: 700;
+      padding: 4px 12px; border-radius: var(--r-full);
+      font-size: 12px; margin-bottom: 6px;
+    }
+    .column-header h2 { font-family: 'Fredoka', sans-serif; font-size: 18px; font-weight: 700; color: var(--warm-dark); }
+    .column-header p { font-size: 12px; color: var(--warm-muted); margin-top: 4px; }
+
+    .phone {
+      flex-shrink: 0; width: 375px; height: 720px;
+      background: var(--cream); border-radius: 44px;
+      border: 3px solid var(--clay-border);
+      box-shadow: 0 8px 32px rgba(45,48,71,0.08), 0 2px 8px rgba(45,48,71,0.04);
+      overflow: hidden; display: flex; flex-direction: column; position: relative;
+    }
+    .phone-status {
+      height: 38px; display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 24px 0; font-size: 12px; color: var(--warm-muted); font-weight: 600; flex-shrink: 0;
+    }
+    .phone-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+    .phone-home-bar { height: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .phone-home-bar::after { content: ''; width: 120px; height: 4px; background: var(--warm-dark); border-radius: 2px; opacity: 0.3; }
+
+    .chat-header {
+      padding: 12px 20px; background: var(--clay-white);
+      border-bottom: 1.5px solid var(--clay-border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .char-info { display: flex; align-items: center; gap: 10px; }
+    .char-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--teal), var(--purple));
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 18px; font-family: 'Fredoka', sans-serif; font-weight: 700;
+    }
+    .char-name { font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 14px; color: var(--warm-dark); }
+    .char-role { font-size: 11px; color: var(--warm-muted); }
+
+    /* Quota pills — different colors for each option */
+    .quota-pill-session {
+      background: var(--gold); color: var(--warm-dark);
+      padding: 6px 12px; border-radius: var(--r-full);
+      font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 11px;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .quota-pill-turn {
+      background: var(--error); color: white;
+      padding: 6px 12px; border-radius: var(--r-full);
+      font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 11px;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .quota-pill-hybrid {
+      background: var(--purple); color: white;
+      padding: 4px 10px; border-radius: var(--r-full);
+      font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 10px;
+    }
+
+    .chat-scroll {
+      flex: 1; overflow-y: auto; padding: 12px 16px 16px;
+      background: var(--cream);
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .bubble {
+      max-width: 75%; padding: 10px 14px;
+      border-radius: 18px; font-size: 13px; line-height: 1.4;
+      font-family: 'Inter', sans-serif;
+    }
+    .bubble-agent {
+      background: var(--clay-white); border: 1.5px solid var(--clay-border);
+      color: var(--warm-dark); align-self: flex-start;
+      border-bottom-left-radius: 4px;
+    }
+    .bubble-user {
+      background: var(--teal); color: var(--warm-dark);
+      align-self: flex-end; border-bottom-right-radius: 4px;
+    }
+    .score-inline {
+      display: flex; align-self: flex-end; align-items: center; gap: 6px;
+      background: var(--clay-white); border: 1.5px solid var(--clay-border);
+      padding: 4px 10px; border-radius: var(--r-full);
+      font-size: 10px; color: var(--warm-muted);
+      margin-top: -4px; margin-bottom: 4px;
+    }
+    .score-inline .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
+
+    .chat-input {
+      padding: 10px 14px; background: var(--clay-white);
+      border-top: 1.5px solid var(--clay-border);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .input-field {
+      flex: 1; background: var(--cream);
+      border: 1.5px solid var(--clay-border);
+      padding: 10px 14px; border-radius: var(--r-full);
+      font-size: 13px; color: var(--warm-light);
+    }
+    .send-btn {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--teal); color: var(--warm-dark);
+      border: 2px solid var(--warm-dark);
+      box-shadow: 2px 2px 0 var(--warm-dark);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+    }
+
+    /* End session button */
+    .end-btn {
+      background: var(--clay-white); color: var(--warm-dark);
+      border: 1.5px solid var(--clay-border);
+      padding: 6px 12px; border-radius: var(--r-full);
+      font-size: 11px; font-family: 'Nunito', sans-serif; font-weight: 700;
+    }
+
+    /* Banner for quota-reached */
+    .quota-banner {
+      margin: 10px 12px; padding: 10px 14px;
+      background: #FFF3E0;
+      border: 1.5px solid var(--gold);
+      border-radius: var(--r-md);
+      display: flex; align-items: center; gap: 10px;
+      font-size: 12px; color: var(--warm-dark);
+    }
+    .quota-banner strong { font-family: 'Nunito', sans-serif; }
+
+    /* Progress bar (Option C — per-session) */
+    .session-progress {
+      padding: 8px 20px; background: var(--clay-white);
+      border-bottom: 1.5px solid var(--clay-border);
+      display: flex; align-items: center; gap: 10px;
+      font-size: 11px; color: var(--warm-muted);
+    }
+    .progress-track {
+      flex: 1; height: 6px; background: var(--clay-beige);
+      border: 1px solid var(--clay-border); border-radius: 3px; overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%; background: var(--teal); border-radius: 2px;
+    }
+    .progress-label { font-family: 'Nunito', sans-serif; font-weight: 700; color: var(--warm-dark); font-size: 11px; }
+
+    /* Bottom toolbar */
+    .quota-footer {
+      padding: 8px 16px; background: var(--clay-beige);
+      border-top: 1px solid var(--clay-border);
+      font-size: 10px; color: var(--warm-muted); text-align: center;
+      font-family: 'Nunito', sans-serif;
+    }
+
+    /* Summary */
+    .summary-wrap {
+      max-width: 960px; margin: 0 auto 60px; padding: 24px;
+      background: var(--clay-white); border: 2px solid var(--clay-border);
+      border-radius: var(--r-lg); box-shadow: var(--shadow-clay);
+    }
+    .summary-wrap h3 { font-family: 'Fredoka', sans-serif; color: var(--warm-dark); margin-bottom: 12px; }
+    .summary-wrap table { width: 100%; border-collapse: collapse; font-size: 12px; color: var(--warm-dark); }
+    .summary-wrap th { text-align: left; padding: 8px 10px; font-family: 'Nunito', sans-serif; }
+    .summary-wrap td { padding: 8px 10px; }
+    .summary-wrap tr { border-bottom: 1px solid var(--clay-border); }
+    .summary-wrap tr:last-child { border-bottom: none; }
+    .summary-wrap td.muted { color: var(--warm-muted); }
+  </style>
+</head>
+<body>
+  <div class="page-header">
+    <h1>Story Mode — Quota Unit Options</h1>
+    <p>3 cách tính quota. Mỗi mockup thể hiện giữa session: user đã chạy vài turns, quota pill phản ánh trạng thái.</p>
+    <div class="label">Aura Coach AI · Clay Design · 2026-04-19 · Tier: Free (3/day · 10/day pro · ∞ premium)</div>
+  </div>
+
+  <div class="screens-row">
+
+    <!-- ═══ OPTION A — 1 session = 1 quota ═══ -->
+    <div class="column">
+      <div class="column-header">
+        <span class="opt-tag" style="background:var(--gold);">Option A</span>
+        <h2>1 session = 1 quota</h2>
+        <p>Trừ lúc Generate. Chat free-form không thêm.</p>
+      </div>
+      <div class="phone">
+        <div class="phone-status">
+          <span>9:41</span>
+          <span>● ● ● ●</span>
+        </div>
+        <div class="phone-content">
+          <div class="chat-header">
+            <div class="char-info">
+              <div class="char-avatar">M</div>
+              <div>
+                <div class="char-name">Maria</div>
+                <div class="char-role">Hotel Receptionist</div>
+              </div>
+            </div>
+            <div class="quota-pill-session">
+              <span>☀</span>
+              <span>2/3 today</span>
+            </div>
+          </div>
+          <div style="padding:6px 20px;background:var(--clay-white);border-bottom:1.5px solid var(--clay-border);font-size:11px;color:var(--warm-muted);">
+            Turn <strong style="color:var(--warm-dark);font-family:'Nunito',sans-serif;">8</strong> · Free-form · <span style="color:var(--teal-deep);">End anytime</span>
+          </div>
+          <div class="chat-scroll">
+            <div class="bubble bubble-agent">Welcome to Paradise Resort!</div>
+            <div class="bubble bubble-user">I'd like to check in, please.</div>
+            <div class="bubble bubble-agent">Of course! Reservation name?</div>
+            <div class="bubble bubble-user">Under Luu Phuc.</div>
+            <div class="bubble bubble-agent">Perfect. One more question — do you want breakfast included?</div>
+            <div class="bubble bubble-user">Yes, two adults please.</div>
+            <div class="bubble bubble-agent">Got it. And here's some info about the resort spa…</div>
+            <div class="bubble bubble-user">Tell me more about the spa hours.</div>
+            <div class="bubble bubble-agent">The spa is open 9 AM to 10 PM. Would you like me to book a session?</div>
+          </div>
+          <div class="chat-input">
+            <div class="end-btn">End ↗</div>
+            <input class="input-field" placeholder="Reply…" />
+            <div class="send-btn">↑</div>
+          </div>
+          <div class="quota-footer">
+            Chat as long as you want · quota charged at story start
+          </div>
+        </div>
+        <div class="phone-home-bar"></div>
+      </div>
+    </div>
+
+    <!-- ═══ OPTION B — 1 turn = 1 quota ═══ -->
+    <div class="column">
+      <div class="column-header">
+        <span class="opt-tag" style="background:var(--error);color:white;">Option B</span>
+        <h2>1 turn = 1 quota</h2>
+        <p>Mỗi reply trừ 1. 3 turns cho cả ngày (free).</p>
+      </div>
+      <div class="phone">
+        <div class="phone-status">
+          <span>9:41</span>
+          <span>● ● ● ●</span>
+        </div>
+        <div class="phone-content">
+          <div class="chat-header">
+            <div class="char-info">
+              <div class="char-avatar">M</div>
+              <div>
+                <div class="char-name">Maria</div>
+                <div class="char-role">Hotel Receptionist</div>
+              </div>
+            </div>
+            <div class="quota-pill-turn">
+              <span>⚠</span>
+              <span>0/3 left</span>
+            </div>
+          </div>
+          <div class="chat-scroll">
+            <div class="bubble bubble-agent">Welcome to Paradise Resort!</div>
+            <div class="bubble bubble-user">I'd like to check in, please.</div>
+            <div class="score-inline"><span class="dot"></span>Turn 1 · 85 · -1 quota</div>
+            <div class="bubble bubble-agent">Of course! Reservation name?</div>
+            <div class="bubble bubble-user">Under Luu Phuc.</div>
+            <div class="score-inline"><span class="dot"></span>Turn 2 · 91 · -1 quota</div>
+            <div class="bubble bubble-agent">Perfect. Do you want breakfast?</div>
+            <div class="bubble bubble-user">Yes, two adults please.</div>
+            <div class="score-inline"><span class="dot"></span>Turn 3 · 78 · -1 quota</div>
+            <div class="quota-banner">
+              <span style="font-size:20px;">🔒</span>
+              <div>
+                <strong>Daily limit reached (3/3)</strong><br>
+                <span style="color:var(--warm-muted);">Upgrade to Pro for 10 turns/day or come back tomorrow.</span>
+              </div>
+            </div>
+          </div>
+          <div class="chat-input" style="opacity:0.5;">
+            <div class="end-btn">End ↗</div>
+            <input class="input-field" placeholder="Out of quota…" disabled />
+            <div class="send-btn" style="background:var(--clay-border);">↑</div>
+          </div>
+          <div class="quota-footer" style="background:#FFE8E8;color:var(--error);">
+            Every reply charges 1 quota · ends at 3 turns (free)
+          </div>
+        </div>
+        <div class="phone-home-bar"></div>
+      </div>
+    </div>
+
+    <!-- ═══ OPTION C — Session + soft cap ═══ -->
+    <div class="column">
+      <div class="column-header">
+        <span class="opt-tag" style="background:var(--purple);color:white;">Option C</span>
+        <h2>Session + soft cap</h2>
+        <p>1 session = 1 quota, nhưng cap turns/session.</p>
+      </div>
+      <div class="phone">
+        <div class="phone-status">
+          <span>9:41</span>
+          <span>● ● ● ●</span>
+        </div>
+        <div class="phone-content">
+          <div class="chat-header">
+            <div class="char-info">
+              <div class="char-avatar">M</div>
+              <div>
+                <div class="char-name">Maria</div>
+                <div class="char-role">Hotel Receptionist</div>
+              </div>
+            </div>
+            <div class="quota-pill-hybrid">2/3 today</div>
+          </div>
+          <div class="session-progress">
+            <span>Session</span>
+            <div class="progress-track">
+              <div class="progress-fill" style="width:80%;background:var(--gold);"></div>
+            </div>
+            <span class="progress-label">8 / 10</span>
+          </div>
+          <div class="chat-scroll">
+            <div class="bubble bubble-agent">Welcome to Paradise Resort!</div>
+            <div class="bubble bubble-user">I'd like to check in, please.</div>
+            <div class="bubble bubble-agent">Of course! Reservation name?</div>
+            <div class="bubble bubble-user">Under Luu Phuc.</div>
+            <div class="bubble bubble-agent">Do you want breakfast?</div>
+            <div class="bubble bubble-user">Yes, two adults please.</div>
+            <div class="bubble bubble-agent">Perfect. Info about spa…</div>
+            <div class="bubble bubble-user">Tell me about spa hours.</div>
+            <div class="bubble bubble-agent">Spa is 9 AM–10 PM. Book a session?</div>
+            <div class="quota-banner" style="background:#FEF3E0;border-color:var(--gold);">
+              <span style="font-size:16px;">⏳</span>
+              <div>
+                <strong>2 turns left in this session</strong><br>
+                <span style="color:var(--warm-muted);font-size:11px;">Pro = 25 turns · Premium = 50</span>
+              </div>
+            </div>
+          </div>
+          <div class="chat-input">
+            <div class="end-btn">End ↗</div>
+            <input class="input-field" placeholder="Reply…" />
+            <div class="send-btn">↑</div>
+          </div>
+          <div class="quota-footer" style="background:#F0E6F7;">
+            1 session charged · Free = 10 turns/session max
+          </div>
+        </div>
+        <div class="phone-home-bar"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="summary-wrap">
+    <h3>Trade-off summary</h3>
+    <table>
+      <tr>
+        <th>Aspect</th>
+        <th style="color:var(--gold-deep);">A. Session</th>
+        <th style="color:var(--error);">B. Per-turn</th>
+        <th style="color:var(--purple-deep);">C. Session + cap</th>
+      </tr>
+      <tr><td class="muted">Free tier "value"</td><td>3 stories × N turns each</td><td>3 turns total/day</td><td>3 stories × 10 turns max</td></tr>
+      <tr><td class="muted">Encourages depth of practice</td><td>Yes (free-form chat)</td><td>No (rushed)</td><td>Balanced</td></tr>
+      <tr><td class="muted">Cost predictability</td><td>Bounded by 20-turn hard cap</td><td>Very tight (3 calls/day)</td><td>Bounded by soft cap × session</td></tr>
+      <tr><td class="muted">Paywall frustration</td><td>Low — "next story tomorrow"</td><td>High — cut mid-convo</td><td>Medium — session ends naturally</td></tr>
+      <tr><td class="muted">Match with Scenario Coach</td><td>Yes (1 lesson = 1 quota)</td><td>No</td><td>Partial</td></tr>
+      <tr><td class="muted">Monetization pressure</td><td>Medium</td><td>High (users hit limit fast)</td><td>Medium-high</td></tr>
+      <tr><td class="muted">Worst-case tokens / day (free)</td><td>3 × 20 turns = 60 evals + 3 gens</td><td>3 evals + 3 gens</td><td>3 × 10 turns = 30 evals + 3 gens</td></tr>
+      <tr><td class="muted">User mental model</td><td>Simple: "3 stories today"</td><td>Transactional: "3 messages left"</td><td>Mixed: 2 pills to track</td></tr>
+      <tr><td class="muted">Best when…</td><td>Goal = encourage long practice</td><td>Goal = force upgrade</td><td>Goal = cost control + practice</td></tr>
+    </table>
+  </div>
+</body>
+</html>

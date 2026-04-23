@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aura Coach AI — Mode Deep Dive (Swipe Right from Mode Select)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700;800&family=Nunito:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --cream: #FFF8F0;
+      --clay-white: #FEFCF9;
+      --clay-beige: #F5EDE3;
+      --clay-border: #E8DFD3;
+      --clay-shadow: #D4C9BB;
+      --warm-dark: #2D3047;
+      --warm-muted: #6B6D7B;
+      --warm-light: #9B9DAB;
+      --teal: #7ECEC5;
+      --purple: #A78BCA;
+      --gold: #E8C77B;
+      --success: #7BC6A0;
+      --error: #D98A8A;
+      --shadow-clay: 3px 3px 0px #D4C9BB;
+      --shadow-card: 0 2px 8px rgba(45,48,71,0.04);
+      --shadow-soft: 0 4px 12px rgba(45,48,71,0.06);
+      --r-sm: 8px; --r-md: 12px; --r-lg: 20px; --r-xl: 28px; --r-full: 9999px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { font-family: 'Inter', sans-serif; background: #EEEAE5; min-height: 100vh; }
+
+    .page-header { text-align: center; padding: 48px 20px 32px; }
+    .page-header h1 { font-family: 'Fredoka', sans-serif; font-size: 32px; font-weight: 800; color: var(--warm-dark); }
+    .page-header p { color: var(--warm-muted); font-size: 14px; margin-top: 6px; }
+
+    .screens-row {
+      display: flex; gap: 32px; padding: 0 40px 60px;
+      overflow-x: auto; scroll-snap-type: x mandatory;
+    }
+    .screens-row::-webkit-scrollbar { height: 6px; }
+    .screens-row::-webkit-scrollbar-thumb { background: var(--clay-shadow); border-radius: 3px; }
+
+    /* ═══ PHONE FRAME ═══ */
+    .phone {
+      flex-shrink: 0; scroll-snap-align: center;
+      width: 375px; height: 812px;
+      background: var(--cream); border-radius: 44px;
+      border: 3px solid var(--clay-border);
+      box-shadow: 0 8px 32px rgba(45,48,71,0.08), 0 2px 8px rgba(45,48,71,0.04);
+      overflow: hidden; display: flex; flex-direction: column;
+      position: relative;
+    }
+    .phone-status {
+      height: 44px; display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; font-size: 12px; color: var(--warm-muted); font-weight: 600;
+      flex-shrink: 0; z-index: 10;
+    }
+    .phone-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+    .phone-home-bar {
+      height: 28px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .phone-home-bar div { width: 134px; height: 5px; background: var(--clay-border); border-radius: 3px; }
+
+    .phone-label {
+      text-align: center; margin-top: 12px;
+      font-size: 11px; font-weight: 700; color: var(--teal);
+      text-transform: uppercase; letter-spacing: 0.1em;
+      background: rgba(126,206,197,0.1); padding: 4px 14px;
+      border-radius: var(--r-full); display: inline-block;
+    }
+    .phone-wrapper { display: flex; flex-direction: column; align-items: center; }
+
+    /* ═══ ANIMATIONS ═══ */
+    @keyframes float3d {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(126,206,197,0.3); }
+      50% { box-shadow: 0 0 0 12px rgba(126,206,197,0); }
+    }
+    .float3d { animation: float3d 3s ease-in-out infinite; }
+
+    /* ═══ MODE CARD (from Phase 1) ═══ */
+    .mode-card {
+      flex-shrink: 0; width: 100%; height: 100%;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 32px 28px; gap: 16px; text-align: center;
+      scroll-snap-align: start;
+    }
+    .mode-icon-wrap {
+      width: 140px; height: 140px; border-radius: 40px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .mode-icon-wrap img { width: 100px; height: 100px; object-fit: contain; filter: drop-shadow(0 4px 8px rgba(45,48,71,0.1)); }
+
+    /* ═══ SWIPE DOTS (vertical = mode switch) ═══ */
+    .swipe-dots { display: flex; gap: 6px; justify-content: center; }
+    .swipe-dots .s-dot { width: 8px; height: 8px; border-radius: 50%; transition: all 0.3s; }
+    .swipe-dots .s-dot.active { width: 20px; border-radius: 4px; }
+
+    /* ═══ HORIZONTAL DOTS (horizontal = page switch: overview ↔ deep dive) ═══ */
+    .h-dots { display: flex; gap: 6px; justify-content: center; margin-top: 6px; }
+    .h-dots .h-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--clay-border); transition: all 0.3s; }
+    .h-dots .h-dot.active { width: 16px; border-radius: 3px; }
+
+    /* ═══ BOTTOM NAV ═══ */
+    .bottom-nav {
+      flex-shrink: 0; background: var(--clay-white);
+      border-top: 2px solid var(--clay-border);
+      display: flex; justify-content: space-around; align-items: center;
+      padding: 8px 0 4px; height: 60px;
+    }
+    .nav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; }
+    .nav-item img { width: 24px; height: 24px; object-fit: contain; opacity: 0.45; transition: all 0.2s; }
+    .nav-item.active img { opacity: 1; transform: scale(1.15); }
+    .nav-item span { font-size: 10px; font-weight: 500; color: var(--warm-light); }
+    .nav-item.active span { color: var(--teal); font-weight: 700; }
+    .nav-item .indicator { width: 20px; height: 3px; border-radius: 2px; background: transparent; }
+    .nav-item.active .indicator { background: var(--teal); }
+
+    /* ═══ FEATURE CARD ═══ */
+    .feature-card {
+      display: flex; gap: 14px; align-items: flex-start;
+      padding: 14px 16px; border-radius: var(--r-lg);
+      background: var(--clay-white); border: 2px solid var(--clay-border);
+      box-shadow: var(--shadow-card);
+    }
+    .feature-icon {
+      width: 44px; height: 44px; border-radius: var(--r-md);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      font-size: 22px;
+    }
+
+    /* ═══ STEP INDICATOR ═══ */
+    .step-num {
+      width: 28px; height: 28px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 800; font-family: 'Nunito', sans-serif;
+      flex-shrink: 0;
+    }
+
+    /* ═══ PAIR GROUP ═══ */
+    .pair-group {
+      display: flex; gap: 8px; align-items: flex-start;
+      position: relative;
+    }
+    .pair-arrow {
+      display: flex; align-items: center; justify-content: center;
+      align-self: center;
+      font-size: 24px; color: var(--warm-light); font-weight: 700;
+      padding: 0 4px;
+    }
+
+    .section-sep {
+      width: 60px; height: 4px; border-radius: 2px; margin: 40px auto;
+      background: linear-gradient(90deg, var(--teal), var(--purple));
+    }
+  </style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Mode Deep Dive — Swipe Interaction</h1>
+  <p>Swipe ↑↓ = switch modes &nbsp;•&nbsp; Swipe → = deep dive into current mode &nbsp;•&nbsp; Swipe ← = back to overview</p>
+</div>
+
+<div class="screens-row">
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PAIR 1: SCENARIO COACH — Overview (page 1) → Deep Dive (page 2) -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="pair-group">
+
+<!-- PAGE 1: Mode Overview (same as Home) -->
+<div class="phone-wrapper">
+<div class="phone">
+  <div class="phone-status"><span>9:41</span><span>●●●● WiFi 100%</span></div>
+  <div class="phone-content">
+    <!-- Top bar -->
+    <div style="flex-shrink:0;display:flex;justify-content:space-between;align-items:center;padding:4px 20px 8px;">
+      <div style="display:flex;align-items:center;font-family:'Fredoka',sans-serif;font-size:16px;font-weight:800;letter-spacing:0.04em;">
+        <span style="color:var(--teal);">AURA C</span>
+        <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_120,h_120,c_fill,q_90/v1774779556/aura-coach-assets/aura-orbs-icons_1ff981_b7df4e.webp" alt="O" style="width:14px;height:14px;margin:0 1px;">
+        <span style="color:var(--teal);">ACH</span>
+        <span style="color:var(--warm-dark);margin-left:2px;">.AI</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:13px;font-weight:600;color:var(--warm-dark);font-family:'Nunito',sans-serif;">Hi, Luu</span>
+        <div style="width:36px;height:36px;border-radius:50%;overflow:hidden;border:2px solid var(--teal);box-shadow:var(--shadow-clay);">
+          <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_240,h_240,c_fill,q_90/v1774780247/aura-coach-assets/avatars/fox-avatar_677f5f.webp" alt="Avatar" style="width:100%;height:100%;object-fit:cover;">
+        </div>
+      </div>
+    </div>
+
+    <!-- Mode card (overview — page 1 of horizontal) -->
+    <div style="flex:1;display:flex;flex-direction:column;">
+      <div class="mode-card" style="background:linear-gradient(180deg, var(--cream) 0%, rgba(126,206,197,0.08) 100%);">
+        <div style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:0.12em;background:rgba(126,206,197,0.1);padding:6px 16px;border-radius:var(--r-full);">Most Popular</div>
+        <div class="mode-icon-wrap" style="background:rgba(126,206,197,0.1);border:2px solid rgba(126,206,197,0.2);">
+          <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_216,h_216,c_fill,q_90/v1774765701/aura-coach-assets/mode-icons/trophy-icon_770c25.webp" alt="Scenario Coach" class="float3d">
+        </div>
+        <h3 style="font-family:'Nunito',sans-serif;font-size:24px;font-weight:800;color:var(--warm-dark);">Scenario Coach</h3>
+        <p style="font-size:15px;color:var(--warm-muted);line-height:1.5;max-width:280px;">
+          Practice real-life situations with AI roleplay. Get instant feedback on grammar, vocabulary & tone.
+        </p>
+        <div style="display:flex;gap:8px;margin-top:4px;">
+          <span style="font-size:12px;color:var(--teal);background:rgba(126,206,197,0.1);padding:4px 12px;border-radius:var(--r-full);font-weight:600;">🎯 Roleplay</span>
+          <span style="font-size:12px;color:var(--teal);background:rgba(126,206,197,0.1);padding:4px 12px;border-radius:var(--r-full);font-weight:600;">💬 4 Tones</span>
+        </div>
+        <button style="margin-top:8px;padding:14px 48px;border-radius:var(--r-lg);background:var(--teal);color:#fff;font-size:16px;font-weight:700;font-family:'Nunito',sans-serif;border:none;box-shadow:var(--shadow-clay);cursor:pointer;">
+          Start Practice →
+        </button>
+        <div style="font-size:11px;color:var(--warm-light);margin-top:8px;">5 free sessions / day</div>
+
+        <!-- Bottom indicators -->
+        <div style="margin-top:auto;padding-bottom:4px;display:flex;flex-direction:column;align-items:center;gap:6px;">
+          <!-- Vertical mode dots -->
+          <div class="swipe-dots">
+            <div class="s-dot active" style="background:var(--teal);"></div>
+            <div class="s-dot" style="background:var(--clay-border);"></div>
+            <div class="s-dot" style="background:var(--clay-border);"></div>
+            <div class="s-dot" style="background:var(--clay-border);"></div>
+          </div>
+          <!-- Horizontal page dots -->
+          <div class="h-dots">
+            <div class="h-dot active" style="background:var(--teal);"></div>
+            <div class="h-dot"></div>
+          </div>
+          <span style="font-size:10px;color:var(--warm-light);">Swipe → for details</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom nav -->
+    <div class="bottom-nav">
+      <div class="nav-item active">
+        <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_84,h_84,c_fill,q_85/v1774765585/aura-coach-assets/navigation-bar/home-icon_f164a9.webp" alt="Home">
+        <span>Home</span>
+        <div class="indicator"></div>
+      </div>
+      <div class="nav-item">
+        <div style="font-size:20px;opacity:0.45;">👤</div>
+        <span>Profile</span>
+        <div class="indicator"></div>
+      </div>
+      <div class="nav-item">
+        <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_84,h_84,c_fill,q_85/v1774780351/aura-coach-assets/navigation-bar/setting-icon_42d237_cac3a9.webp" alt="Settings">
+        <span>Settings</span>
+        <div class="indicator"></div>
+      </div>
+    </div>
+  </div>
+  <div class="phone-home-bar"><div></div></div>
+</div>
+<div class="phone-label">Scenario Coach — Overview (←→ page 1)</div>
+</div>
+
+<div class="pair-arrow">→</div>
+
+<!-- PAGE 2: Deep Dive (swipe right) -->
+<div class="phone-wrapper">
+<div class="phone">
+  <div class="phone-status"><span>9:41</span><span>●●●● WiFi 100%</span></div>
+  <div class="phone-content">
+    <!-- Same top bar -->
+    <div style="flex-shrink:0;display:flex;justify-content:space-between;align-items:center;padding:4px 20px 8px;">
+      <div style="display:flex;align-items:center;font-family:'Fredoka',sans-serif;font-size:16px;font-weight:800;letter-spacing:0.04em;">
+        <span style="color:var(--teal);">AURA C</span>
+        <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_120,h_120,c_fill,q_90/v1774779556/aura-coach-assets/aura-orbs-icons_1ff981_b7df4e.webp" alt="O" style="width:14px;height:14px;margin:0 1px;">
+        <span style="color:var(--teal);">ACH</span>
+        <span style="color:var(--warm-dark);margin-left:2px;">.AI</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:13px;font-weight:600;color:var(--warm-dark);font-family:'Nunito',sans-serif;">Hi, Luu</span>
+        <div style="width:36px;height:36px;border-radius:50%;overflow:hidden;border:2px solid var(--teal);box-shadow:var(--shadow-clay);">
+          <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_240,h_240,c_fill,q_90/v1774780247/aura-coach-assets/avatars/fox-avatar_677f5f.webp" alt="Avatar" style="width:100%;height:100%;object-fit:cover;">
+        </div>
+      </div>
+    </div>
+
+    <!-- Deep dive scrollable content -->
+    <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:linear-gradient(180deg, var(--cream) 0%, rgba(126,206,197,0.05) 100%);">
+
+      <!-- Compact hero -->
+      <div style="padding:16px 24px 12px;display:flex;align-items:center;gap:16px;">
+        <div style="width:64px;height:64px;border-radius:20px;background:rgba(126,206,197,0.1);border:2px solid rgba(126,206,197,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_216,h_216,c_fill,q_90/v1774765701/aura-coach-assets/mode-icons/trophy-icon_770c25.webp" alt="" style="width:44px;height:44px;object-fit:contain;" class="float3d">
+        </div>
+        <div>
+          <h2 style="font-family:'Nunito',sans-serif;font-size:22px;font-weight:800;color:var(--warm-dark);line-height:1.2;">Scenario Coach</h2>
+          <div style="display:flex;gap:6px;margin-top:6px;">
+            <span style="font-size:11px;color:var(--teal);background:rgba(126,206,197,0.1);padding:3px 10px;border-radius:var(--r-full);font-weight:600;">🎯 Roleplay</span>
+            <span style="font-size:11px;color:var(--teal);background:rgba(126,206,197,0.1);padding:3px 10px;border-radius:var(--r-full);font-weight:600;">💬 4 Tones</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Separator -->
+      <div style="height:2px;background:var(--clay-border);margin:0 24px;"></div>
+
+      <!-- How it works -->
+      <div style="padding:20px 24px 0;">
+        <p style="font-size:11px;font-weight:700;color:var(--warm-light);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:14px;">How it works</p>
+
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div style="display:flex;gap:12px;align-items:center;">
+            <div class="step-num" style="background:rgba(126,206,197,0.15);color:var(--teal);">1</div>
+            <div>
+              <div style="font-size:14px;font-weight:700;color:var(--warm-dark);font-family:'Nunito',sans-serif;">Choose a scenario</div>
+              <div style="font-size:12px;color:var(--warm-muted);margin-top:2px;">Hotel, restaurant, interview, meeting...</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:center;">
+            <div class="step-num" style="background:rgba(126,206,197,0.15);color:var(--teal);">2</div>
+            <div>
+              <div style="font-size:14px;font-weight:700;color:var(--warm-dark);font-family:'Nunito',sans-serif;">Roleplay with AI</div>
+              <div style="font-size:12px;color:var(--warm-muted);margin-top:2px;">Natural conversation that adapts to your level</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:center;">
+            <div class="step-num" style="background:rgba(126,206,197,0.15);color:var(--teal);">3</div>
+            <div>
+              <div style="font-size:14px;font-weight:700;color:var(--warm-dark);font-family:'Nunito',sans-serif;">Get instant feedback</div>
+              <div style="font-size:12px;color:var(--warm-muted);margin-top:2px;">Score, radar chart & improvement tips</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Key features -->
+      <div style="padding:20px 24px 0;">
+        <p style="font-size:11px;font-weight:700;color:var(--warm-light);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:12px;">Key features</p>
+
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div class="feature-card">
+            <div class="feature-icon" style="background:rgba(126,206,197,0.1);">🎭</div>
+            <div>
+              <div style="font-size:14px;font-weight:700;color:var(--warm-dark);">20+ Real Scenarios</div>
+              <div style="font-size:12px;color:var(--warm-muted);margin-top:2px;line-height:1.4;">Hotel check-in, ordering food, job interviews, business meetings & more</div>
+            </div>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon" style="background:rgba(126,206,197,0.1);">📊</div>
+            <div>
+              <div style="font-size:14px;font-weight:700;color:var(--warm-dark);">Performance Radar</div>
+              <div style="font-size:12px;color:var(--warm-muted);margin-top:2px;line-height:1.4;">Visual breakdown of grammar, vocabulary, fluency & tone accuracy</div>
+            </div>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon" style="background:rgba(126,206,197,0.1);">🎯</div>
+            <div>
+              <div style="font-size:14px;font-weight:700;color:var(--warm-dark);">4 Tone Variations</div>
+              <div style="font-size:12px;color:var(--warm-muted);margin-top:2px;line-height:1.4;">Learn formal, neutral, friendly & casual styles</div>
+            </div>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon" style="background:rgba(126,206,197,0.1);">💾</div>
+            <div>
+              <div style="font-size:14px;font-weight:700;color:var(--warm-dark);">Auto-Save Progress</div>
+              <div style="font-size:12px;color:var(--warm-muted);margin-top:2px;line-height:1.4;">Resume any session exactly where you left off</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CTA -->
+      <div style="padding:20px 24px;">
+        <button style="width:100%;padding:16px;border-radius:var(--r-lg);background:var(--teal);color:#fff;font-size:17px;font-weight:800;font-family:'Nunito',sans-serif;border:none;box-shadow:var(--shadow-clay);cursor:pointer;">
+          Start Practice →
+        </button>
+        <div style="text-align:center;font-size:11px;color:var(--warm-light);margin-top:8px;">5 free sessions / day</div>
+
+        <!-- Bottom indicators -->
+        <div style="display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:12px;">
+          <div class="swipe-dots">
+            <div class="s-dot active" style="background:var(--teal);"></div>
+            <div class="s-dot" style="background:var(--clay-border);"></div>
+            <div class="s-dot" style="background:var(--clay-border);"></div>
+            <div class="s-dot" style="background:var(--clay-border);"></div>
+          </div>
+          <div class="h-dots">
+            <div class="h-dot"></div>
+            <div class="h-dot active" style="background:var(--teal);"></div>
+          </div>
+          <span style="font-size:10px;color:var(--warm-light);">← Swipe back to overview</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom nav -->
+    <div class="bottom-nav">
+      <div class="nav-item active">
+        <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_84,h_84,c_fill,q_85/v1774765585/aura-coach-assets/navigation-bar/home-icon_f164a9.webp" alt="Home">
+        <span>Home</span>
+        <div class="indicator"></div>
+      </div>
+      <div class="nav-item">
+        <div style="font-size:20px;opacity:0.45;">👤</div>
+        <span>Profile</span>
+        <div class="indicator"></div>
+      </div>
+      <div class="nav-item">
+        <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_84,h_84,c_fill,q_85/v1774780351/aura-coach-assets/navigation-bar/setting-icon_42d237_cac3a9.webp" alt="Settings">
+        <span>Settings</span>
+        <div class="indicator"></div>
+      </div>
+    </div>
+  </div>
+  <div class="phone-home-bar"><div></div></div>
+</div>
+<div class="phone-label">Scenario Coach — Deep Dive (←→ page 2)</div>
+</div>
+
+</div><!-- end pair-group -->
+
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PAIR 2: STORY MODE — Overview → Deep Dive                  -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="pair-group">
+
+<!-- PAGE 1: Overview -->
+<div class="phone-wrapper">
+<div class="phone">
+  <div class="phone-status"><span>9:41</span><span>●●●● WiFi 100%</span></div>
+  <div class="phone-content">
+    <div style="flex-shrink:0;display:flex;justify-content:space-between;align-items:center;padding:4px 20px 8px;">
+      <div style="display:flex;align-items:center;font-family:'Fredoka',sans-serif;font-size:16px;font-weight:800;letter-spacing:0.04em;">
+        <span style="color:var(--teal);">AURA C</span>
+        <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_120,h_120,c_fill,q_90/v1774779556/aura-coach-assets/aura-orbs-icons_1ff981_b7df4e.webp" alt="O" style="width:14px;height:14px;margin:0 1px;">
+        <span style="color:var(--teal);">ACH</span>
+        <span style="color:var(--warm-dark);margin-left:2px;">.AI</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:13px;font-weight:600;color:var(--warm-dark);font-family:'Nunito',sans-serif;">Hi, Luu</span>
+        <div style="width:36px;height:36px;border-radius:50%;overflow:hidden;border:2px solid var(--teal);box-shadow:var(--shadow-clay);">
+          <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_240,h_240,c_fill,q_90/v1774780247/aura-coach-assets/avatars/fox-avatar_677f5f.webp" alt="Avatar" style="width:100%;height:100%;object-fit:cover;">
+        </div>
+      </div>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;">
+      <div class="mode-card" style="background:linear-gradient(180deg, var(--cream) 0%, rgba(167,139,202,0.08) 100%);">
+        <div style="font-size:11px;font-weight:700;color:var(--purple);text-transform:uppercase;letter-spacing:0.12em;background:rgba(167,139,202,0.1);padding:6px 16px;border-radius:var(--r-full);">Interactive</div>
+        <div class="mode-icon-wrap" style="background:rgba(167,139,202,0.1);border:2px solid rgba(167,139,202,0.2);">
+          <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_216,h_216,c_fill,q_90/v1774779261/aura-coach-assets/mode-icons/national-park-icons_628f11.webp" alt="Story Mode" class="float3d">
+        </div>
+        <h3 style="font-family:'Nunito',sans-serif;font-size:24px;font-weight:800;color:var(--warm-dark);">Story Mode</h3>
+        <p style="font-size:15px;color:var(--warm-muted);line-height:1.5;max-width:280px;">
+          Learn through interactive stories. You're the main character — your choices shape the narrative.
+        </p>
+        <div style="display:flex;gap:8px;margin-top:4px;">
+          <span style="font-size:12px;color:var(--purple);background:rgba(167,139,202,0.1);padding:4px 12px;border-radius:var(--r-full);font-weight:600;">📖 Narrative</span>
+          <span style="font-size:12px;color:var(--purple);background:rgba(167,139,202,0.1);padding:4px 12px;border-radius:var(--r-full);font-weight:600;">🎭 Choices</span>
+        </div>
+        <button style="margin-top:8px;padding:14px 48px;border-radius:var(--r-lg);background:var(--purple);color:#fff;font-size:16px;font-weight:700;font-family:'Nunito',sans-serif;border:none;box-shadow:3px 3px 0px rgba(167,139,202,0.4);cursor:pointer;">
+          Begin Story →
+        </button>
+        <div style="font-size:11px;color:var(--warm-light);margin-top:8px;">3 free stories / day</div>
+        <div style="margin-top:auto;padding-bottom:4px;display:flex;flex-direction:column;align-items:center;gap:6px;">
+          <div class="swipe-dots">
+            <div class="s-dot" style="background:var(--clay-border);"></div>
+            <div class="s-dot active" style="background:var(--purple);"></div>
+            <div class="s-dot" style="background:var(--clay-border);"></div>
+            <div class="s-dot" style="background:var(--clay-border);"></div>
+          </div>
+          <div class="h-dots">
+            <div class="h-dot active" style="background:var(--purple);"></div>
+            <div class="h-dot"></div>
+          </div>
+          <span style="font-size:10px;color:var(--warm-light);">Swipe → for details</span>
+        </div>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item active"><img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_84,h_84,c_fill,q_85/v1774765585/aura-coach-assets/navigation-bar/home-icon_f164a9.webp" alt="Home"><span>Home</span><div class="indicator"></div></div>
+      <div class="nav-item"><div style="font-size:20px;opacity:0.45;">👤</div><span>Profile</span><div class="indicator"></div></div>
+      <div class="nav-item"><img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_84,h_84,c_fill,q_85/v1774780351/aura-coach-assets/navigation-bar/setting-icon_42d237_cac3a9.webp" alt="Settings"><span>Settings</span><div class="indicator"></div></div>
+    </div>
+  </div>
+  <div class="phone-home-bar"><div></div></div>
+</div>
+<div class="phone-label">Story Mode — Overview (←→ page 1)</div>
+</div>
+
+<div class="pair-arrow">→</div>
+
+<!-- PAGE 2: Deep Dive -->
+<div class="phone-wrapper">
+<div class="phone">
+  <div class="phone-status"><span>9:41</span><span>●●●● WiFi 100%</span></div>
+  <div class="phone-content">
+    <div style="flex-shrink:0;display:flex;justify-content:space-between;align-items:center;padding:4px 20px 8px;">
+      <div style="display:flex;align-items:center;font-family:'Fredoka',sans-serif;font-size:16px;font-weight:800;letter-spacing:0.04em;">
+        <span style="color:var(--teal);">AURA C</span><img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_120,h_120,c_fill,q_90/v1774779556/aura-coach-assets/aura-orbs-icons_1ff981_b7df4e.webp" alt="O" style="width:14px;height:14px;margin:0 1px;"><span style="color:var(--teal);">ACH</span><span style="color:var(--warm-dark);margin-left:2px;">.AI</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:13px;font-weight:600;color:var(--warm-dark);font-family:'Nunito',sans-serif;">Hi, Luu</span>
+        <div style="width:36px;height:36px;border-radius:50%;overflow:hidden;border:2px solid var(--teal);box-shadow:var(--shadow-clay);"><img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_240,h_240,c_fill,q_90/v1774780247/aura-coach-assets/avatars/fox-avatar_677f5f.webp" alt="Avatar" style="width:100%;height:100%;object-fit:cover;"></div>
+      </div>
+    </div>
+
+    <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:linear-gradient(180deg, var(--cream) 0%, rgba(167,139,202,0.05) 100%);">
+      <!-- Compact hero -->
+      <div style="padding:16px 24px 12px;display:flex;align-items:center;gap:16px;">
+        <div style="width:64px;height:64px;border-radius:20px;background:rgba(167,139,202,0.1);border:2px solid rgba(167,139,202,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_216,h_216,c_fill,q_90/v1774779261/aura-coach-assets/mode-icons/national-park-icons_628f11.webp" alt="" style="width:44px;height:44px;object-fit:contain;" class="float3d">
+        </div>
+        <div>
+          <h2 style="font-family:'Nunito',sans-serif;font-size:22px;font-weight:800;color:var(--warm-dark);line-height:1.2;">Story Mode</h2>
+          <div style="display:flex;gap:6px;margin-top:6px;">
+            <span style="font-size:11px;color:var(--purple);background:rgba(167,139,202,0.1);padding:3px 10px;border-radius:var(--r-full);font-weight:600;">📖 Narrative</span>
+            <span style="font-size:11px;color:var(--purple);background:rgba(167,139,202,0.1);padding:3px 10px;border-radius:var(--r-full);font-weight:600;">🎭 Choices</span>
+          </div>
+        </div>
+      </div>
+      <div style="height:2px;background:var(--clay-border);margin:0 24px;"></div>
+
+      <!-- How it works -->
+      <div style="padding:20px 24px 0;">
+        <p style="font-size:11px;font-weight:700;color:var(--warm-light);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:14px;">How it works</p>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div style="display:flex;gap:12px;align-items:center;">
+            <div class="step-num" style="background:rgba(167,139,202,0.15);color:var(--purple);">1</div>
+            <div><div style="font-size:14px;font-weight:700;color:var(--warm-dark);font-family:'Nunito',sans-serif;">Pick a story</div><div style="font-size:12px;color:var(--warm-muted);margin-top:2px;">Browse by genre, topic & difficulty</div></div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:center;">
+            <div class="step-num" style="background:rgba(167,139,202,0.15);color:var(--purple);">2</div>
+            <div><div style="font-size:14px;font-weight:700;color:var(--warm-dark);font-family:'Nunito',sans-serif;">Make choices</div><div style="font-size:12px;color:var(--warm-muted);margin-top:2px;">Your responses drive the narrative forward</div></div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:center;">
+            <div class="step-num" style="background:rgba(167,139,202,0.15);color:var(--purple);">3</div>
+            <div><div style="font-size:14px;font-weight:700;color:var(--warm-dark);font-family:'Nunito',sans-serif;">Learn as you play</div><div style="font-size:12px;color:var(--warm-muted);margin-top:2px;">Instant assessment after each dialogue turn</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Features -->
+      <div style="padding:20px 24px 0;">
+        <p style="font-size:11px;font-weight:700;color:var(--warm-light);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:12px;">Key features</p>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div class="feature-card"><div class="feature-icon" style="background:rgba(167,139,202,0.1);">📖</div><div><div style="font-size:14px;font-weight:700;color:var(--warm-dark);">Branching Narratives</div><div style="font-size:12px;color:var(--warm-muted);margin-top:2px;line-height:1.4;">Every choice leads to a different outcome — no two sessions alike</div></div></div>
+          <div class="feature-card"><div class="feature-icon" style="background:rgba(167,139,202,0.1);">🎭</div><div><div style="font-size:14px;font-weight:700;color:var(--warm-dark);">Character Interactions</div><div style="font-size:12px;color:var(--warm-muted);margin-top:2px;line-height:1.4;">Engage with unique AI characters who remember your choices</div></div></div>
+          <div class="feature-card"><div class="feature-icon" style="background:rgba(167,139,202,0.1);">📊</div><div><div style="font-size:14px;font-weight:700;color:var(--warm-dark);">Real-time Assessment</div><div style="font-size:12px;color:var(--warm-muted);margin-top:2px;line-height:1.4;">Grammar, vocabulary & tone scored after each turn</div></div></div>
+          <div class="feature-card"><div class="feature-icon" style="background:rgba(167,139,202,0.1);">🔖</div><div><div style="font-size:14px;font-weight:700;color:var(--warm-dark);">Save & Resume</div><div style="font-size:12px;color:var(--warm-muted);margin-top:2px;line-height:1.4;">Bookmark your story and continue any time</div></div></div>
+        </div>
+      </div>
+
+      <!-- CTA -->
+      <div style="padding:20px 24px;">
+        <button style="width:100%;padding:16px;border-radius:var(--r-lg);background:var(--purple);color:#fff;font-size:17px;font-weight:800;font-family:'Nunito',sans-serif;border:none;box-shadow:3px 3px 0px rgba(167,139,202,0.4);cursor:pointer;">Begin Story →</button>
+        <div style="text-align:center;font-size:11px;color:var(--warm-light);margin-top:8px;">3 free stories / day</div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:12px;">
+          <div class="swipe-dots"><div class="s-dot" style="background:var(--clay-border);"></div><div class="s-dot active" style="background:var(--purple);"></div><div class="s-dot" style="background:var(--clay-border);"></div><div class="s-dot" style="background:var(--clay-border);"></div></div>
+          <div class="h-dots"><div class="h-dot"></div><div class="h-dot active" style="background:var(--purple);"></div></div>
+          <span style="font-size:10px;color:var(--warm-light);">← Swipe back to overview</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-nav">
+      <div class="nav-item active"><img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_84,h_84,c_fill,q_85/v1774765585/aura-coach-assets/navigation-bar/home-icon_f164a9.webp" alt="Home"><span>Home</span><div class="indicator"></div></div>
+      <div class="nav-item"><div style="font-size:20px;opacity:0.45;">👤</div><span>Profile</span><div class="indicator"></div></div>
+      <div class="nav-item"><img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_84,h_84,c_fill,q_85/v1774780351/aura-coach-assets/navigation-bar/setting-icon_42d237_cac3a9.webp" alt="Settings"><span>Settings</span><div class="indicator"></div></div>
+    </div>
+  </div>
+  <div class="phone-home-bar"><div></div></div>
+</div>
+<div class="phone-label">Story Mode — Deep Dive (←→ page 2)</div>
+</div>
+
+</div><!-- end pair-group -->
+
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PAIR 3: TONE TRANSLATOR — Overview → Deep Dive             -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="pair-group">
+
+<!-- PAGE 1: Overview -->
+<div class="phone-wrapper">
+<div class="phone">
+  <div class="phone-status"><span>9:41</span><span>●●●● WiFi 100%</span></div>
+  <div class="phone-content">
+    <div style="flex-shrink:0;display:flex;justify-content:space-between;align-items:center;padding:4px 20px 8px;">
+      <div style="display:flex;align-items:center;font-family:'Fredoka',sans-serif;font-size:16px;font-weight:800;letter-spacing:0.04em;"><span style="color:var(--teal);">AURA C</span><img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_120,h_120,c_fill,q_90/v1774779556/aura-coach-assets/aura-orbs-icons_1ff981_b7df4e.webp" alt="O" style="width:14px;height:14px;margin:0 1px;"><span style="color:var(--teal);">ACH</span><span style="color:var(--warm-dark);margin-left:2px;">.AI</span></div>
+      <div style="display:flex;align-items:center;gap:10px;"><span style="font-size:13px;font-weight:600;color:var(--warm-dark);font-family:'Nunito',sans-serif;">Hi, Luu</span><div style="width:36px;height:36px;border-radius:50%;overflow:hidden;border:2px solid var(--teal);box-shadow:var(--shadow-clay);"><img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_240,h_240,c_fill,q_90/v1774780247/aura-coach-assets/avatars/fox-avatar_677f5f.webp" alt="Avatar" style="width:100%;height:100%;object-fit:cover;"></div></div>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;">
+      <div class="mode-card" style="background:linear-gradient(180deg, var(--cream) 0%, rgba(232,199,123,0.08) 100%);">
+        <div style="font-size:11px;font-weight:700;color:#9A7B3D;text-transform:uppercase;letter-spacing:0.12em;background:rgba(232,199,123,0.15);padding:6px 16px;border-radius:var(--r-full);">Unique</div>
+        <div class="mode-icon-wrap" style="background:rgba(232,199,123,0.1);border:2px solid rgba(232,199,123,0.2);">
+          <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_216,h_216,c_fill,q_90/v1774766467/aura-coach-assets/mode-icons/tone-translator_327cd6.webp" alt="Tone Translator" class="float3d">
+        </div>
+        <h3 style="font-family:'Nunito',sans-serif;font-size:24px;font-weight:800;color:var(--warm-dark);">Tone Translator</h3>
+        <p style="font-size:15px;color:var(--warm-muted);line-height:1.5;max-width:280px;">Master the art of tone. See how one sentence sounds formal, friendly, casual & neutral.</p>
+        <div style="display:flex;gap:8px;margin-top:4px;">
+          <span style="font-size:12px;color:#9A7B3D;background:rgba(232,199,123,0.15);padding:4px 12px;border-radius:var(--r-full);font-weight:600;">🎭 4 Tones</span>
+          <span style="font-size:12px;color:#9A7B3D;background:rgba(232,199,123,0.15);padding:4px 12px;border-radius:var(--r-full);font-weight:600;">🔊 TTS</span>
+        </div>
+        <button style="margin-top:8px;padding:14px 48px;border-radius:var(--r-lg);background:var(--gold);color:#fff;font-size:16px;font-weight:700;font-family:'Nunito',sans-serif;border:none;box-shadow:3px 3px 0px rgba(232,199,123,0.4);cursor:pointer;">Translate Now →</button>
+        <div style="font-size:11px;color:var(--warm-light);margin-top:8px;">10 free translations / day</div>
+        <div style="margin-top:auto;padding-bottom:4px;display:flex;flex-direction:column;align-items:center;gap:6px;">
+          <div class="swipe-dots"><div class="s-dot" style="background:var(--clay-border);"></div><div class="s-dot" style="background:var(--clay-border);"></div><div class="s-dot active" style="background:var(--gold);"></div><div class="s-dot" style="background:var(--clay-border);"></div></div>
+          <div class="h-dots"><div class="h-dot active" style="background:var(--gold);"></div><div class="h-dot"></div></div>
+          <span style="font-size:10px;color:var(--warm-light);">Swipe → for details</span>
+        </div>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item active"><img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_84,h_84,c_fill,q_85/v1774765585/aura-coach-assets/navigation-bar/home-icon_f164a9.webp" alt="Home"><span>Home</span><div class="indicator"></div></div>
+      <div class="nav-item"><div style="font-size:20px;opacity:0.45;">👤</div><span>Profile</span><div class="indicator"></div></div>
+      <div class="nav-item"><img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_84,h_84,c_fill,q_85/v1774780351/aura-coach-assets/navigation-bar/setting-icon_42d237_cac3a9.webp" alt="Settings"><span>Settings</span><div class="indicator"></div></div>
+    </div>
+  </div>
+  <div class="phone-home-bar"><div></div></div>
+</div>
+<div class="phone-label">Tone Translator — Overview (←→ page 1)</div>
+</div>
+
+<div class="pair-arrow">→</div>
+
+<!-- PAGE 2: Deep Dive -->
+<div class="phone-wrapper">
+<div class="phone">
+  <div class="phone-status"><span>9:41</span><span>●●●● WiFi 100%</span></div>
+  <div class="phone-content">
+    <div style="flex-shrink:0;display:flex;justify-content:space-between;align-items:center;padding:4px 20px 8px;">
+      <div style="display:flex;align-items:center;font-family:'Fredoka',sans-serif;font-size:16px;font-weight:800;letter-spacing:0.04em;"><span style="color:var(--teal);">AURA C</span><img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_120,h_120,c_fill,q_90/v1774779556/aura-coach-assets/aura-orbs-icons_1ff981_b7df4e.webp" alt="O" style="width:14px;height:14px;margin:0 1px;"><span style="color:var(--teal);">ACH</span><span style="color:var(--warm-dark);margin-left:2px;">.AI</span></div>
+      <div style="display:flex;align-items:center;gap:10px;"><span style="font-size:13px;font-weight:600;color:var(--warm-dark);font-family:'Nunito',sans-serif;">Hi, Luu</span><div style="width:36px;height:36px;border-radius:50%;overflow:hidden;border:2px solid var(--teal);box-shadow:var(--shadow-clay);"><img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_240,h_240,c_fill,q_90/v1774780247/aura-coach-assets/avatars/fox-avatar_677f5f.webp" alt="Avatar" style="width:100%;height:100%;object-fit:cover;"></div></div>
+    </div>
+
+    <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:linear-gradient(180deg, var(--cream) 0%, rgba(232,199,123,0.05) 100%);">
+      <!-- Compact hero -->
+      <div style="padding:16px 24px 12px;display:flex;align-items:center;gap:16px;">
+        <div style="width:64px;height:64px;border-radius:20px;background:rgba(232,199,123,0.1);border:2px solid rgba(232,199,123,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_216,h_216,c_fill,q_90/v1774766467/aura-coach-assets/mode-icons/tone-translator_327cd6.webp" alt="" style="width:44px;height:44px;object-fit:contain;" class="float3d">
+        </div>
+        <div>
+          <h2 style="font-family:'Nunito',sans-serif;font-size:22px;font-weight:800;color:var(--warm-dark);line-height:1.2;">Tone Translator</h2>
+          <div style="display:flex;gap:6px;margin-top:6px;">
+            <span style="font-size:11px;color:#9A7B3D;background:rgba(232,199,123,0.15);padding:3px 10px;border-radius:var(--r-full);font-weight:600;">🎭 4 Tones</span>
+            <span style="font-size:11px;color:#9A7B3D;background:rgba(232,199,123,0.15);padding:3px 10px;border-radius:var(--r-full);font-weight:600;">🔊 TTS</span>
+          </div>
+        </div>
+      </div>
+      <div style="height:2px;background:var(--clay-border);margin:0 24px;"></div>
+
+      <!-- How it works -->
+      <div style="padding:20px 24px 0;">
+        <p style="font-size:11px;font-weight:700;color:var(--warm-light);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:14px;">How it works</p>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div style="display:flex;gap:12px;align-items:center;"><div class="step-num" style="background:rgba(232,199,123,0.15);color:#9A7B3D;">1</div><div><div style="font-size:14px;font-weight:700;color:var(--warm-dark);font-family:'Nunito',sans-serif;">Type a sentence</div><div style="font-size:12px;color:var(--warm-muted);margin-top:2px;">Any phrase you want to learn</div></div></div>
+          <div style="display:flex;gap:12px;align-items:center;"><div class="step-num" style="background:rgba(232,199,123,0.15);color:#9A7B3D;">2</div><div><div style="font-size:14px;font-weight:700;color:var(--warm-dark);font-family:'Nunito',sans-serif;">See 4 tone variations</div><div style="font-size:12px;color:var(--warm-muted);margin-top:2px;">Formal, neutral, friendly & casual</div></div></div>
+          <div style="display:flex;gap:12px;align-items:center;"><div class="step-num" style="background:rgba(232,199,123,0.15);color:#9A7B3D;">3</div><div><div style="font-size:14px;font-weight:700;color:var(--warm-dark);font-family:'Nunito',sans-serif;">Listen & save</div><div style="font-size:12px;color:var(--warm-muted);margin-top:2px;">TTS playback + save to your library</div></div></div>
+        </div>
+      </div>
+
+      <!-- 4 Tone preview -->
+      <div style="padding:20px 24px 0;">
+        <p style="font-size:11px;font-weight:700;color:var(--warm-light);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:12px;">4 Tone styles</p>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;gap:12px;align-items:center;padding:12px 14px;border-radius:var(--r-lg);background:var(--clay-white);border:2px solid var(--clay-border);">
+            <div style="width:36px;height:36px;border-radius:10px;background:rgba(99,102,241,0.1);display:flex;align-items:center;justify-content:center;"><span style="font-size:16px;">🎩</span></div>
+            <div style="flex:1;"><div style="font-size:13px;font-weight:700;color:#6366F1;">Formal</div><div style="font-size:11px;color:var(--warm-muted);margin-top:1px;">"I would appreciate your assistance..."</div></div>
+            <span style="font-size:14px;color:var(--warm-light);">🔊</span>
+          </div>
+          <div style="display:flex;gap:12px;align-items:center;padding:12px 14px;border-radius:var(--r-lg);background:var(--clay-white);border:2px solid var(--clay-border);">
+            <div style="width:36px;height:36px;border-radius:10px;background:rgba(123,198,160,0.1);display:flex;align-items:center;justify-content:center;"><span style="font-size:16px;">⚖️</span></div>
+            <div style="flex:1;"><div style="font-size:13px;font-weight:700;color:var(--success);">Neutral</div><div style="font-size:11px;color:var(--warm-muted);margin-top:1px;">"Could you help me with this?"</div></div>
+            <span style="font-size:14px;color:var(--warm-light);">🔊</span>
+          </div>
+          <div style="display:flex;gap:12px;align-items:center;padding:12px 14px;border-radius:var(--r-lg);background:var(--clay-white);border:2px solid var(--clay-border);">
+            <div style="width:36px;height:36px;border-radius:10px;background:rgba(232,199,123,0.1);display:flex;align-items:center;justify-content:center;"><span style="font-size:16px;">😊</span></div>
+            <div style="flex:1;"><div style="font-size:13px;font-weight:700;color:var(--gold);">Friendly</div><div style="font-size:11px;color:var(--warm-muted);margin-top:1px;">"Hey, mind giving me a hand?"</div></div>
+            <span style="font-size:14px;color:var(--warm-light);">🔊</span>
+          </div>
+          <div style="display:flex;gap:12px;align-items:center;padding:12px 14px;border-radius:var(--r-lg);background:var(--clay-white);border:2px solid var(--clay-border);">
+            <div style="width:36px;height:36px;border-radius:10px;background:rgba(217,138,138,0.1);display:flex;align-items:center;justify-content:center;"><span style="font-size:16px;">✌️</span></div>
+            <div style="flex:1;"><div style="font-size:13px;font-weight:700;color:var(--error);">Casual</div><div style="font-size:11px;color:var(--warm-muted);margin-top:1px;">"Yo, can you help real quick?"</div></div>
+            <span style="font-size:14px;color:var(--warm-light);">🔊</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CTA -->
+      <div style="padding:20px 24px;">
+        <button style="width:100%;padding:16px;border-radius:var(--r-lg);background:var(--gold);color:#fff;font-size:17px;font-weight:800;font-family:'Nunito',sans-serif;border:none;box-shadow:3px 3px 0px rgba(232,199,123,0.4);cursor:pointer;">Translate Now →</button>
+        <div style="text-align:center;font-size:11px;color:var(--warm-light);margin-top:8px;">10 free translations / day</div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:12px;">
+          <div class="swipe-dots"><div class="s-dot" style="background:var(--clay-border);"></div><div class="s-dot" style="background:var(--clay-border);"></div><div class="s-dot active" style="background:var(--gold);"></div><div class="s-dot" style="background:var(--clay-border);"></div></div>
+          <div class="h-dots"><div class="h-dot"></div><div class="h-dot active" style="background:var(--gold);"></div></div>
+          <span style="font-size:10px;color:var(--warm-light);">← Swipe back to overview</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-nav">
+      <div class="nav-item active"><img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_84,h_84,c_fill,q_85/v1774765585/aura-coach-assets/navigation-bar/home-icon_f164a9.webp" alt="Home"><span>Home</span><div class="indicator"></div></div>
+      <div class="nav-item"><div style="font-size:20px;opacity:0.45;">👤</div><span>Profile</span><div class="indicator"></div></div>
+      <div class="nav-item"><img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_84,h_84,c_fill,q_85/v1774780351/aura-coach-assets/navigation-bar/setting-icon_42d237_cac3a9.webp" alt="Settings"><span>Settings</span><div class="indicator"></div></div>
+    </div>
+  </div>
+  <div class="phone-home-bar"><div></div></div>
+</div>
+<div class="phone-label">Tone Translator — Deep Dive (←→ page 2)</div>
+</div>
+
+</div><!-- end pair-group -->
+
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PAIR 4: VOCAB HUB — Overview → Deep Dive                  -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="pair-group">
+
+<!-- PAGE 1: Overview -->
+<div class="phone-wrapper">
+<div class="phone">
+  <div class="phone-status"><span>9:41</span><span>●●●● WiFi 100%</span></div>
+  <div class="phone-content">
+    <div style="flex-shrink:0;display:flex;justify-content:space-between;align-items:center;padding:4px 20px 8px;">
+      <div style="display:flex;align-items:center;font-family:'Fredoka',sans-serif;font-size:16px;font-weight:800;letter-spacing:0.04em;"><span style="color:var(--teal);">AURA C</span><img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_120,h_120,c_fill,q_90/v1774779556/aura-coach-assets/aura-orbs-icons_1ff981_b7df4e.webp" alt="O" style="width:14px;height:14px;margin:0 1px;"><span style="color:var(--teal);">ACH</span><span style="color:var(--warm-dark);margin-left:2px;">.AI</span></div>
+      <div style="display:flex;align-items:center;gap:10px;"><span style="font-size:13px;font-weight:600;color:var(--warm-dark);font-family:'Nunito',sans-serif;">Hi, Luu</span><div style="width:36px;height:36px;border-radius:50%;overflow:hidden;border:2px solid var(--teal);box-shadow:var(--shadow-clay);"><img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_240,h_240,c_fill,q_90/v1774780247/aura-coach-assets/avatars/fox-avatar_677f5f.webp" alt="Avatar" style="width:100%;height:100%;object-fit:cover;"></div></div>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;">
+      <div class="mode-card" style="background:linear-gradient(180deg, var(--cream) 0%, rgba(167,139,202,0.08) 100%);">
+        <div style="font-size:11px;font-weight:700;color:var(--purple);text-transform:uppercase;letter-spacing:0.12em;background:rgba(167,139,202,0.1);padding:6px 16px;border-radius:var(--r-full);">Build Skills</div>
+        <div class="mode-icon-wrap" style="background:rgba(167,139,202,0.1);border:2px solid rgba(167,139,202,0.2);">
+          <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_216,h_216,c_fill,q_90/v1774779311/aura-coach-assets/mode-icons/ringed-planet-icons_bbcaa8.webp" alt="Vocab Hub" class="float3d">
+        </div>
+        <h3 style="font-family:'Nunito',sans-serif;font-size:24px;font-weight:800;color:var(--warm-dark);">Vocab Hub</h3>
+        <p style="font-size:15px;color:var(--warm-muted);line-height:1.5;max-width:280px;">Deep-dive into any word. Get analysis, mind maps, examples & spaced repetition flashcards.</p>
+        <div style="display:flex;gap:8px;margin-top:4px;">
+          <span style="font-size:12px;color:var(--purple);background:rgba(167,139,202,0.1);padding:4px 12px;border-radius:var(--r-full);font-weight:600;">🧠 Mind Map</span>
+          <span style="font-size:12px;color:var(--purple);background:rgba(167,139,202,0.1);padding:4px 12px;border-radius:var(--r-full);font-weight:600;">📝 Quiz</span>
+        </div>
+        <button style="margin-top:8px;padding:14px 48px;border-radius:var(--r-lg);background:var(--purple);color:#fff;font-size:16px;font-weight:700;font-family:'Nunito',sans-serif;border:none;box-shadow:3px 3px 0px rgba(167,139,202,0.4);cursor:pointer;">Explore Words →</button>
+        <div style="font-size:11px;color:var(--warm-light);margin-top:8px;">Unlimited</div>
+        <div style="margin-top:auto;padding-bottom:4px;display:flex;flex-direction:column;align-items:center;gap:6px;">
+          <div class="swipe-dots"><div class="s-dot" style="background:var(--clay-border);"></div><div class="s-dot" style="background:var(--clay-border);"></div><div class="s-dot" style="background:var(--clay-border);"></div><div class="s-dot active" style="background:var(--purple);"></div></div>
+          <div class="h-dots"><div class="h-dot active" style="background:var(--purple);"></div><div class="h-dot"></div></div>
+          <span style="font-size:10px;color:var(--warm-light);">Swipe → for details</span>
+        </div>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item active"><img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_84,h_84,c_fill,q_85/v1774765585/aura-coach-assets/navigation-bar/home-icon_f164a9.webp" alt="Home"><span>Home</span><div class="indicator"></div></div>
+      <div class="nav-item"><div style="font-size:20px;opacity:0.45;">👤</div><span>Profile</span><div class="indicator"></div></div>
+      <div class="nav-item"><img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_84,h_84,c_fill,q_85/v1774780351/aura-coach-assets/navigation-bar/setting-icon_42d237_cac3a9.webp" alt="Settings"><span>Settings</span><div class="indicator"></div></div>
+    </div>
+  </div>
+  <div class="phone-home-bar"><div></div></div>
+</div>
+<div class="phone-label">Vocab Hub — Overview (←→ page 1)</div>
+</div>
+
+<div class="pair-arrow">→</div>
+
+<!-- PAGE 2: Deep Dive -->
+<div class="phone-wrapper">
+<div class="phone">
+  <div class="phone-status"><span>9:41</span><span>●●●● WiFi 100%</span></div>
+  <div class="phone-content">
+    <div style="flex-shrink:0;display:flex;justify-content:space-between;align-items:center;padding:4px 20px 8px;">
+      <div style="display:flex;align-items:center;font-family:'Fredoka',sans-serif;font-size:16px;font-weight:800;letter-spacing:0.04em;"><span style="color:var(--teal);">AURA C</span><img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_120,h_120,c_fill,q_90/v1774779556/aura-coach-assets/aura-orbs-icons_1ff981_b7df4e.webp" alt="O" style="width:14px;height:14px;margin:0 1px;"><span style="color:var(--teal);">ACH</span><span style="color:var(--warm-dark);margin-left:2px;">.AI</span></div>
+      <div style="display:flex;align-items:center;gap:10px;"><span style="font-size:13px;font-weight:600;color:var(--warm-dark);font-family:'Nunito',sans-serif;">Hi, Luu</span><div style="width:36px;height:36px;border-radius:50%;overflow:hidden;border:2px solid var(--teal);box-shadow:var(--shadow-clay);"><img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_240,h_240,c_fill,q_90/v1774780247/aura-coach-assets/avatars/fox-avatar_677f5f.webp" alt="Avatar" style="width:100%;height:100%;object-fit:cover;"></div></div>
+    </div>
+
+    <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:linear-gradient(180deg, var(--cream) 0%, rgba(167,139,202,0.05) 100%);">
+      <!-- Compact hero -->
+      <div style="padding:16px 24px 12px;display:flex;align-items:center;gap:16px;">
+        <div style="width:64px;height:64px;border-radius:20px;background:rgba(167,139,202,0.1);border:2px solid rgba(167,139,202,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_216,h_216,c_fill,q_90/v1774779311/aura-coach-assets/mode-icons/ringed-planet-icons_bbcaa8.webp" alt="" style="width:44px;height:44px;object-fit:contain;" class="float3d">
+        </div>
+        <div>
+          <h2 style="font-family:'Nunito',sans-serif;font-size:22px;font-weight:800;color:var(--warm-dark);line-height:1.2;">Vocab Hub</h2>
+          <div style="display:flex;gap:6px;margin-top:6px;">
+            <span style="font-size:11px;color:var(--purple);background:rgba(167,139,202,0.1);padding:3px 10px;border-radius:var(--r-full);font-weight:600;">🧠 Mind Map</span>
+            <span style="font-size:11px;color:var(--purple);background:rgba(167,139,202,0.1);padding:3px 10px;border-radius:var(--r-full);font-weight:600;">📝 Quiz</span>
+          </div>
+        </div>
+      </div>
+      <div style="height:2px;background:var(--clay-border);margin:0 24px;"></div>
+
+      <!-- 5 Powerful tools -->
+      <div style="padding:20px 24px 0;">
+        <p style="font-size:11px;font-weight:700;color:var(--warm-light);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:12px;">5 Powerful tools</p>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div class="feature-card"><div class="feature-icon" style="background:rgba(167,139,202,0.1);">🔍</div><div><div style="font-size:14px;font-weight:700;color:var(--warm-dark);">Word Analysis</div><div style="font-size:12px;color:var(--warm-muted);margin-top:2px;line-height:1.4;">Deep breakdown with pronunciation, definitions & examples</div></div></div>
+          <div class="feature-card"><div class="feature-icon" style="background:rgba(167,139,202,0.1);">🧠</div><div><div style="font-size:14px;font-weight:700;color:var(--warm-dark);">Mind Maps</div><div style="font-size:12px;color:var(--warm-muted);margin-top:2px;line-height:1.4;">Visual word relationships — synonyms, antonyms & related</div></div></div>
+          <div class="feature-card"><div class="feature-icon" style="background:rgba(167,139,202,0.1);">🃏</div><div><div style="font-size:14px;font-weight:700;color:var(--warm-dark);">Flashcards</div><div style="font-size:12px;color:var(--warm-muted);margin-top:2px;line-height:1.4;">SM-2 spaced repetition — review at the perfect time</div></div></div>
+          <div class="feature-card"><div class="feature-icon" style="background:rgba(167,139,202,0.1);">📚</div><div><div style="font-size:14px;font-weight:700;color:var(--warm-dark);">Learning Library</div><div style="font-size:12px;color:var(--warm-muted);margin-top:2px;line-height:1.4;">All saved words from every mode in one place</div></div></div>
+          <div class="feature-card"><div class="feature-icon" style="background:rgba(167,139,202,0.1);">📈</div><div><div style="font-size:14px;font-weight:700;color:var(--warm-dark);">Progress Dashboard</div><div style="font-size:12px;color:var(--warm-muted);margin-top:2px;line-height:1.4;">Track total, due reviews & mastered at a glance</div></div></div>
+        </div>
+      </div>
+
+      <!-- CTA -->
+      <div style="padding:20px 24px;">
+        <button style="width:100%;padding:16px;border-radius:var(--r-lg);background:var(--purple);color:#fff;font-size:17px;font-weight:800;font-family:'Nunito',sans-serif;border:none;box-shadow:3px 3px 0px rgba(167,139,202,0.4);cursor:pointer;">Explore Words →</button>
+        <div style="text-align:center;font-size:11px;color:var(--warm-light);margin-top:8px;">Unlimited</div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:12px;">
+          <div class="swipe-dots"><div class="s-dot" style="background:var(--clay-border);"></div><div class="s-dot" style="background:var(--clay-border);"></div><div class="s-dot" style="background:var(--clay-border);"></div><div class="s-dot active" style="background:var(--purple);"></div></div>
+          <div class="h-dots"><div class="h-dot"></div><div class="h-dot active" style="background:var(--purple);"></div></div>
+          <span style="font-size:10px;color:var(--warm-light);">← Swipe back to overview</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-nav">
+      <div class="nav-item active"><img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_84,h_84,c_fill,q_85/v1774765585/aura-coach-assets/navigation-bar/home-icon_f164a9.webp" alt="Home"><span>Home</span><div class="indicator"></div></div>
+      <div class="nav-item"><div style="font-size:20px;opacity:0.45;">👤</div><span>Profile</span><div class="indicator"></div></div>
+      <div class="nav-item"><img src="https://res.cloudinary.com/dgx0fr20a/image/upload/w_84,h_84,c_fill,q_85/v1774780351/aura-coach-assets/navigation-bar/setting-icon_42d237_cac3a9.webp" alt="Settings"><span>Settings</span><div class="indicator"></div></div>
+    </div>
+  </div>
+  <div class="phone-home-bar"><div></div></div>
+</div>
+<div class="phone-label">Vocab Hub — Deep Dive (←→ page 2)</div>
+</div>
+
+</div><!-- end pair-group -->
+
+</div><!-- end screens-row -->
+
+</body>
+</html>

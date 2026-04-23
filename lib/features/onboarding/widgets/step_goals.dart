@@ -7,6 +7,8 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/clay_card.dart';
 import '../../../shared/widgets/selection_check_circle.dart';
+import '../../../shared/widgets/staggered_entrance.dart';
+import 'goal_icon.dart';
 
 class StepGoals extends StatelessWidget {
   const StepGoals({super.key});
@@ -17,12 +19,11 @@ class StepGoals extends StatelessWidget {
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxxl),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: StaggeredEntrance(
         children: [
           Text(
             'What are your goals?',
-            style: AppTypography.displayMd.copyWith(fontSize: 26),
+            style: AppTypography.displayMd,
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
@@ -43,13 +44,17 @@ class StepGoals extends StatelessWidget {
                 onTap: () => provider.toggleGoal(goal.id),
                 child: Row(
                   children: [
-                    Text(goal.emoji, style: const TextStyle(fontSize: 24)),
+                    GoalIcon(goalId: goal.id, size: 40),
                     const SizedBox(width: AppSpacing.mdd),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(goal.label, style: AppTypography.labelLg.copyWith(fontSize: 16)),
+                          Text(
+                            goal.label,
+                            style: AppTypography.title
+                                .copyWith(fontWeight: FontWeight.w600),
+                          ),
                           const SizedBox(height: AppSpacing.xxs),
                           Text(
                             goal.description,

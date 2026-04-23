@@ -6,13 +6,15 @@ class LocalDatasource {
   static const _keyOnboardingComplete = 'onboarding_complete';
   static const _keyCachedUid = 'cached_uid';
   static const _keyActiveConversation = 'active_conversation';
+  static const _keyActiveStorySession = 'active_story_session';
   static const _keyDailyUsagePrefix = 'daily_usage_';
 
   final SharedPreferences _prefs;
 
   LocalDatasource({required SharedPreferences prefs}) : _prefs = prefs;
 
-  bool get isOnboardingComplete => _prefs.getBool(_keyOnboardingComplete) ?? false;
+  bool get isOnboardingComplete =>
+      _prefs.getBool(_keyOnboardingComplete) ?? false;
 
   Future<void> setOnboardingComplete(bool value) async {
     await _prefs.setBool(_keyOnboardingComplete, value);
@@ -44,6 +46,24 @@ class LocalDatasource {
 
   Future<void> clearActiveConversation() async {
     await _prefs.remove(_keyActiveConversation);
+  }
+
+  Future<void> cacheActiveStorySession(Map<String, dynamic> data) async {
+    await _prefs.setString(_keyActiveStorySession, jsonEncode(data));
+  }
+
+  Map<String, dynamic>? readActiveStorySession() {
+    final raw = _prefs.getString(_keyActiveStorySession);
+    if (raw == null) return null;
+    try {
+      return jsonDecode(raw) as Map<String, dynamic>;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> clearActiveStorySession() async {
+    await _prefs.remove(_keyActiveStorySession);
   }
 
   Future<void> cacheDailyUsage(String date, Map<String, int> usage) async {

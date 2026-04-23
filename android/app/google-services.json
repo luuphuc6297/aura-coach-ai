@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "649025183049",
+    "project_id": "aura-coach-ai",
+    "storage_bucket": "aura-coach-ai.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:649025183049:android:8e0fde2831ff21b3f1ce98",
+        "android_client_info": {
+          "package_name": "com.auracoach.aura_coach_ai"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAMt2a1IuQdbxGB1B9oaFQHjpYlh9GkpMk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

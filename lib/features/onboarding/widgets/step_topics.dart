@@ -8,7 +8,9 @@ import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_animations.dart';
-import '../../../shared/widgets/cloud_image.dart';
+import '../../../shared/widgets/app_icon.dart';
+import '../../../shared/widgets/clay_pressable.dart';
+import '../../../shared/widgets/staggered_entrance.dart';
 
 class StepTopics extends StatelessWidget {
   const StepTopics({super.key});
@@ -19,12 +21,11 @@ class StepTopics extends StatelessWidget {
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: StaggeredEntrance(
         children: [
           Text(
             'Pick your interests',
-            style: AppTypography.displayMd.copyWith(fontSize: 26),
+            style: AppTypography.displayMd,
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
@@ -37,39 +38,46 @@ class StepTopics extends StatelessWidget {
             runSpacing: AppSpacing.smd,
             children: topicOptions.map((topic) {
               final isSelected = provider.selectedTopics.contains(topic.id);
-              return GestureDetector(
+              return ClayPressable(
                 onTap: () => provider.toggleTopic(topic.id),
-                child: AnimatedContainer(
-                  duration: AppAnimations.durationMedium,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.lg,
-                    vertical: AppSpacing.smd,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isSelected ? AppColors.teal.withValues(alpha: 0.1) : AppColors.clayWhite,
-                    borderRadius: AppRadius.fullBorder,
-                    border: Border.all(
-                      color: isSelected ? AppColors.teal : AppColors.clayBorder,
-                      width: 2,
+                builder: (context, isPressed) {
+                  return AnimatedContainer(
+                    duration: AppAnimations.durationMedium,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.lg,
+                      vertical: AppSpacing.smd,
                     ),
-                    boxShadow: isSelected ? AppShadows.clay : [],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      CloudImage(url: topic.emojiUrl, size: 24),
-                      const SizedBox(width: AppSpacing.sm),
-                      Text(
-                        topic.label,
-                        style: AppTypography.labelMd.copyWith(
-                          fontSize: 13,
-                          color: isSelected ? AppColors.teal : AppColors.warmDark,
-                          fontWeight: FontWeight.w600,
-                        ),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? topic.color.withValues(alpha: 0.25)
+                          : topic.color.withValues(alpha: 0.10),
+                      borderRadius: AppRadius.fullBorder,
+                      border: Border.all(
+                        color: isSelected
+                            ? AppColors.warmDark
+                            : AppColors.clayBorder,
+                        width: 2,
                       ),
-                    ],
-                  ),
-                ),
+                      boxShadow: isSelected ? AppShadows.clayBold : [],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        AppIcon(iconId: topic.iconId, size: 24),
+                        const SizedBox(width: AppSpacing.sm),
+                        Text(
+                          topic.label,
+                          style: AppTypography.labelMd.copyWith(
+                            fontSize: 13,
+                            color: AppColors.warmDark,
+                            fontWeight:
+                                isSelected ? FontWeight.w700 : FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               );
             }).toList(),
           ),
@@ -87,10 +95,7 @@ class StepTopics extends StatelessWidget {
             ),
             child: Row(
               children: [
-                const Text(
-                  '\u{2728}',
-                  style: TextStyle(fontSize: 16),
-                ),
+                const AppIcon(iconId: 'sparkle', size: 16),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Text(

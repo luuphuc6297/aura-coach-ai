@@ -9,6 +9,8 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/clay_card.dart';
 import '../../../shared/widgets/cloud_image.dart';
 import '../../../shared/widgets/selection_check_circle.dart';
+import '../../../shared/widgets/staggered_entrance.dart';
+import 'level_animation_wrapper.dart';
 
 class StepLevel extends StatelessWidget {
   const StepLevel({super.key});
@@ -41,12 +43,11 @@ class StepLevel extends StatelessWidget {
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxxl),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: StaggeredEntrance(
         children: [
           Text(
             "What's your English level?",
-            style: AppTypography.displayMd.copyWith(fontSize: 26),
+            style: AppTypography.displayMd,
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
@@ -64,19 +65,24 @@ class StepLevel extends StatelessWidget {
                 onTap: () => provider.setProficiencyLevel(level.id),
                 child: Row(
                   children: [
-                    CloudImage(url: _iconUrl(level), size: 72),
+                    isSelected
+                        ? LevelAnimationWrapper(
+                            levelId: level.id,
+                            child: CloudImage(url: _iconUrl(level), size: 72),
+                          )
+                        : CloudImage(url: _iconUrl(level), size: 72),
                     const SizedBox(width: AppSpacing.mdd),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(level.label, style: AppTypography.labelLg.copyWith(fontSize: 17)),
+                          Text(level.label, style: AppTypography.title),
                           const SizedBox(height: AppSpacing.xxs),
                           Text(
                             level.cefr,
-                            style: AppTypography.labelSm.copyWith(
+                            style: AppTypography.sentenceLabel.copyWith(
                               color: _cefrColor(level),
-                              fontWeight: FontWeight.w700,
+                              fontSize: 12,
                             ),
                           ),
                           const SizedBox(height: AppSpacing.xs),

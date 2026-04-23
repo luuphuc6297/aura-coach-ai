@@ -31,9 +31,8 @@ String buildWordAnalysisPrompt({
   required String word,
   String? context,
 }) {
-  final contextLine = (context != null && context.isNotEmpty)
-      ? 'Context: "$context"'
-      : '';
+  final contextLine =
+      (context != null && context.isNotEmpty) ? 'Context: "$context"' : '';
 
   return '''
 You are an expert linguist and etymologist. Analyze the English word "$word".

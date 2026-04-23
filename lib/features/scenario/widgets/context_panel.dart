@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import '../../../core/constants/icon_constants.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_shadows.dart';
+import '../../../shared/widgets/clay_pressable.dart';
+import '../../../shared/widgets/app_icon.dart';
 import '../models/scenario.dart';
 
 class ContextPanel extends StatelessWidget {
@@ -48,7 +51,7 @@ class ContextPanel extends StatelessWidget {
               children: [
                 Text(
                   'Context Details',
-                  style: AppTypography.h2.copyWith(fontSize: 18),
+                  style: AppTypography.title,
                 ),
                 const SizedBox(height: 12),
                 _infoCard(),
@@ -122,7 +125,7 @@ class ContextPanel extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Text('💡', style: TextStyle(fontSize: 14)),
+              const AppIcon(iconId: AppIcons.hint, size: 16),
               const SizedBox(width: 6),
               Text(
                 'Hints ($hintsRevealed/${scenario.hints.toFlatList().length})',
@@ -156,16 +159,19 @@ class ContextPanel extends StatelessWidget {
             );
           }),
           if (hintsRevealed < scenario.hints.toFlatList().length)
-            GestureDetector(
+            ClayPressable(
               onTap: onRevealHint,
-              child: Text(
-                '▶ Reveal next hint',
-                style: AppTypography.caption.copyWith(
-                  color: AppColors.teal,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 12,
-                ),
-              ),
+              scaleDown: 0.95,
+              builder: (context, isPressed) {
+                return Text(
+                  '▶ Reveal next hint',
+                  style: AppTypography.caption.copyWith(
+                    color: AppColors.teal,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                  ),
+                );
+              },
             ),
         ],
       ),
@@ -186,7 +192,7 @@ class ContextPanel extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Text('🎯', style: TextStyle(fontSize: 14)),
+              const AppIcon(iconId: 'practice', size: 14),
               const SizedBox(width: 6),
               Text(
                 'Vocabulary Prep',

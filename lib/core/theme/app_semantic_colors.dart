@@ -37,7 +37,7 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
     onSurfaceMuted: AppColors.warmMuted,
     onSurfaceLight: AppColors.warmLight,
     primary: AppColors.teal,
-    onPrimary: AppColors.white,
+    onPrimary: AppColors.warmDark,
     cardBackground: AppColors.clayBeige,
     divider: AppColors.clayBorder,
     shadow: AppColors.clayShadow,

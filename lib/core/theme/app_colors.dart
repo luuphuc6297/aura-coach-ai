@@ -16,9 +16,13 @@ abstract final class AppColors {
 
   // Accent
   static const teal = Color(0xFF7ECEC5);
+  static const tealDeep = Color(0xFF5FB5AB);
   static const purple = Color(0xFFA78BCA);
+  static const purpleDeep = Color(0xFF8A6FB0);
   static const gold = Color(0xFFE8C77B);
-  static const goldDark = Color(0xFF9A7B3D);
+  static const goldDeep = Color(0xFFD4AF5F);
+  static const goldDark =
+      Color(0xFF9A7B3D); // deeper amber for on-gold text/strokes
   static const coral = Color(0xFFE8927C);
 
   // Semantic — intentionally shares hex with accent/tone where applicable.

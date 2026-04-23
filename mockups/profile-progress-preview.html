@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Profile — Progress Preview Options</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --cream: #FFF8F0;
+    --clay-white: #FEFCF9;
+    --clay-border: #E8DFD3;
+    --warm-dark: #2D3047;
+    --warm-muted: #6B6D7B;
+    --warm-light: #9B9DAB;
+    --teal: #7ECEC5;
+    --teal-deep: #5FB5AB;
+    --purple: #A78BCA;
+    --purple-deep: #8A6FB0;
+    --gold: #E8C77B;
+    --gold-dark: #9A7B3D;
+    --coral: #E8927C;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #F2EDE4;
+    color: var(--warm-dark);
+    padding: 40px 24px 60px;
+    min-height: 100vh;
+  }
+  .page-title {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 28px;
+    text-align: center;
+    margin-bottom: 8px;
+  }
+  .page-subtitle {
+    text-align: center;
+    color: var(--warm-muted);
+    font-size: 14px;
+    margin-bottom: 40px;
+  }
+  .mockup-row {
+    display: flex;
+    gap: 32px;
+    justify-content: center;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+  .mockup-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 320px;
+  }
+  .option-label {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 14px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--warm-dark);
+    background: var(--clay-white);
+    padding: 8px 16px;
+    border-radius: 999px;
+    border: 2px solid var(--clay-border);
+    margin-bottom: 16px;
+    box-shadow: 0 4px 0 rgba(45, 48, 71, 0.06);
+  }
+  .option-label.rec { background: var(--teal); color: #fff; border-color: var(--teal-deep); }
+  .phone {
+    width: 320px;
+    height: 640px;
+    background: var(--cream);
+    border-radius: 36px;
+    border: 3px solid var(--warm-dark);
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 12px 32px rgba(45, 48, 71, 0.18);
+  }
+  .phone::before {
+    content: '';
+    position: absolute;
+    top: 8px; left: 50%;
+    transform: translateX(-50%);
+    width: 88px; height: 6px;
+    background: var(--warm-dark);
+    border-radius: 3px;
+    z-index: 10;
+  }
+  .scroll {
+    padding: 32px 20px 70px;
+    height: 100%;
+    overflow: auto;
+  }
+  .avatar-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+  }
+  .avatar {
+    width: 88px; height: 88px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #F7D9A1 0%, #E8927C 100%);
+    border: 3px solid var(--teal);
+    box-shadow: 0 4px 0 rgba(45, 48, 71, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+  }
+  .name { font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 22px; }
+  .tier-pill {
+    font-size: 11px; font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 999px;
+    background: rgba(126, 206, 197, 0.15);
+    color: var(--teal-deep);
+    border: 1px solid rgba(126, 206, 197, 0.3);
+    letter-spacing: 0.5px;
+  }
+  .streak-badge {
+    position: absolute;
+    top: 0; right: 60px;
+    background: var(--coral);
+    color: #fff;
+    padding: 4px 10px 4px 8px;
+    border-radius: 999px;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 12px;
+    border: 2px solid var(--clay-white);
+    box-shadow: 0 2px 0 rgba(45, 48, 71, 0.12);
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+  /* Progress card */
+  .progress-card {
+    background: var(--clay-white);
+    border: 2px solid var(--clay-border);
+    border-radius: 20px;
+    padding: 16px 16px 18px;
+    margin-top: 20px;
+    box-shadow: 0 4px 0 rgba(45, 48, 71, 0.06);
+  }
+  .progress-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .progress-title {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 13px;
+    letter-spacing: 0.8px;
+    color: var(--warm-muted);
+  }
+  .progress-link {
+    font-size: 11px;
+    color: var(--teal-deep);
+    font-weight: 700;
+  }
+  .progress-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .stat {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 12px;
+    background: rgba(255, 248, 240, 0.6);
+    border-radius: 12px;
+  }
+  .stat-top {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 18px;
+  }
+  .stat-value {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 900;
+    font-size: 20px;
+    color: var(--warm-dark);
+    line-height: 1;
+  }
+  .stat-label {
+    font-size: 10px;
+    color: var(--warm-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  /* Info row (existing style) */
+  .info-row {
+    background: var(--clay-white);
+    border: 2px solid var(--clay-border);
+    border-radius: 20px;
+    padding: 14px 12px;
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-around;
+    box-shadow: 0 4px 0 rgba(45, 48, 71, 0.06);
+  }
+  .info-item {
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    flex: 1;
+  }
+  .info-icon { font-size: 20px; }
+  .info-value {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 13px;
+    color: var(--warm-dark);
+  }
+  .info-label { font-size: 9px; color: var(--warm-light); letter-spacing: 0.3px; }
+  .divider {
+    width: 1px; background: var(--clay-border); margin: 4px 0;
+  }
+  .section-hdr {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--warm-muted);
+    margin-top: 20px;
+    margin-bottom: 8px;
+    padding: 0 4px;
+  }
+  .edit-row {
+    background: var(--clay-white);
+    border: 2px solid var(--clay-border);
+    padding: 12px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+  }
+  .edit-row:first-of-type { border-radius: 16px 16px 0 0; }
+  .edit-row:last-of-type { border-radius: 0 0 16px 16px; }
+  .edit-row:not(:first-of-type) { border-top: none; }
+  .edit-label { font-weight: 700; color: var(--warm-dark); font-family: 'Nunito', sans-serif; }
+  .edit-value { color: var(--warm-muted); font-size: 12px; display: flex; gap: 8px; align-items: center; }
+  .chev { color: var(--warm-light); }
+  /* Caption */
+  .caption {
+    padding: 0 12px;
+    margin-top: 12px;
+    font-size: 11px;
+    color: var(--warm-muted);
+    text-align: center;
+    line-height: 1.5;
+    max-width: 320px;
+  }
+  .caption strong { color: var(--warm-dark); }
+  /* Legend / summary */
+  .tradeoff-row {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    margin-top: 40px;
+    flex-wrap: wrap;
+  }
+  .tradeoff-card {
+    max-width: 300px;
+    background: var(--clay-white);
+    border: 2px solid var(--clay-border);
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 4px 0 rgba(45, 48, 71, 0.06);
+  }
+  .tradeoff-title {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+  .tradeoff-text {
+    font-size: 12px;
+    color: var(--warm-muted);
+    line-height: 1.5;
+  }
+  .tradeoff-text b { color: var(--warm-dark); }
+  .legend-dot {
+    display: inline-block;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+  .dot-a { background: var(--teal); }
+  .dot-b { background: var(--warm-light); }
+  .dot-c { background: var(--coral); }
+</style>
+</head>
+<body>
+  <h1 class="page-title">Profile — Progress Preview Options</h1>
+  <p class="page-subtitle">Ba options cho Progress section. Chọn option anh thấy phù hợp nhất với luồng dữ liệu + analytics tương lai.</p>
+
+  <div class="mockup-row">
+    <!-- OPTION A: full progress card -->
+    <div class="mockup-col">
+      <div class="option-label rec"><span class="legend-dot dot-a"></span>Option A — Full card (Recommended)</div>
+      <div class="phone">
+        <div class="scroll">
+          <div class="avatar-block">
+            <div class="avatar">🦊</div>
+            <div class="name">Luu</div>
+            <div class="tier-pill">FREE PLAN</div>
+          </div>
+
+          <div class="progress-card">
+            <div class="progress-header">
+              <div class="progress-title">YOUR PROGRESS</div>
+              <div class="progress-link">View all ›</div>
+            </div>
+            <div class="progress-grid">
+              <div class="stat">
+                <div class="stat-top">🔥 <span class="stat-value">7</span></div>
+                <div class="stat-label">Day streak</div>
+              </div>
+              <div class="stat">
+                <div class="stat-top">💬 <span class="stat-value">23</span></div>
+                <div class="stat-label">Sessions</div>
+              </div>
+              <div class="stat">
+                <div class="stat-top">📚 <span class="stat-value">48</span></div>
+                <div class="stat-label">Words saved</div>
+              </div>
+              <div class="stat">
+                <div class="stat-top">⭐ <span class="stat-value">7.8</span></div>
+                <div class="stat-label">Avg score</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="info-row">
+            <div class="info-item"><div class="info-icon">🎯</div><div class="info-value">Intermediate</div><div class="info-label">LEVEL</div></div>
+            <div class="divider"></div>
+            <div class="info-item"><div class="info-icon">⏱️</div><div class="info-value">15 min</div><div class="info-label">DAILY</div></div>
+            <div class="divider"></div>
+            <div class="info-item"><div class="info-icon">👑</div><div class="info-value">Free</div><div class="info-label">PLAN</div></div>
+          </div>
+
+          <div class="section-hdr">EDIT PROFILE</div>
+          <div class="edit-row"><span class="edit-label">Name</span><span class="edit-value">Luu <span class="chev">›</span></span></div>
+          <div class="edit-row"><span class="edit-label">Avatar</span><span class="edit-value">🦊 <span class="chev">›</span></span></div>
+          <div class="edit-row"><span class="edit-label">Goals</span><span class="edit-value">3 selected <span class="chev">›</span></span></div>
+        </div>
+      </div>
+      <p class="caption"><strong>Hiển thị:</strong> streak, total sessions, words saved, avg score. Tap "View all" → mở Analytics tab (future).</p>
+    </div>
+
+    <!-- OPTION B: no progress -->
+    <div class="mockup-col">
+      <div class="option-label"><span class="legend-dot dot-b"></span>Option B — Defer hoàn toàn</div>
+      <div class="phone">
+        <div class="scroll">
+          <div class="avatar-block">
+            <div class="avatar">🦊</div>
+            <div class="name">Luu</div>
+            <div class="tier-pill">FREE PLAN</div>
+          </div>
+
+          <div class="info-row">
+            <div class="info-item"><div class="info-icon">🎯</div><div class="info-value">Intermediate</div><div class="info-label">LEVEL</div></div>
+            <div class="divider"></div>
+            <div class="info-item"><div class="info-icon">⏱️</div><div class="info-value">15 min</div><div class="info-label">DAILY</div></div>
+            <div class="divider"></div>
+            <div class="info-item"><div class="info-icon">👑</div><div class="info-value">Free</div><div class="info-label">PLAN</div></div>
+          </div>
+
+          <div class="section-hdr">EDIT PROFILE</div>
+          <div class="edit-row"><span class="edit-label">Name</span><span class="edit-value">Luu <span class="chev">›</span></span></div>
+          <div class="edit-row"><span class="edit-label">Avatar</span><span class="edit-value">🦊 <span class="chev">›</span></span></div>
+          <div class="edit-row"><span class="edit-label">Level</span><span class="edit-value">Intermediate <span class="chev">›</span></span></div>
+          <div class="edit-row"><span class="edit-label">Daily Goal</span><span class="edit-value">15 min <span class="chev">›</span></span></div>
+          <div class="edit-row"><span class="edit-label">Goals</span><span class="edit-value">3 selected <span class="chev">›</span></span></div>
+          <div class="edit-row"><span class="edit-label">Topics</span><span class="edit-value">4 selected <span class="chev">›</span></span></div>
+
+          <div class="section-hdr">PLAN</div>
+          <div class="edit-row"><span class="edit-label">Current plan</span><span class="edit-value">Free · Upgrade <span class="chev">›</span></span></div>
+        </div>
+      </div>
+      <p class="caption"><strong>Không có Progress</strong>. Gọn gàng, chỉ edit + account. Analytics làm trọn vẹn sau khi xong 5 modes còn lại.</p>
+    </div>
+
+    <!-- OPTION C: streak badge only -->
+    <div class="mockup-col">
+      <div class="option-label"><span class="legend-dot dot-c"></span>Option C — Chỉ streak badge</div>
+      <div class="phone">
+        <div class="scroll">
+          <div class="avatar-block">
+            <div class="streak-badge">🔥 7</div>
+            <div class="avatar">🦊</div>
+            <div class="name">Luu</div>
+            <div class="tier-pill">FREE PLAN</div>
+          </div>
+
+          <div class="info-row">
+            <div class="info-item"><div class="info-icon">🎯</div><div class="info-value">Intermediate</div><div class="info-label">LEVEL</div></div>
+            <div class="divider"></div>
+            <div class="info-item"><div class="info-icon">⏱️</div><div class="info-value">15 min</div><div class="info-label">DAILY</div></div>
+            <div class="divider"></div>
+            <div class="info-item"><div class="info-icon">👑</div><div class="info-value">Free</div><div class="info-label">PLAN</div></div>
+          </div>
+
+          <div class="section-hdr">EDIT PROFILE</div>
+          <div class="edit-row"><span class="edit-label">Name</span><span class="edit-value">Luu <span class="chev">›</span></span></div>
+          <div class="edit-row"><span class="edit-label">Avatar</span><span class="edit-value">🦊 <span class="chev">›</span></span></div>
+          <div class="edit-row"><span class="edit-label">Level</span><span class="edit-value">Intermediate <span class="chev">›</span></span></div>
+          <div class="edit-row"><span class="edit-label">Daily Goal</span><span class="edit-value">15 min <span class="chev">›</span></span></div>
+        </div>
+      </div>
+      <p class="caption"><strong>Mini streak badge</strong> ở gần avatar (🔥 7). Đủ tạo hook gamification mà không chiếm chỗ. Full analytics làm sau.</p>
+    </div>
+  </div>
+
+  <!-- Tradeoffs -->
+  <div class="tradeoff-row">
+    <div class="tradeoff-card">
+      <div class="tradeoff-title"><span class="legend-dot dot-a"></span>Option A — Full card</div>
+      <div class="tradeoff-text">
+        <b>Pro:</b> Users thấy ngay tiến độ → motivation ↑. Stepping stone trực tiếp cho Analytics tab.<br/>
+        <b>Con:</b> Stats phụ thuộc data — Scenario Coach đã có, 5 modes khác chưa → số sẽ thấp cho tới khi build xong các modes còn lại.
+      </div>
+    </div>
+    <div class="tradeoff-card">
+      <div class="tradeoff-title"><span class="legend-dot dot-b"></span>Option B — Defer</div>
+      <div class="tradeoff-text">
+        <b>Pro:</b> Profile gọn, không risk data thiếu. Analytics làm trọn khi có data từ 6 modes.<br/>
+        <b>Con:</b> Lỡ cơ hội tạo engagement hook sớm. Users không thấy tiến độ của mình trong giai đoạn đầu.
+      </div>
+    </div>
+    <div class="tradeoff-card">
+      <div class="tradeoff-title"><span class="legend-dot dot-c"></span>Option C — Streak badge</div>
+      <div class="tradeoff-text">
+        <b>Pro:</b> Gamification hook siêu nhẹ, không chiếm UI. 1 metric duy nhất, logic đơn giản.<br/>
+        <b>Con:</b> Streak nhạy cảm — break streak thì demotivating. Chỉ streak thôi là ít thông tin.
+      </div>
+    </div>
+  </div>
+</body>
+</html>

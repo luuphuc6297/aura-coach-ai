@@ -20,7 +20,9 @@ class ClayBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
-        color: isOutlined ? Colors.transparent : accentColor.withValues(alpha: 0.1),
+        color: isOutlined
+            ? Colors.transparent
+            : accentColor.withValues(alpha: 0.1),
         borderRadius: AppRadius.fullBorder,
         border: isOutlined
             ? Border.all(color: accentColor.withValues(alpha: 0.3), width: 1.5)

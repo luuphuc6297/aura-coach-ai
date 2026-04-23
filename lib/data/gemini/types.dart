@@ -221,7 +221,8 @@ class CustomNodeResult {
     this.context,
   });
 
-  factory CustomNodeResult.fromJson(Map<String, dynamic> json) => CustomNodeResult(
+  factory CustomNodeResult.fromJson(Map<String, dynamic> json) =>
+      CustomNodeResult(
         status: (json['status'] as String? ?? 'unrelated') == 'connected'
             ? CustomNodeStatus.connected
             : CustomNodeStatus.unrelated,
@@ -451,11 +452,12 @@ class GrammarAnalysis {
     required this.generalExplanation,
   });
 
-  factory GrammarAnalysis.fromJson(Map<String, dynamic> json) => GrammarAnalysis(
+  factory GrammarAnalysis.fromJson(Map<String, dynamic> json) =>
+      GrammarAnalysis(
         sentence: json['sentence'] as String? ?? '',
         components: (json['components'] as List<dynamic>?)
-                ?.map((e) =>
-                    GrammarComponent.fromJson(e as Map<String, dynamic>))
+                ?.map(
+                    (e) => GrammarComponent.fromJson(e as Map<String, dynamic>))
                 .toList() ??
             const [],
         generalExplanation: json['generalExplanation'] as String? ?? '',
