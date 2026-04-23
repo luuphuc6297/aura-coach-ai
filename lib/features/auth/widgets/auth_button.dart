@@ -5,7 +5,6 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_animations.dart';
-import '../../../shared/widgets/clay_pressable.dart';
 
 enum AuthButtonVariant {
   google,
@@ -63,60 +62,49 @@ class AuthButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClayPressable(
+    return GestureDetector(
       onTap: isLoading ? null : onTap,
-      enabled: onTap != null,
-      builder: (context, isPressed) {
-        return AnimatedOpacity(
-          duration: AppAnimations.durationFast,
-          opacity: onTap == null ? 0.5 : 1.0,
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(
-              vertical: AppSpacing.lg,
-              horizontal: AppSpacing.xl,
-            ),
-            decoration: BoxDecoration(
-              color: _bg,
-              borderRadius: AppRadius.lgBorder,
-              border: style == AuthButtonVariant.guest
-                  ? Border.all(color: AppColors.clayBorder, width: 2)
-                  : null,
-              boxShadow: _shadow,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                AnimatedSwitcher(
-                  duration: AppAnimations.durationFast,
-                  child: isLoading
-                      ? SizedBox(
-                          key: const ValueKey('loading'),
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.5,
-                            valueColor: AlwaysStoppedAnimation(_fg),
-                          ),
-                        )
-                      : Row(
-                          key: const ValueKey('content'),
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            icon,
-                            const SizedBox(width: AppSpacing.md),
-                            Text(
-                              text,
-                              style: AppTypography.button.copyWith(color: _fg),
-                            ),
-                          ],
-                        ),
+      child: AnimatedOpacity(
+        duration: AppAnimations.durationFast,
+        opacity: onTap == null ? 0.5 : 1.0,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(
+            vertical: AppSpacing.lg,
+            horizontal: AppSpacing.xl,
+          ),
+          decoration: BoxDecoration(
+            color: _bg,
+            borderRadius: AppRadius.lgBorder,
+            border: style == AuthButtonVariant.guest
+                ? Border.all(color: AppColors.clayBorder, width: 2)
+                : null,
+            boxShadow: _shadow,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (isLoading)
+                SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    valueColor: AlwaysStoppedAnimation(_fg),
+                  ),
+                )
+              else ...[
+                icon,
+                const SizedBox(width: AppSpacing.md),
+                Text(
+                  text,
+                  style: AppTypography.button.copyWith(color: _fg),
                 ),
               ],
-            ),
+            ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

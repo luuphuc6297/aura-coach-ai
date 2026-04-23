@@ -11,16 +11,13 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/constants/cloudinary_assets.dart';
-import '../../../core/constants/icon_constants.dart';
 import '../../../shared/widgets/cloud_image.dart';
-import '../../../shared/widgets/fluent_icon.dart';
 import '../../../shared/widgets/aura_logo.dart';
 import '../../../shared/widgets/swipe_dots.dart';
 import '../../auth/providers/auth_provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../my_library/providers/library_provider.dart';
 import '../../scenario/providers/scenario_provider.dart';
-import '../../../shared/widgets/clay_pressable.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -289,18 +286,15 @@ class _TopBar extends StatelessWidget {
         children: [
           AuraLogo(fontSize: 16, compact: true, color: accentColor),
           const Spacer(),
-          ClayPressable(
+          GestureDetector(
             onTap: () => context.push('/history'),
-            scaleDown: 0.90,
-            builder: (context, isPressed) {
-              return const SizedBox(
-                width: 44,
-                height: 44,
-                child: Center(
-                  child: FluentIcon(AppIcons.history, size: 22),
-                ),
-              );
-            },
+            child: const SizedBox(
+              width: 44,
+              height: 44,
+              child: Center(
+                child: Text('\u{1F4CB}', style: TextStyle(fontSize: 18)),
+              ),
+            ),
           ),
           const SizedBox(width: AppSpacing.sm),
           if (profile != null) ...[

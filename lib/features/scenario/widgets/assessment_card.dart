@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
-import '../../../core/constants/icon_constants.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/constants/cloudinary_assets.dart';
 import '../../../shared/widgets/cloud_image.dart';
-import '../../../shared/widgets/fluent_icon.dart';
 import '../models/assessment.dart';
-import '../../../core/theme/app_animations.dart';
-import '../../../shared/widgets/clay_pressable.dart';
 import 'score_circle.dart';
 import 'radar_score.dart';
 
@@ -196,7 +192,7 @@ class _AssessmentCardState extends State<AssessmentCard> {
         children: [
           Row(
             children: [
-              const FluentIcon(AppIcons.grammar, size: 14),
+              const Text('✏️', style: TextStyle(fontSize: 12)),
               const SizedBox(width: 6),
               Text(
                 'Correction',
@@ -223,12 +219,10 @@ class _AssessmentCardState extends State<AssessmentCard> {
   }
 
   Widget _buildBetterAlternativeSection() {
-    return ClayPressable(
+    return GestureDetector(
       onTap: () => setState(() => _showBetterWayExpanded = !_showBetterWayExpanded),
-      scaleDown: 0.98,
-      builder: (context, isPressed) {
-        return Container(
-          padding: const EdgeInsets.all(12),
+      child: Container(
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: AppColors.teal.withValues(alpha: 0.08),
           borderRadius: AppRadius.mdBorder,
@@ -245,7 +239,7 @@ class _AssessmentCardState extends State<AssessmentCard> {
               children: [
                 Row(
                   children: [
-                    const FluentIcon(AppIcons.hint, size: 14),
+                    const Text('💡', style: TextStyle(fontSize: 12)),
                     const SizedBox(width: 6),
                     Text(
                       'Better Way to Say It',
@@ -257,39 +251,27 @@ class _AssessmentCardState extends State<AssessmentCard> {
                     ),
                   ],
                 ),
-                AnimatedRotation(
-                  turns: _showBetterWayExpanded ? 0.5 : 0.0,
-                  duration: AppAnimations.durationMedium,
-                  child: const Icon(
-                    Icons.expand_more,
-                    size: 18,
-                    color: AppColors.teal,
-                  ),
+                Icon(
+                  _showBetterWayExpanded ? Icons.expand_less : Icons.expand_more,
+                  size: 18,
+                  color: AppColors.teal,
                 ),
               ],
             ),
-            AnimatedCrossFade(
-              firstChild: Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Text(
-                  widget.assessment.betterAlternative!,
-                  style: AppTypography.caption.copyWith(
-                    color: AppColors.warmDark,
-                    fontSize: 12,
-                    height: 1.4,
-                  ),
+            if (_showBetterWayExpanded) ...[
+              const SizedBox(height: 8),
+              Text(
+                widget.assessment.betterAlternative!,
+                style: AppTypography.caption.copyWith(
+                  color: AppColors.warmDark,
+                  fontSize: 12,
+                  height: 1.4,
                 ),
               ),
-              secondChild: const SizedBox.shrink(),
-              crossFadeState: _showBetterWayExpanded
-                  ? CrossFadeState.showFirst
-                  : CrossFadeState.showSecond,
-              duration: AppAnimations.durationMedium,
-            ),
+            ],
           ],
         ),
-        );
-      },
+      ),
     );
   }
 
@@ -299,16 +281,18 @@ class _AssessmentCardState extends State<AssessmentCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          RadarScore(
-            accuracyScore: widget.assessment.accuracyScore,
-            naturalnessScore: widget.assessment.naturalnessScore,
-            complexityScore: widget.assessment.complexityScore,
-            size: 130,
+          Center(
+            child: RadarScore(
+              accuracyScore: widget.assessment.accuracyScore,
+              naturalnessScore: widget.assessment.naturalnessScore,
+              complexityScore: widget.assessment.complexityScore,
+              size: 140,
+            ),
           ),
           const SizedBox(height: 16),
-          _buildAnalysisBlock(AppIcons.grammar, 'Grammar', widget.assessment.grammarAnalysis),
+          _buildAnalysisBlock('✏️', 'Grammar', widget.assessment.grammarAnalysis),
           const SizedBox(height: 10),
-          _buildAnalysisBlock(AppIcons.vocabulary, 'Vocabulary', widget.assessment.vocabularyAnalysis),
+          _buildAnalysisBlock('📖', 'Vocabulary', widget.assessment.vocabularyAnalysis),
           if (widget.assessment.improvements.isNotEmpty) ...[
             const SizedBox(height: 10),
             _buildImprovementsBlock(),
@@ -377,7 +361,7 @@ class _AssessmentCardState extends State<AssessmentCard> {
         children: [
           Row(
             children: [
-              FluentIcon(icon, size: 16),
+              Text(icon, style: const TextStyle(fontSize: 13)),
               const SizedBox(width: 6),
               Text(
                 title,
@@ -478,7 +462,7 @@ class _AssessmentCardState extends State<AssessmentCard> {
                           onTap: () => widget.onSaveImprovement?.call(imp),
                           child: const Padding(
                             padding: EdgeInsets.only(top: 2),
-                            child: FluentIcon(AppIcons.bookmark, size: 16),
+                            child: Text('\u{1F516}', style: TextStyle(fontSize: 14)),
                           ),
                         ),
                       ],
@@ -560,20 +544,14 @@ class _AssessmentCardState extends State<AssessmentCard> {
                     const SizedBox(width: 8),
                     Column(
                       children: [
-                        ClayPressable(
+                        GestureDetector(
                           onTap: () => widget.onListen?.call(toneVar.text),
-                          scaleDown: 0.85,
-                          builder: (context, isPressed) {
-                            return const FluentIcon(AppIcons.listen, size: 18);
-                          },
+                          child: Text('🔊', style: const TextStyle(fontSize: 14)),
                         ),
                         const SizedBox(height: 4),
-                        ClayPressable(
+                        GestureDetector(
                           onTap: () {},
-                          scaleDown: 0.85,
-                          builder: (context, isPressed) {
-                            return const FluentIcon(AppIcons.bookmark, size: 18);
-                          },
+                          child: Text('🔖', style: const TextStyle(fontSize: 14)),
                         ),
                       ],
                     ),
@@ -643,28 +621,25 @@ class _AssessmentCardState extends State<AssessmentCard> {
   }
 
   Widget _difficultyButton(String label, VoidCallback? onTap, Color color) {
-    return ClayPressable(
+    return GestureDetector(
       onTap: onTap,
-      scaleDown: 0.95,
-      builder: (context, isPressed) {
-        return Container(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            borderRadius: AppRadius.mdBorder,
-            border: Border.all(color: color.withValues(alpha: 0.4), width: 1.5),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: AppRadius.mdBorder,
+          border: Border.all(color: color.withValues(alpha: 0.4), width: 1.5),
+        ),
+        child: Text(
+          label,
+          textAlign: TextAlign.center,
+          style: AppTypography.caption.copyWith(
+            fontWeight: FontWeight.w600,
+            color: color,
+            fontSize: 11,
           ),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: AppTypography.caption.copyWith(
-              fontWeight: FontWeight.w600,
-              color: color,
-              fontSize: 11,
-            ),
-          ),
-        );
-      },
+        ),
+      ),
     );
   }
 

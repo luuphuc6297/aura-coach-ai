@@ -7,8 +7,6 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/theme/app_theme.dart';
-import 'core/theme/page_transitions.dart';
-import 'shared/widgets/bouncing_scroll_behavior.dart';
 import 'data/cache/scenario_cache.dart';
 import 'data/datasources/firebase_datasource.dart';
 import 'data/datasources/local_datasource.dart';
@@ -96,62 +94,14 @@ class _AuraCoachAppState extends State<AuraCoachApp> {
         return null;
       },
       routes: [
-        GoRoute(
-          path: '/splash',
-          pageBuilder: (_, state) => fadeTransitionPage(
-            key: state.pageKey,
-            child: const SplashScreen(),
-          ),
-        ),
-        GoRoute(
-          path: '/auth',
-          pageBuilder: (_, state) => fadeTransitionPage(
-            key: state.pageKey,
-            child: const AuthScreen(),
-          ),
-        ),
-        GoRoute(
-          path: '/onboarding',
-          pageBuilder: (_, state) => fadeTransitionPage(
-            key: state.pageKey,
-            child: const OnboardingScreen(),
-          ),
-        ),
-        GoRoute(
-          path: '/home',
-          pageBuilder: (_, state) => fadeTransitionPage(
-            key: state.pageKey,
-            child: const HomeScreen(),
-          ),
-        ),
-        GoRoute(
-          path: '/scenario',
-          pageBuilder: (_, state) => slideFadeTransitionPage(
-            key: state.pageKey,
-            child: const ScenarioChatScreen(),
-          ),
-        ),
-        GoRoute(
-          path: '/scenario/summary',
-          pageBuilder: (_, state) => slideFadeTransitionPage(
-            key: state.pageKey,
-            child: const SessionSummaryScreen(),
-          ),
-        ),
-        GoRoute(
-          path: '/history',
-          pageBuilder: (_, state) => slideFadeTransitionPage(
-            key: state.pageKey,
-            child: const ConversationHistoryScreen(),
-          ),
-        ),
-        GoRoute(
-          path: '/my-library',
-          pageBuilder: (_, state) => slideFadeTransitionPage(
-            key: state.pageKey,
-            child: const MyLibraryScreen(),
-          ),
-        ),
+        GoRoute(path: '/splash', builder: (_, __) => const SplashScreen()),
+        GoRoute(path: '/auth', builder: (_, __) => const AuthScreen()),
+        GoRoute(path: '/onboarding', builder: (_, __) => const OnboardingScreen()),
+        GoRoute(path: '/home', builder: (_, __) => const HomeScreen()),
+        GoRoute(path: '/scenario', builder: (_, __) => const ScenarioChatScreen()),
+        GoRoute(path: '/scenario/summary', builder: (_, __) => const SessionSummaryScreen()),
+        GoRoute(path: '/history', builder: (_, __) => const ConversationHistoryScreen()),
+        GoRoute(path: '/my-library', builder: (_, __) => const MyLibraryScreen()),
       ],
     );
   }
@@ -177,14 +127,11 @@ class _AuraCoachAppState extends State<AuraCoachApp> {
         ChangeNotifierProvider<LibraryProvider>.value(value: _libraryProvider),
         ChangeNotifierProvider<ScenarioProvider>.value(value: _scenarioProvider),
       ],
-      child: ScrollConfiguration(
-        behavior: const BouncingScrollBehavior(),
-        child: MaterialApp.router(
-          title: 'Aura Coach AI',
-          theme: AppTheme.light,
-          routerConfig: _router,
-          debugShowCheckedModeBanner: false,
-        ),
+      child: MaterialApp.router(
+        title: 'Aura Coach AI',
+        theme: AppTheme.light,
+        routerConfig: _router,
+        debugShowCheckedModeBanner: false,
       ),
     );
   }

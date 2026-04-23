@@ -1,23 +1,12 @@
 import 'package:flutter/material.dart';
-import '../../../core/constants/icon_constants.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_radius.dart';
-import '../../../shared/widgets/fluent_icon.dart';
-import '../../../shared/widgets/selectable_text_with_save.dart';
-import '../../../shared/widgets/clay_pressable.dart';
 
 class ChatBubbleUser extends StatelessWidget {
   final String text;
-  final VoidCallback? onListen;
-  final void Function(String selectedText, String fullContext)? onSaveSelection;
 
-  const ChatBubbleUser({
-    super.key,
-    required this.text,
-    this.onListen,
-    this.onSaveSelection,
-  });
+  const ChatBubbleUser({super.key, required this.text});
 
   @override
   Widget build(BuildContext context) {
@@ -47,48 +36,22 @@ class ChatBubbleUser extends StatelessWidget {
                   ),
                 ],
               ),
-              child: SelectableTextWithSave(
-                text: text,
+              child: Text(
+                text,
                 style: AppTypography.bodySm.copyWith(
                   color: Colors.white,
                   height: 1.5,
-                  letterSpacing: 0.15,
                 ),
-                onSave: onSaveSelection,
               ),
             ),
             const SizedBox(height: 4),
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                ClayPressable(
-                  onTap: onListen,
-                  scaleDown: 0.90,
-                  builder: (context, isPressed) {
-                    return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: AppColors.clayBeige,
-                        borderRadius: AppRadius.fullBorder,
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const FluentIcon(AppIcons.listen, size: 12),
-                          const SizedBox(width: 3),
-                          Text(
-                            'Listen',
-                            style: AppTypography.caption.copyWith(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.warmMuted,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
+                _tag('🔊 Listen', AppColors.clayBeige, AppColors.warmMuted),
+                const SizedBox(width: 6),
+                _tag('✓ Good pron.', AppColors.success.withValues(alpha: 0.15),
+                    AppColors.success),
               ],
             ),
           ],
