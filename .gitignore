@@ -46,3 +46,13 @@ app.*.map.json
 
 # Environment variables
 .env
+
+# Signing and secrets (CI/CD)
+android/key.properties
+android/app/upload-keystore.jks
+*.keystore
+*.jks
+*.p12
+*.mobileprovision
+ios/ExportOptions.plist
+ios/AuthKey_*.p8

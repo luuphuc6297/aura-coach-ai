@@ -19,6 +19,7 @@ class AuthProvider extends ChangeNotifier {
   AuthMethod? _loadingMethod;
   String? _errorMessage;
   bool _hasCompletedOnboarding = false;
+  bool _googleSignInInitialized = false;
 
   AuthProvider({
     required FirebaseAuth auth,
@@ -43,6 +44,7 @@ class AuthProvider extends ChangeNotifier {
   bool get hasCompletedOnboarding => _hasCompletedOnboarding;
 
   Future<void> initialize() async {
+    await _ensureGoogleSignInInitialized();
     _hasCompletedOnboarding = _localDatasource.isOnboardingComplete;
     if (currentUser != null && !_hasCompletedOnboarding) {
       try {
@@ -61,24 +63,36 @@ class AuthProvider extends ChangeNotifier {
     });
   }
 
+  Future<void> _ensureGoogleSignInInitialized() async {
+    if (_googleSignInInitialized) return;
+    try {
+      await _googleSignIn.initialize();
+      _googleSignInInitialized = true;
+    } catch (_) {}
+  }
+
   Future<void> signInWithGoogle() async {
     _loadingMethod = AuthMethod.google;
     _errorMessage = null;
     notifyListeners();
     try {
-      final googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) {
-        _loadingMethod = null;
-        notifyListeners();
-        return;
+      await _ensureGoogleSignInInitialized();
+      if (!_googleSignIn.supportsAuthenticate()) {
+        throw UnsupportedError(
+          'Google Sign-In is not supported on this platform.',
+        );
       }
-      final googleAuth = await googleUser.authentication;
+      final googleUser = await _googleSignIn.authenticate();
+      final googleAuth = googleUser.authentication;
       final credential = GoogleAuthProvider.credential(
         idToken: googleAuth.idToken,
-        accessToken: googleAuth.accessToken,
       );
       await _auth.signInWithCredential(credential);
       await _checkOnboarding();
+    } on GoogleSignInException catch (e) {
+      if (e.code != GoogleSignInExceptionCode.canceled) {
+        _errorMessage = friendlyAuthError(e);
+      }
     } catch (e) {
       _errorMessage = friendlyAuthError(e);
     }
@@ -144,7 +158,9 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> signOut() async {
     await _auth.signOut();
-    await _googleSignIn.signOut();
+    try {
+      await _googleSignIn.signOut();
+    } catch (_) {}
     await _localDatasource.clearAll();
     _hasCompletedOnboarding = false;
     notifyListeners();

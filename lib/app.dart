@@ -67,7 +67,7 @@ class _AuraCoachAppState extends State<AuraCoachApp> {
     super.initState();
     final firebaseAuth = FirebaseAuth.instance;
     final firestore = FirebaseFirestore.instance;
-    final googleSignIn = GoogleSignIn();
+    final googleSignIn = GoogleSignIn.instance;
     _firebaseDatasource = FirebaseDatasource(db: firestore);
     _geminiService = GeminiService();
     _localDatasource = LocalDatasource(prefs: widget.prefs);
