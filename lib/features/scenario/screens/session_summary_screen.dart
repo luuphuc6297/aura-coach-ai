@@ -7,6 +7,7 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_animations.dart';
+import '../../../core/theme/clay_palette.dart';
 import '../../../shared/widgets/celebration_overlay.dart';
 import '../../../shared/widgets/clay_pressable.dart';
 import '../providers/scenario_provider.dart';
@@ -52,7 +53,7 @@ class _SessionSummaryScreenState extends State<SessionSummaryScreen> {
     final scoreColor = _getScoreColor(avgScore);
 
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: context.clay.background,
       body: Stack(
         children: [
           SafeArea(
@@ -63,12 +64,12 @@ class _SessionSummaryScreenState extends State<SessionSummaryScreen> {
                   child: ListView(
                     padding: const EdgeInsets.all(16),
                     children: [
-                      _buildScoreHeader(summary, avgScore, scoreColor),
+                      _buildScoreHeader(context, summary, avgScore, scoreColor),
                       const SizedBox(height: 16),
-                      _buildStatsRow(summary),
+                      _buildStatsRow(context, summary),
                       const SizedBox(height: 16),
                       if (assessments.isNotEmpty)
-                        _buildAverageRadar(assessments),
+                        _buildAverageRadar(context, assessments),
                       const SizedBox(height: 24),
                       _buildActionButtons(context, provider),
                     ],
@@ -116,15 +117,15 @@ class _SessionSummaryScreenState extends State<SessionSummaryScreen> {
     );
   }
 
-  Widget _buildScoreHeader(
+  Widget _buildScoreHeader(BuildContext context,
       Map<String, dynamic> summary, double avgScore, Color color) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.clayWhite,
+        color: context.clay.surface,
         borderRadius: AppRadius.lgBorder,
-        border: Border.all(color: AppColors.clayBorder, width: 2),
-        boxShadow: AppShadows.lifted,
+        border: Border.all(color: context.clay.border, width: 2),
+        boxShadow: AppShadows.lifted(context),
       ),
       child: Column(
         children: [
@@ -145,34 +146,34 @@ class _SessionSummaryScreenState extends State<SessionSummaryScreen> {
           const SizedBox(height: 4),
           Text(
             '${summary['topic']} · ${summary['difficulty']}',
-            style: AppTypography.caption.copyWith(color: AppColors.warmMuted),
+            style: AppTypography.caption.copyWith(color: context.clay.textMuted),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildStatsRow(Map<String, dynamic> summary) {
+  Widget _buildStatsRow(BuildContext context, Map<String, dynamic> summary) {
     return Row(
       children: [
-        _statCard('⏱️', '${summary['duration']}m', 'Duration'),
+        _statCard(context, '⏱️', '${summary['duration']}m', 'Duration'),
         const SizedBox(width: 10),
-        _statCard('💬', '${summary['totalTurns']}', 'Turns'),
+        _statCard(context, '💬', '${summary['totalTurns']}', 'Turns'),
         const SizedBox(width: 10),
-        _statCard('📊', '#${summary['scenarioIndex']}', 'Scenario'),
+        _statCard(context, '📊', '#${summary['scenarioIndex']}', 'Scenario'),
       ],
     );
   }
 
-  Widget _statCard(String emoji, String value, String label) {
+  Widget _statCard(BuildContext context, String emoji, String value, String label) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
-          color: AppColors.clayWhite,
+          color: context.clay.surface,
           borderRadius: AppRadius.mdBorder,
-          border: Border.all(color: AppColors.clayBorder, width: 1.5),
-          boxShadow: AppShadows.soft,
+          border: Border.all(color: context.clay.border, width: 1.5),
+          boxShadow: AppShadows.soft(context),
         ),
         child: Column(
           children: [
@@ -185,7 +186,7 @@ class _SessionSummaryScreenState extends State<SessionSummaryScreen> {
             Text(
               label,
               style: AppTypography.caption.copyWith(
-                color: AppColors.warmMuted,
+                color: context.clay.textMuted,
                 fontSize: 11,
               ),
             ),
@@ -195,7 +196,7 @@ class _SessionSummaryScreenState extends State<SessionSummaryScreen> {
     );
   }
 
-  Widget _buildAverageRadar(List<AssessmentResult> assessments) {
+  Widget _buildAverageRadar(BuildContext context, List<AssessmentResult> assessments) {
     final avgAccuracy =
         assessments.map((a) => a.accuracyScore).reduce((a, b) => a + b) /
             assessments.length;
@@ -209,10 +210,10 @@ class _SessionSummaryScreenState extends State<SessionSummaryScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.clayWhite,
+        color: context.clay.surface,
         borderRadius: AppRadius.lgBorder,
-        border: Border.all(color: AppColors.clayBorder, width: 2),
-        boxShadow: AppShadows.soft,
+        border: Border.all(color: context.clay.border, width: 2),
+        boxShadow: AppShadows.soft(context),
       ),
       child: Column(
         children: [
@@ -247,16 +248,16 @@ class _SessionSummaryScreenState extends State<SessionSummaryScreen> {
               return Container(
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 decoration: BoxDecoration(
-                  color: AppColors.clayWhite,
+                  color: context.clay.surface,
                   borderRadius: AppRadius.mdBorder,
-                  border: Border.all(color: AppColors.clayBorder, width: 2),
+                  border: Border.all(color: context.clay.border, width: 2),
                 ),
                 child: Text(
                   'Back to Home',
                   textAlign: TextAlign.center,
                   style: AppTypography.labelMd.copyWith(
                     fontWeight: FontWeight.w700,
-                    color: AppColors.warmDark,
+                    color: context.clay.text,
                   ),
                 ),
               );
@@ -290,7 +291,7 @@ class _SessionSummaryScreenState extends State<SessionSummaryScreen> {
                   textAlign: TextAlign.center,
                   style: AppTypography.labelMd.copyWith(
                     fontWeight: FontWeight.w700,
-                    color: AppColors.warmDark,
+                    color: context.clay.text,
                   ),
                 ),
               );

@@ -3,14 +3,14 @@ import 'package:provider/provider.dart';
 import '../providers/onboarding_provider.dart';
 import '../../../core/constants/topic_constants.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/clay_palette.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
-import '../../../core/theme/app_shadows.dart';
-import '../../../core/theme/app_animations.dart';
+import '../../../l10n/app_loc_context.dart';
 import '../../../shared/widgets/app_icon.dart';
-import '../../../shared/widgets/clay_pressable.dart';
 import '../../../shared/widgets/staggered_entrance.dart';
+import '../../../shared/widgets/topic_chip.dart';
 
 class StepTopics extends StatelessWidget {
   const StepTopics({super.key});
@@ -24,60 +24,23 @@ class StepTopics extends StatelessWidget {
       child: StaggeredEntrance(
         children: [
           Text(
-            'Pick your interests',
+            context.loc.onboardingTopicsTitle,
             style: AppTypography.displayMd,
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            "We'll tailor scenarios to what matters to you",
-            style: AppTypography.bodyMd.copyWith(color: AppColors.warmMuted),
+            context.loc.onboardingTopicsSubtitle,
+            style: AppTypography.bodyMd.copyWith(color: context.clay.textMuted),
           ),
           const SizedBox(height: AppSpacing.xl),
           Wrap(
             spacing: AppSpacing.smd,
             runSpacing: AppSpacing.smd,
             children: topicOptions.map((topic) {
-              final isSelected = provider.selectedTopics.contains(topic.id);
-              return ClayPressable(
+              return TopicChip(
+                topic: topic,
+                isSelected: provider.selectedTopics.contains(topic.id),
                 onTap: () => provider.toggleTopic(topic.id),
-                builder: (context, isPressed) {
-                  return AnimatedContainer(
-                    duration: AppAnimations.durationMedium,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.lg,
-                      vertical: AppSpacing.smd,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? topic.color.withValues(alpha: 0.25)
-                          : topic.color.withValues(alpha: 0.10),
-                      borderRadius: AppRadius.fullBorder,
-                      border: Border.all(
-                        color: isSelected
-                            ? AppColors.warmDark
-                            : AppColors.clayBorder,
-                        width: 2,
-                      ),
-                      boxShadow: isSelected ? AppShadows.clayBold : [],
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        AppIcon(iconId: topic.iconId, size: 24),
-                        const SizedBox(width: AppSpacing.sm),
-                        Text(
-                          topic.label,
-                          style: AppTypography.labelMd.copyWith(
-                            fontSize: 13,
-                            color: AppColors.warmDark,
-                            fontWeight:
-                                isSelected ? FontWeight.w700 : FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
               );
             }).toList(),
           ),
@@ -89,9 +52,9 @@ class StepTopics extends StatelessWidget {
               vertical: AppSpacing.md,
             ),
             decoration: BoxDecoration(
-              color: AppColors.clayBeige,
+              color: context.clay.surfaceAlt,
               borderRadius: AppRadius.fullBorder,
-              border: Border.all(color: AppColors.clayBorder, width: 2),
+              border: Border.all(color: context.clay.border, width: 2),
             ),
             child: Row(
               children: [
@@ -99,10 +62,10 @@ class StepTopics extends StatelessWidget {
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Text(
-                    'Add your own topic...',
+                    context.loc.addYourOwnTopic,
                     style: AppTypography.bodyMd.copyWith(
                       fontSize: 14,
-                      color: AppColors.warmLight,
+                      color: context.clay.textFaint,
                     ),
                   ),
                 ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/theme/clay_palette.dart';
 
 /// Three-dot step indicator for the custom story flow
 /// (Topic → Character → Context). Active step is filled purple; completed
@@ -65,8 +66,8 @@ class _StepDot extends StatelessWidget {
       fill = AppColors.purple.withValues(alpha: 0.4);
       text = Colors.white;
     } else {
-      fill = AppColors.clayBeige;
-      text = AppColors.warmMuted;
+      fill = context.clay.surfaceAlt;
+      text = context.clay.textMuted;
     }
 
     return Row(
@@ -78,7 +79,7 @@ class _StepDot extends StatelessWidget {
             color: fill,
             shape: BoxShape.circle,
             border: Border.all(
-              color: isActive ? AppColors.purpleDeep : AppColors.clayBorder,
+              color: isActive ? AppColors.purpleDeep : context.clay.border,
               width: 1.5,
             ),
           ),
@@ -98,7 +99,7 @@ class _StepDot extends StatelessWidget {
           child: Text(
             label,
             style: AppTypography.caption.copyWith(
-              color: isActive ? AppColors.purpleDeep : AppColors.warmMuted,
+              color: isActive ? AppColors.purpleDeep : context.clay.textMuted,
               fontSize: 11,
               fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
             ),
@@ -125,7 +126,7 @@ class StoryStepperDivider extends StatelessWidget {
       width: 16,
       height: 2,
       decoration: BoxDecoration(
-        color: isActive ? AppColors.purpleDeep : AppColors.clayBorder,
+        color: isActive ? AppColors.purpleDeep : context.clay.border,
         borderRadius: AppRadius.fullBorder,
       ),
     );

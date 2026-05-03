@@ -4,6 +4,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_shadows.dart';
+import '../../../core/theme/clay_palette.dart';
 import '../../../shared/widgets/clay_pressable.dart';
 import '../../../shared/widgets/app_icon.dart';
 import '../models/scenario.dart';
@@ -27,9 +28,9 @@ class ContextPanel extends StatelessWidget {
         maxHeight: MediaQuery.of(context).size.height * 0.6,
       ),
       decoration: BoxDecoration(
-        color: AppColors.clayWhite,
+        color: context.clay.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        border: Border.all(color: AppColors.clayBorder, width: 2),
+        border: Border.all(color: context.clay.border, width: 2),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -39,7 +40,7 @@ class ContextPanel extends StatelessWidget {
             width: 36,
             height: 4,
             decoration: BoxDecoration(
-              color: AppColors.clayBorder,
+              color: context.clay.border,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -54,11 +55,11 @@ class ContextPanel extends StatelessWidget {
                   style: AppTypography.title,
                 ),
                 const SizedBox(height: 12),
-                _infoCard(),
+                _infoCard(context),
                 const SizedBox(height: 10),
-                _hintsCard(),
+                _hintsCard(context),
                 const SizedBox(height: 10),
-                _tipsCard(),
+                _tipsCard(context),
                 const SizedBox(height: 16),
               ],
             ),
@@ -68,14 +69,14 @@ class ContextPanel extends StatelessWidget {
     );
   }
 
-  Widget _infoCard() {
+  Widget _infoCard(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.clayWhite,
-        border: Border.all(color: AppColors.clayBorder, width: 2),
+        color: context.clay.surface,
+        border: Border.all(color: context.clay.border, width: 2),
         borderRadius: AppRadius.lgBorder,
-        boxShadow: AppShadows.soft,
+        boxShadow: AppShadows.soft(context),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -104,21 +105,21 @@ class ContextPanel extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             'Level: ${scenario.difficulty} · Topic: ${scenario.topic}',
-            style: AppTypography.caption.copyWith(color: AppColors.warmMuted),
+            style: AppTypography.caption.copyWith(color: context.clay.textMuted),
           ),
         ],
       ),
     );
   }
 
-  Widget _hintsCard() {
+  Widget _hintsCard(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.clayWhite,
-        border: Border.all(color: AppColors.clayBorder, width: 2),
+        color: context.clay.surface,
+        border: Border.all(color: context.clay.border, width: 2),
         borderRadius: AppRadius.lgBorder,
-        boxShadow: AppShadows.soft,
+        boxShadow: AppShadows.soft(context),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -151,7 +152,7 @@ class ContextPanel extends StatelessWidget {
                 child: Text(
                   scenario.hints.toFlatList()[i],
                   style: AppTypography.caption.copyWith(
-                    color: AppColors.warmMuted,
+                    color: context.clay.textMuted,
                     fontSize: 12,
                   ),
                 ),
@@ -178,14 +179,14 @@ class ContextPanel extends StatelessWidget {
     );
   }
 
-  Widget _tipsCard() {
+  Widget _tipsCard(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.clayWhite,
-        border: Border.all(color: AppColors.clayBorder, width: 2),
+        color: context.clay.surface,
+        border: Border.all(color: context.clay.border, width: 2),
         borderRadius: AppRadius.lgBorder,
-        boxShadow: AppShadows.soft,
+        boxShadow: AppShadows.soft(context),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -209,7 +210,7 @@ class ContextPanel extends StatelessWidget {
             Text(
               'No vocabulary prep for this scenario.',
               style: AppTypography.caption.copyWith(
-                color: AppColors.warmLight,
+                color: context.clay.textFaint,
                 fontSize: 12,
                 fontStyle: FontStyle.italic,
               ),
@@ -220,7 +221,7 @@ class ContextPanel extends StatelessWidget {
                   child: Text(
                     '• $word',
                     style: AppTypography.caption.copyWith(
-                      color: AppColors.warmMuted,
+                      color: context.clay.textMuted,
                       fontSize: 12,
                       height: 1.6,
                     ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
+import '../../../core/theme/clay_palette.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../shared/widgets/clay_pressable.dart';
@@ -42,7 +43,7 @@ class StoryHeroCard extends StatelessWidget {
               colors: gradient,
             ),
             borderRadius: AppRadius.xlBorder,
-            boxShadow: AppShadows.lifted,
+            boxShadow: AppShadows.lifted(context),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -226,9 +227,9 @@ class _BeginPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.clayWhite,
+        color: context.clay.surface,
         borderRadius: AppRadius.fullBorder,
-        boxShadow: AppShadows.card,
+        boxShadow: AppShadows.card(context),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

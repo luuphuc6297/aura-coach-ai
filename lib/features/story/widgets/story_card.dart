@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
+import '../../../core/theme/clay_palette.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../shared/widgets/clay_pressable.dart';
@@ -35,10 +36,10 @@ class StoryCard extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: AppColors.clayWhite,
+            color: context.clay.surface,
             borderRadius: AppRadius.lgBorder,
-            border: Border.all(color: AppColors.clayBorder, width: 1.5),
-            boxShadow: AppShadows.card,
+            border: Border.all(color: context.clay.border, width: 1.5),
+            boxShadow: AppShadows.card(context),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -79,7 +80,7 @@ class StoryCard extends StatelessWidget {
               Text(
                 isLoading ? 'Starting…' : story.title,
                 style: AppTypography.cardBody.copyWith(
-                  color: AppColors.warmDark,
+                  color: context.clay.text,
                   fontSize: 14,
                 ),
                 maxLines: 2,
@@ -89,7 +90,7 @@ class StoryCard extends StatelessWidget {
               Text(
                 story.character.name,
                 style: AppTypography.caption.copyWith(
-                  color: AppColors.warmMuted,
+                  color: context.clay.textMuted,
                   fontSize: 11,
                 ),
                 maxLines: 1,

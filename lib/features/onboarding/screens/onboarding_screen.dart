@@ -10,7 +10,7 @@ import '../widgets/step_topics.dart';
 import '../../../shared/widgets/clay_button.dart';
 import '../../../shared/widgets/progress_dots.dart';
 import '../../../shared/widgets/error_banner.dart';
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/clay_palette.dart';
 import '../../../core/theme/app_animations.dart';
 import '../../auth/providers/auth_provider.dart';
 
@@ -52,7 +52,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         localDatasource: context.read(),
       ),
       child: Scaffold(
-        backgroundColor: AppColors.cream,
+        backgroundColor: context.clay.background,
         body: SafeArea(
           child: Consumer<OnboardingProvider>(
             builder: (context, provider, _) {

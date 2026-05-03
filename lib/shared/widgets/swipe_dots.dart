@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_animations.dart';
+import '../../core/theme/clay_palette.dart';
 
 class SwipeDots extends StatelessWidget {
   final int total;
@@ -42,7 +43,7 @@ class SwipeDots extends StatelessWidget {
           ),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(dotSize / 2),
-            color: isActive ? activeColor : AppColors.clayBorder,
+            color: isActive ? activeColor : context.clay.border,
           ),
         );
       }),

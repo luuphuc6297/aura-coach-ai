@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/icon_constants.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/clay_palette.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_shadows.dart';
@@ -39,19 +40,19 @@ class _LessonCardState extends State<LessonCard>
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
       decoration: BoxDecoration(
-        color: AppColors.clayWhite,
+        color: context.clay.surface,
         border: Border(
-          bottom: BorderSide(color: AppColors.clayBorder, width: 1.5),
+          bottom: BorderSide(color: context.clay.border, width: 1.5),
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          _buildSentenceBlock(),
+          _buildSentenceBlock(context),
           if (widget.situation.isNotEmpty) ...[
             const SizedBox(height: 10),
-            _buildCollapsibleSituation(),
+            _buildCollapsibleSituation(context),
           ],
           const SizedBox(height: 12),
           _buildActionRow(),
@@ -60,17 +61,17 @@ class _LessonCardState extends State<LessonCard>
     );
   }
 
-  Widget _buildSentenceBlock() {
+  Widget _buildSentenceBlock(BuildContext context) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
       decoration: BoxDecoration(
-        color: AppColors.cream,
+        color: context.clay.background,
         borderRadius: AppRadius.mdBorder,
         border: Border(
           left: BorderSide(color: AppColors.teal, width: 4),
         ),
-        boxShadow: AppShadows.soft,
+        boxShadow: AppShadows.soft(context),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -178,7 +179,7 @@ class _LessonCardState extends State<LessonCard>
     );
   }
 
-  Widget _buildCollapsibleSituation() {
+  Widget _buildCollapsibleSituation(BuildContext context) {
     return ClayPressable(
       onTap: () => setState(() => _situationExpanded = !_situationExpanded),
       scaleDown: 0.98,
@@ -187,7 +188,7 @@ class _LessonCardState extends State<LessonCard>
           width: double.infinity,
           padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
           decoration: BoxDecoration(
-            color: AppColors.cream,
+            color: context.clay.background,
             borderRadius: AppRadius.mdBorder,
             border: Border(
               left: BorderSide(color: AppColors.teal, width: 3),
@@ -225,7 +226,7 @@ class _LessonCardState extends State<LessonCard>
                     widget.situation,
                     // 13/600 — Card body tier
                     style: AppTypography.cardBody.copyWith(
-                      color: AppColors.warmMuted,
+                      color: context.clay.textMuted,
                       height: 1.6,
                       fontStyle: FontStyle.italic,
                     ),

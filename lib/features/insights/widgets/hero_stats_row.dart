@@ -3,6 +3,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/theme/clay_palette.dart';
 import '../../../shared/widgets/clay_card.dart';
 
 /// Three-up stats row: streak / practice minutes / sessions. Each tile uses
@@ -120,7 +121,7 @@ class _StatTile extends StatelessWidget {
           Text(
             label,
             style: AppTypography.caption.copyWith(
-              color: AppColors.warmMuted,
+              color: context.clay.textMuted,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.4,
             ),

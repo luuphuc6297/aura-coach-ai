@@ -14,6 +14,12 @@ class LibraryProvider extends ChangeNotifier {
   // Tracks vocabulary items currently generating an AI illustration so the
   // card can render a shimmer without firing duplicate requests.
   final Set<String> _generatingImageIds = {};
+  // Tracks vocabulary items currently fetching dictionary enrichment
+  // (explanation / POS / examples). Used by the card to show the
+  // "Loading explanation..." hint *only while a request is actually
+  // in flight* — items whose enrichment finished or was never queued
+  // do not show the loading text.
+  final Set<String> _enrichingItemIds = {};
   bool _isLoading = false;
   String? _error;
   String _searchQuery = '';
@@ -25,6 +31,30 @@ class LibraryProvider extends ChangeNotifier {
   // Unfiltered view — needed by callers that check membership regardless of
   // the active filter state (e.g., "is this word already saved?").
   List<SavedItem> get allItems => List.unmodifiable(_items);
+
+  /// Locates a vocabulary saved item by its English label, case-insensitive.
+  /// Used by the mind-map canvas to render a "saved" star on word nodes and
+  /// by the double-tap toggle to find what to remove.
+  SavedItem? findVocabByLabel(String label) {
+    final needle = label.trim().toLowerCase();
+    if (needle.isEmpty) return null;
+    for (final item in _items) {
+      if (item.type != 'vocabulary') continue;
+      if (item.correction.trim().toLowerCase() == needle) return item;
+    }
+    return null;
+  }
+
+  /// Compact set of every saved-vocabulary label (lowercased) — perfect for
+  /// `context.select` so a widget tree only rebuilds when membership changes,
+  /// not on every library mutation.
+  Set<String> get savedVocabLabels {
+    return {
+      for (final item in _items)
+        if (item.type == 'vocabulary')
+          item.correction.trim().toLowerCase(),
+    };
+  }
   bool get isLoading => _isLoading;
   String? get error => _error;
   String get searchQuery => _searchQuery;
@@ -47,6 +77,7 @@ class LibraryProvider extends ChangeNotifier {
   int get categoryCount => categories.length;
 
   bool isGeneratingImage(String itemId) => _generatingImageIds.contains(itemId);
+  bool isEnrichingItem(String itemId) => _enrichingItemIds.contains(itemId);
 
   LibraryProvider({
     required FirebaseDatasource firebase,
@@ -154,23 +185,51 @@ class LibraryProvider extends ChangeNotifier {
   }
 
   /// Fire-and-forget pass that fills in missing explanations for vocabulary
-  /// items that pre-date the dictionary feature. Image generation is
-  /// intentionally excluded — AI illustrations are opt-in and gated behind
-  /// the paid tier, so we never auto-generate them on load.
+  /// items that pre-date the dictionary feature. ONLY items with no
+  /// explanation at all are enriched — we never re-enrich just to pad
+  /// example counts, because (a) it spends Gemini quota on data the user
+  /// already has and (b) it risks overwriting a sourced example with a
+  /// hallucinated one.
+  ///
+  /// Capped at 5 enrichments per load with a 500ms delay between calls to
+  /// avoid Gemini rate-limit bursts when a large legacy library loads.
   Future<void> _backfillVocabularyEnrichment() async {
+    const maxPerLoad = 5;
+    var count = 0;
     for (final item in List<SavedItem>.from(_items)) {
       if (item.type != 'vocabulary') continue;
-      if (item.explanation == null) {
-        await _enrichVocabularyItem(item);
-        await Future.delayed(const Duration(milliseconds: 200));
-      }
+      if (item.explanation != null) continue;
+      if (count >= maxPerLoad) break;
+      await _runEnrichment(item);
+      count++;
+      await Future.delayed(const Duration(milliseconds: 500));
     }
   }
 
-  Future<void> addItem(SavedItem item) async {
+  /// Wraps [_enrichVocabularyItem] with the `_enrichingItemIds` lifecycle
+  /// so the card can render the "Loading explanation..." hint only while
+  /// a request is actively in flight.
+  Future<void> _runEnrichment(SavedItem item) async {
+    if (_enrichingItemIds.contains(item.id)) return;
+    _enrichingItemIds.add(item.id);
+    notifyListeners();
+    try {
+      await _enrichVocabularyItem(item);
+    } finally {
+      _enrichingItemIds.remove(item.id);
+      notifyListeners();
+    }
+  }
+
+  /// Inserts a saved item into the library. Returns `true` if the item was
+  /// accepted, `false` if it was skipped because a duplicate (same original +
+  /// correction) already exists. Callers that need to know the real outcome
+  /// (e.g. flashcard suggestions counting how many cards were actually added)
+  /// MUST check the return value rather than assuming success.
+  Future<bool> addItem(SavedItem item) async {
     if (_items.any((i) =>
         i.original == item.original && i.correction == item.correction)) {
-      return;
+      return false;
     }
     _items.insert(0, item);
     notifyListeners();
@@ -185,10 +244,11 @@ class LibraryProvider extends ChangeNotifier {
       debugPrint('LibraryProvider: uid null, queued item ${item.id} for save');
     }
     if (item.type == 'vocabulary' && item.explanation == null) {
-      _enrichVocabularyItem(item);
+      _runEnrichment(item);
     }
     // Illustration generation is intentionally not triggered here — it's a
     // paid, opt-in action the user initiates from the item card.
+    return true;
   }
 
   /// Public entry point used by the library UI when a learner taps
@@ -226,6 +286,9 @@ class LibraryProvider extends ChangeNotifier {
       final enriched = current.copyWith(
         explanation: dictData.explanation,
         partOfSpeech: dictData.partOfSpeech,
+        pronunciation: dictData.pronunciation,
+        synonyms: dictData.synonyms,
+        contextUsage: dictData.contextUsage,
         examples:
             dictData.examples.map((e) => {'en': e.en, 'vn': e.vn}).toList(),
       );

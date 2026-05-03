@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/theme/clay_palette.dart';
 
 /// Circular fluency gauge used on the Profile preview card and planned for
 /// the full Insights dashboard. Renders a two-tone arc: background ring in
@@ -13,7 +14,10 @@ class FluencyRing extends StatelessWidget {
   final double size;
   final double strokeWidth;
   final Color progressColor;
-  final Color backgroundColor;
+  /// Optional override for the unfilled track. Falls back to
+  /// `context.clay.surfaceAlt` so the ring stays readable in both light and
+  /// dark themes.
+  final Color? backgroundColor;
   final Widget? centerLabel;
 
   const FluencyRing({
@@ -22,13 +26,14 @@ class FluencyRing extends StatelessWidget {
     this.size = 80,
     this.strokeWidth = 8,
     this.progressColor = AppColors.tealDeep,
-    this.backgroundColor = AppColors.clayBeige,
+    this.backgroundColor,
     this.centerLabel,
   });
 
   @override
   Widget build(BuildContext context) {
     final clamped = score.clamp(0, 100).toDouble();
+    final resolvedBackground = backgroundColor ?? context.clay.surfaceAlt;
     return SizedBox(
       width: size,
       height: size,
@@ -36,7 +41,7 @@ class FluencyRing extends StatelessWidget {
         painter: _FluencyRingPainter(
           progress: clamped / 100,
           progressColor: progressColor,
-          backgroundColor: backgroundColor,
+          backgroundColor: resolvedBackground,
           strokeWidth: strokeWidth,
         ),
         child: Center(
@@ -44,7 +49,7 @@ class FluencyRing extends StatelessWidget {
               Text(
                 clamped == 0 ? '—' : clamped.round().toString(),
                 style: AppTypography.h2.copyWith(
-                  color: AppColors.warmDark,
+                  color: context.clay.text,
                   fontWeight: FontWeight.w800,
                 ),
               ),

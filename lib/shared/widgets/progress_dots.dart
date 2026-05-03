@@ -3,6 +3,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_animations.dart';
+import '../../core/theme/clay_palette.dart';
 
 class ProgressDots extends StatelessWidget {
   final int totalSteps;
@@ -31,7 +32,7 @@ class ProgressDots extends StatelessWidget {
             height: AppSpacing.sm,
             decoration: BoxDecoration(
               color:
-                  (isActive || isDone) ? AppColors.teal : AppColors.clayBorder,
+                  (isActive || isDone) ? AppColors.teal : context.clay.border,
               borderRadius: AppRadius.xsBorder,
             ),
           );

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
-import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_radius.dart';
+import '../../core/theme/clay_palette.dart';
 
 class ShimmerPlaceholder extends StatelessWidget {
   final double width;
@@ -17,14 +17,15 @@ class ShimmerPlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.clay;
     return Shimmer.fromColors(
-      baseColor: AppColors.clayBeige,
-      highlightColor: AppColors.clayWhite,
+      baseColor: palette.surfaceAlt,
+      highlightColor: palette.surface,
       child: Container(
         width: width,
         height: height,
         decoration: BoxDecoration(
-          color: AppColors.clayBeige,
+          color: palette.surfaceAlt,
           borderRadius: borderRadius ?? AppRadius.smBorder,
         ),
       ),

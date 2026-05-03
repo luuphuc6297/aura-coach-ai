@@ -16,6 +16,8 @@ void registerFeaturePainters(Map<String, IconPainterFn> registry) {
   registry['feat_stack'] = _paintStack;
   registry['feat_chartUp'] = _paintChartUp;
   registry['feat_notepad'] = _paintNotepad;
+  registry['feat_describe'] = _paintDescribe;
+  registry['feat_compare'] = _paintCompare;
 }
 
 // Theater masks — happy (teal) overlapping sad (purple). Subtle z-order toggle.
@@ -601,6 +603,160 @@ void _paintChartUp(Canvas canvas, Size size, double t, Color? color) {
     ..color = AppColors.white.withValues(alpha: 0.70)
     ..style = PaintingStyle.fill;
   canvas.drawCircle(lastDrawn, s * 0.028, dotRimPaint);
+}
+
+// Describe Word — speech bubble with question mark + "abc" strokes. Pulses gently.
+void _paintDescribe(Canvas canvas, Size size, double t, Color? color) {
+  final s = size.width;
+  final primaryColor = color ?? AppColors.coral;
+  final pulse = (math.sin(t * 2 * math.pi) + 1) / 2;
+
+  // Speech bubble body
+  final bubblePaint = Paint()
+    ..color = primaryColor
+    ..style = PaintingStyle.fill;
+
+  final bubbleRect = RRect.fromRectAndRadius(
+    Rect.fromLTWH(s * 0.12, s * 0.16, s * 0.76, s * 0.54),
+    Radius.circular(s * 0.14),
+  );
+  canvas.drawRRect(bubbleRect, bubblePaint);
+
+  // Tail (bottom-left)
+  final tailPath = Path()
+    ..moveTo(s * 0.28, s * 0.68)
+    ..lineTo(s * 0.20, s * 0.84)
+    ..lineTo(s * 0.40, s * 0.70)
+    ..close();
+  canvas.drawPath(tailPath, bubblePaint);
+
+  // Inner question mark (white)
+  final qPaint = Paint()
+    ..color = AppColors.white.withValues(alpha: 0.95)
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = s * 0.07
+    ..strokeCap = StrokeCap.round
+    ..strokeJoin = StrokeJoin.round;
+
+  final qPath = Path()
+    ..moveTo(s * 0.40, s * 0.30)
+    ..cubicTo(s * 0.40, s * 0.22, s * 0.62, s * 0.22, s * 0.62, s * 0.32)
+    ..cubicTo(s * 0.62, s * 0.40, s * 0.50, s * 0.42, s * 0.50, s * 0.50);
+  canvas.drawPath(qPath, qPaint);
+
+  // Dot under question mark (pulse)
+  final dotPaint = Paint()
+    ..color = AppColors.white.withValues(alpha: 0.85 + pulse * 0.15)
+    ..style = PaintingStyle.fill;
+  canvas.drawCircle(Offset(s * 0.50, s * 0.60), s * 0.045, dotPaint);
+}
+
+// Compare Words — balance scale with two pans (left & right). Tilts slightly.
+void _paintCompare(Canvas canvas, Size size, double t, Color? color) {
+  final s = size.width;
+  final primaryColor = color ?? AppColors.coral;
+  final tilt = math.sin(t * 2 * math.pi) * 0.06;
+
+  // Center pillar + base
+  final pillarPaint = Paint()
+    ..color = AppColors.warmDark
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = s * 0.05
+    ..strokeCap = StrokeCap.round;
+  canvas.drawLine(
+      Offset(s * 0.50, s * 0.26), Offset(s * 0.50, s * 0.78), pillarPaint);
+
+  // Base
+  final basePaint = Paint()
+    ..color = AppColors.warmDark
+    ..style = PaintingStyle.fill;
+  canvas.drawRRect(
+    RRect.fromRectAndRadius(
+      Rect.fromLTWH(s * 0.30, s * 0.78, s * 0.40, s * 0.06),
+      Radius.circular(s * 0.02),
+    ),
+    basePaint,
+  );
+
+  // Crossbar (tilts)
+  canvas.save();
+  canvas.translate(s * 0.50, s * 0.26);
+  canvas.rotate(tilt);
+
+  final barPaint = Paint()
+    ..color = AppColors.warmDark
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = s * 0.05
+    ..strokeCap = StrokeCap.round;
+  canvas.drawLine(Offset(-s * 0.30, 0), Offset(s * 0.30, 0), barPaint);
+
+  // Left pan
+  final panLPaint = Paint()
+    ..color = primaryColor
+    ..style = PaintingStyle.fill;
+  final panLPath = Path()
+    ..moveTo(-s * 0.34, 0)
+    ..lineTo(-s * 0.18, 0)
+    ..lineTo(-s * 0.14, s * 0.12)
+    ..lineTo(-s * 0.38, s * 0.12)
+    ..close();
+  canvas.drawPath(panLPath, panLPaint);
+
+  // Right pan
+  final panRPaint = Paint()
+    ..color = primaryColor.withValues(alpha: 0.78)
+    ..style = PaintingStyle.fill;
+  final panRPath = Path()
+    ..moveTo(s * 0.18, 0)
+    ..lineTo(s * 0.34, 0)
+    ..lineTo(s * 0.38, s * 0.12)
+    ..lineTo(s * 0.14, s * 0.12)
+    ..close();
+  canvas.drawPath(panRPath, panRPaint);
+
+  canvas.restore();
+
+  // A / B letters on pans (hinting word comparison)
+  final textPaint = Paint()
+    ..color = AppColors.white.withValues(alpha: 0.90)
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = s * 0.025
+    ..strokeCap = StrokeCap.round;
+  // "A" on left pan (triangle + crossbar)
+  final leftX = s * 0.24 + tilt * s * 0.30;
+  final leftY = s * 0.34 + tilt * s * 0.04;
+  canvas.drawLine(
+      Offset(leftX - s * 0.04, leftY + s * 0.04), Offset(leftX, leftY - s * 0.04), textPaint);
+  canvas.drawLine(
+      Offset(leftX, leftY - s * 0.04), Offset(leftX + s * 0.04, leftY + s * 0.04), textPaint);
+  canvas.drawLine(Offset(leftX - s * 0.025, leftY + s * 0.015),
+      Offset(leftX + s * 0.025, leftY + s * 0.015), textPaint);
+
+  // "B" on right pan (two arcs)
+  final rightX = s * 0.76 - tilt * s * 0.30;
+  final rightY = s * 0.34 - tilt * s * 0.04;
+  canvas.drawLine(Offset(rightX - s * 0.02, rightY - s * 0.04),
+      Offset(rightX - s * 0.02, rightY + s * 0.04), textPaint);
+  canvas.drawArc(
+      Rect.fromCenter(
+        center: Offset(rightX, rightY - s * 0.02),
+        width: s * 0.05,
+        height: s * 0.04,
+      ),
+      -math.pi / 2,
+      math.pi,
+      false,
+      textPaint);
+  canvas.drawArc(
+      Rect.fromCenter(
+        center: Offset(rightX, rightY + s * 0.02),
+        width: s * 0.05,
+        height: s * 0.04,
+      ),
+      -math.pi / 2,
+      math.pi,
+      false,
+      textPaint);
 }
 
 // Notepad — rect with lines + small pencil on right. Pencil writes.

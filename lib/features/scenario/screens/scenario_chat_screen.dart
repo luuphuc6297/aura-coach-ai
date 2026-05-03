@@ -6,6 +6,8 @@ import '../../../core/services/tts_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_animations.dart';
+import '../../../core/theme/clay_palette.dart';
+import '../../my_library/providers/dictionary_quota_guard.dart';
 import '../../my_library/providers/library_provider.dart';
 import '../../my_library/models/saved_item.dart';
 import '../providers/scenario_provider.dart';
@@ -17,6 +19,7 @@ import '../widgets/chat_bubble_ai.dart';
 import '../widgets/assessment_card.dart';
 import '../widgets/chat_input_bar.dart';
 import '../widgets/context_panel.dart';
+import '../../../l10n/app_loc_context.dart';
 import '../../../shared/widgets/message_entrance.dart';
 import '../../../shared/widgets/end_session_dialog.dart';
 import '../../../shared/widgets/thinking_indicator.dart';
@@ -99,8 +102,8 @@ class ScenarioChatScreen extends StatelessWidget {
     final confirmed = await showEndSessionDialog(
       context: context,
       accentColor: AppColors.teal,
-      stats: _buildStats(provider),
-      title: 'End this session?',
+      stats: _buildStats(context, provider),
+      title: context.loc.scenarioEndSessionTitle,
     );
     if (!context.mounted) return;
 
@@ -120,7 +123,8 @@ class ScenarioChatScreen extends StatelessWidget {
     }
   }
 
-  EndSessionStats _buildStats(ScenarioProvider provider) {
+  EndSessionStats _buildStats(BuildContext context, ScenarioProvider provider) {
+    final loc = context.loc;
     final turns = provider.totalTurns;
     final avg = provider.averageScore;
     final duration = provider.sessionDuration;
@@ -129,14 +133,15 @@ class ScenarioChatScreen extends StatelessWidget {
     final limit = provider.roleplayLimitToday;
     final remainingLabel = limit == -1
         ? null
-        : '${(limit - usedToday).clamp(0, limit)}/$limit sessions left today';
+        : loc.endSessionScenarioQuotaRemaining(
+            (limit - usedToday).clamp(0, limit), limit);
 
     String? highlight;
     final best = _findBestUserLine(provider.messages);
     if (best != null) {
       final preview =
           best.text.length > 48 ? '${best.text.substring(0, 48)}…' : best.text;
-      highlight = 'Best line: "$preview"';
+      highlight = loc.endSessionBestLine(preview);
     }
 
     return EndSessionStats(
@@ -175,7 +180,7 @@ class ScenarioChatScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: context.clay.background,
       body: SafeArea(
         bottom: false,
         child: Consumer<ScenarioProvider>(
@@ -185,14 +190,14 @@ class ScenarioChatScreen extends StatelessWidget {
               return AnimatedSwitcher(
                 duration: AppAnimations.durationNormal,
                 child: provider.isLoading
-                    ? const Center(
-                        key: ValueKey('loading'),
+                    ? Center(
+                        key: const ValueKey('loading'),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            CircularProgressIndicator(),
-                            SizedBox(height: 16),
-                            Text('Preparing your scenario...'),
+                            const CircularProgressIndicator(),
+                            const SizedBox(height: 16),
+                            Text(context.loc.scenarioLoadingPreparing),
                           ],
                         ),
                       )
@@ -202,15 +207,16 @@ class ScenarioChatScreen extends StatelessWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              provider.error ?? 'No scenario loaded',
+                              provider.error ??
+                                  context.loc.scenarioErrorNoScenarioLoaded,
                               textAlign: TextAlign.center,
                               style: AppTypography.bodyMd
-                                  .copyWith(color: AppColors.warmMuted),
+                                  .copyWith(color: context.clay.textMuted),
                             ),
                             const SizedBox(height: 16),
                             TextButton(
                               onPressed: () => context.go('/home'),
-                              child: const Text('Back to Home'),
+                              child: Text(context.loc.scenarioErrorBackToHome),
                             ),
                           ],
                         ),
@@ -294,10 +300,13 @@ class ScenarioChatScreen extends StatelessWidget {
     );
   }
 
-  void _saveSelectionToDictionary(
-      BuildContext context, String selectedText, String fullContext) {
+  Future<void> _saveSelectionToDictionary(
+      BuildContext context, String selectedText, String fullContext) async {
+    final allowed = await ensureDictionaryQuota(context);
+    if (!allowed) return;
+    if (!context.mounted) return;
     final libraryProvider = context.read<LibraryProvider>();
-    libraryProvider.addItem(SavedItem(
+    await libraryProvider.addItem(SavedItem(
       id: const Uuid().v4(),
       original: selectedText,
       correction: selectedText,
@@ -309,10 +318,14 @@ class ScenarioChatScreen extends StatelessWidget {
       interval: 0,
       reviewCount: 0,
       nextReviewDate: DateTime.now().millisecondsSinceEpoch.toDouble(),
+      sourceTag: 'scenario',
     ));
+    if (!context.mounted) return;
+    await recordDictionaryUsage(context);
+    if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Saved: $selectedText'),
+        content: Text(context.loc.chatSavedSnack(selectedText)),
         duration: const Duration(seconds: 2),
         backgroundColor: AppColors.teal,
       ),
@@ -326,15 +339,17 @@ class ScenarioChatScreen extends StatelessWidget {
       case MessageType.system:
         return ChatBubbleAi(
           text: msg.text,
-          onSaveSelection: (selectedText, fullContext) =>
-              _saveSelectionToDictionary(context, selectedText, fullContext),
+          onSaveSelection: (selectedText, fullContext) {
+            _saveSelectionToDictionary(context, selectedText, fullContext);
+          },
         );
       case MessageType.user:
         return ChatBubbleUser(
           text: msg.text,
           onListen: () => _tts.speakEnglish(msg.text),
-          onSaveSelection: (selectedText, fullContext) =>
-              _saveSelectionToDictionary(context, selectedText, fullContext),
+          onSaveSelection: (selectedText, fullContext) {
+            _saveSelectionToDictionary(context, selectedText, fullContext);
+          },
         );
       case MessageType.assessment:
         // Belt-and-suspenders: the resume path drops orphan assessment turns,
@@ -357,24 +372,34 @@ class ScenarioChatScreen extends StatelessWidget {
               await provider.startNewScenario(difficulty: 'harder');
             },
             onListen: (text) => _tts.speakEnglish(text),
-            onSaveImprovement: (imp) {
-              libraryProvider.addItem(SavedItem.fromImprovement(
+            onSaveImprovement: (imp) async {
+              final allowed = await ensureDictionaryQuota(context);
+              if (!allowed) return;
+              if (!context.mounted) return;
+              await libraryProvider.addItem(SavedItem.fromImprovement(
                 id: const Uuid().v4(),
                 original: imp.original,
                 correction: imp.correction,
                 type: imp.type.value,
                 context: '',
+                sourceTag: 'scenario',
               ));
+              if (!context.mounted) return;
+              await recordDictionaryUsage(context);
+              if (!context.mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Saved: ${imp.correction}'),
+                  content: Text(context.loc.chatSavedSnack(imp.correction)),
                   duration: const Duration(seconds: 2),
                   backgroundColor: AppColors.teal,
                 ),
               );
             },
-            onSaveVocabulary: (vocab) {
-              libraryProvider.addItem(SavedItem(
+            onSaveVocabulary: (vocab) async {
+              final allowed = await ensureDictionaryQuota(context);
+              if (!allowed) return;
+              if (!context.mounted) return;
+              await libraryProvider.addItem(SavedItem(
                 id: const Uuid().v4(),
                 original: vocab.word,
                 correction: vocab.word,
@@ -392,10 +417,14 @@ class ScenarioChatScreen extends StatelessWidget {
                       ],
                 nextReviewDate:
                     DateTime.now().millisecondsSinceEpoch.toDouble(),
+                sourceTag: 'scenario',
               ));
+              if (!context.mounted) return;
+              await recordDictionaryUsage(context);
+              if (!context.mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Saved: ${vocab.word}'),
+                  content: Text(context.loc.chatSavedSnack(vocab.word)),
                   duration: const Duration(seconds: 2),
                   backgroundColor: AppColors.purple,
                 ),

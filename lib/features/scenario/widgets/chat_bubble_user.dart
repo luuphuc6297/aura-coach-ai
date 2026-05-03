@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/icon_constants.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/clay_palette.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../shared/widgets/app_icon.dart';
@@ -55,7 +56,7 @@ class ChatBubbleUser extends StatelessWidget {
               child: SelectableTextWithSave(
                 text: text,
                 style: AppTypography.bodySm.copyWith(
-                  color: AppColors.warmDark,
+                  color: context.clay.text,
                   height: 1.5,
                   letterSpacing: 0.15,
                 ),
@@ -74,7 +75,7 @@ class ChatBubbleUser extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: AppColors.clayBeige,
+                        color: context.clay.surfaceAlt,
                         borderRadius: AppRadius.fullBorder,
                       ),
                       child: Row(
@@ -87,7 +88,7 @@ class ChatBubbleUser extends StatelessWidget {
                             style: AppTypography.caption.copyWith(
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.warmMuted,
+                              color: context.clay.textMuted,
                             ),
                           ),
                         ],

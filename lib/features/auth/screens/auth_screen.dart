@@ -8,8 +8,10 @@ import '../../../shared/widgets/aura_logo.dart';
 import '../../../shared/widgets/app_icon.dart';
 import '../../../shared/widgets/error_banner.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/clay_palette.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../l10n/app_loc_context.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -82,7 +84,7 @@ class _AuthScreenState extends State<AuthScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: context.clay.background,
       body: SafeArea(
         child: Consumer<AuthProvider>(
           builder: (context, auth, _) {
@@ -99,9 +101,9 @@ class _AuthScreenState extends State<AuthScreen>
                           _staggered(
                             1,
                             Text(
-                              'Your personal AI English coach.\nLearn naturally, speak confidently.',
+                              context.loc.authSubtitle,
                               style: AppTypography.bodyMd.copyWith(
-                                color: AppColors.warmMuted,
+                                color: context.clay.textMuted,
                                 height: 1.6,
                               ),
                               textAlign: TextAlign.center,
@@ -124,7 +126,7 @@ class _AuthScreenState extends State<AuthScreen>
                         _staggered(
                           2,
                           AuthButton(
-                            text: 'Continue with Google',
+                            text: context.loc.continueWithGoogle,
                             icon: const _GoogleIcon(),
                             style: AuthButtonVariant.google,
                             isLoading: auth.isMethodLoading(AuthMethod.google),
@@ -137,7 +139,7 @@ class _AuthScreenState extends State<AuthScreen>
                         _staggered(
                           3,
                           AuthButton(
-                            text: 'Continue with Apple',
+                            text: context.loc.continueWithApple,
                             icon: Icon(
                               Icons.apple,
                               size: 20,
@@ -154,7 +156,7 @@ class _AuthScreenState extends State<AuthScreen>
                         _staggered(
                           4,
                           AuthButton(
-                            text: 'Try as Guest',
+                            text: context.loc.tryAsGuest,
                             icon: const AppIcon(
                                 iconId: AppIcons.profile, size: 20),
                             style: AuthButtonVariant.guest,
@@ -168,7 +170,7 @@ class _AuthScreenState extends State<AuthScreen>
                         _staggered(
                           4,
                           Text(
-                            'By continuing you agree to our\nTerms of Service and Privacy Policy',
+                            context.loc.termsNotice,
                             style: AppTypography.caption,
                             textAlign: TextAlign.center,
                           ),

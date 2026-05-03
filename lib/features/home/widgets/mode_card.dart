@@ -4,6 +4,7 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_shadows.dart';
+import '../../../core/theme/clay_palette.dart';
 import '../../../shared/widgets/cloud_image.dart';
 import '../../../shared/widgets/clay_badge.dart';
 import '../../../core/theme/app_animations.dart';
@@ -46,7 +47,7 @@ class ModeCard extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [AppColors.cream, accentColor.withValues(alpha: 0.08)],
+          colors: [context.clay.background, accentColor.withValues(alpha: 0.08)],
         ),
       ),
       child: Column(
@@ -80,7 +81,7 @@ class ModeCard extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           Text(
             description,
-            style: AppTypography.bodyMd.copyWith(color: AppColors.warmMuted),
+            style: AppTypography.bodyMd.copyWith(color: context.clay.textMuted),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: AppSpacing.md),
@@ -126,7 +127,7 @@ class ModeCard extends StatelessWidget {
                               child: CircularProgressIndicator(
                                 strokeWidth: 2.5,
                                 valueColor: AlwaysStoppedAnimation<Color>(
-                                    AppColors.warmDark),
+                                    context.clay.text),
                               ),
                             ),
                           ],

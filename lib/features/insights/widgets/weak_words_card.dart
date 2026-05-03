@@ -4,6 +4,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/theme/clay_palette.dart';
 import '../../../shared/widgets/clay_card.dart';
 import '../../../shared/widgets/clay_pressable.dart';
 import '../../my_library/models/saved_item.dart';
@@ -78,9 +79,9 @@ class _WeakWordRow extends StatelessWidget {
           vertical: AppSpacing.smd,
         ),
         decoration: BoxDecoration(
-          color: AppColors.cream,
+          color: context.clay.background,
           borderRadius: AppRadius.mdBorder,
-          border: Border.all(color: AppColors.clayBorder, width: 1),
+          border: Border.all(color: context.clay.border, width: 1),
         ),
         child: Row(
           children: [
@@ -102,7 +103,7 @@ class _WeakWordRow extends StatelessWidget {
                   Text(
                     _subtitleFor(item),
                     style: AppTypography.caption.copyWith(
-                      color: AppColors.warmMuted,
+                      color: context.clay.textMuted,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -181,9 +182,9 @@ class _EmptyState extends StatelessWidget {
           vertical: AppSpacing.lg,
         ),
         decoration: BoxDecoration(
-          color: AppColors.cream,
+          color: context.clay.background,
           borderRadius: AppRadius.mdBorder,
-          border: Border.all(color: AppColors.clayBorder, width: 1),
+          border: Border.all(color: context.clay.border, width: 1),
         ),
         child: Row(
           children: [
@@ -203,7 +204,7 @@ class _EmptyState extends StatelessWidget {
                   Text(
                     'Save words from your chats to build your review list.',
                     style: AppTypography.caption.copyWith(
-                      color: AppColors.warmMuted,
+                      color: context.clay.textMuted,
                     ),
                   ),
                 ],

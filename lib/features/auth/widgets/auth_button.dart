@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/clay_palette.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_shadows.dart';
@@ -29,34 +30,34 @@ class AuthButton extends StatelessWidget {
     this.isLoading = false,
   });
 
-  Color get _bg {
+  Color _bg(BuildContext context) {
     switch (style) {
       case AuthButtonVariant.google:
         return AppColors.teal;
       case AuthButtonVariant.apple:
-        return AppColors.warmDark;
+        return context.clay.text;
       case AuthButtonVariant.guest:
         return Colors.transparent;
     }
   }
 
-  Color get _fg {
+  Color _fg(BuildContext context) {
     switch (style) {
       case AuthButtonVariant.google:
-        return AppColors.warmDark;
+        return context.clay.text;
       case AuthButtonVariant.apple:
         return AppColors.white;
       case AuthButtonVariant.guest:
-        return AppColors.warmMuted;
+        return context.clay.textMuted;
     }
   }
 
-  List<BoxShadow>? get _shadow {
+  List<BoxShadow>? _shadow(BuildContext context) {
     switch (style) {
       case AuthButtonVariant.google:
-        return AppShadows.clay;
+        return AppShadows.clay(context);
       case AuthButtonVariant.apple:
-        return AppShadows.colored(AppColors.warmDark, alpha: 0.3);
+        return AppShadows.colored(context.clay.text, alpha: 0.3);
       case AuthButtonVariant.guest:
         return null;
     }
@@ -78,12 +79,12 @@ class AuthButton extends StatelessWidget {
               horizontal: AppSpacing.xl,
             ),
             decoration: BoxDecoration(
-              color: _bg,
+              color: _bg(context),
               borderRadius: AppRadius.lgBorder,
               border: style == AuthButtonVariant.guest
-                  ? Border.all(color: AppColors.clayBorder, width: 2)
+                  ? Border.all(color: context.clay.border, width: 2)
                   : null,
-              boxShadow: _shadow,
+              boxShadow: _shadow(context),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -105,7 +106,7 @@ class AuthButton extends StatelessWidget {
                                   Text(
                                     text,
                                     style: AppTypography.button
-                                        .copyWith(color: _fg),
+                                        .copyWith(color: _fg(context)),
                                   ),
                                 ],
                               ),
@@ -115,7 +116,7 @@ class AuthButton extends StatelessWidget {
                               height: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2.5,
-                                valueColor: AlwaysStoppedAnimation(_fg),
+                                valueColor: AlwaysStoppedAnimation(_fg(context)),
                               ),
                             ),
                           ],
@@ -128,7 +129,8 @@ class AuthButton extends StatelessWidget {
                             const SizedBox(width: AppSpacing.md),
                             Text(
                               text,
-                              style: AppTypography.button.copyWith(color: _fg),
+                              style:
+                                  AppTypography.button.copyWith(color: _fg(context)),
                             ),
                           ],
                         ),

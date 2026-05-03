@@ -1,10 +1,12 @@
 {
   "@@locale": "en",
+
   "authSubtitle": "Your personal AI English coach.\nLearn naturally, speak confidently.",
   "continueWithGoogle": "Continue with Google",
   "continueWithApple": "Continue with Apple",
   "tryAsGuest": "Try as Guest",
   "termsNotice": "By continuing you agree to our\nTerms of Service and Privacy Policy",
+
   "onboardingNameTitle": "What should we call you?",
   "onboardingNameSubtitle": "Pick a name and choose your avatar",
   "onboardingNameHint": "Enter your name",
@@ -20,19 +22,570 @@
   "addYourOwnTopic": "Add your own topic...",
   "selectedTopicsCount": "Selected: {count} topics",
   "@selectedTopicsCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
+    "placeholders": { "count": { "type": "int" } }
   },
   "dailyLimitReached": "Daily limit reached. Upgrade for more sessions.",
   "failedToStart": "Failed to start: {error}",
   "@failedToStart": {
+    "placeholders": { "error": { "type": "String" } }
+  },
+
+  "commonSave": "Save",
+  "commonCancel": "Cancel",
+  "commonDelete": "Delete",
+  "commonContinue": "Continue",
+  "commonNext": "Next",
+  "commonBack": "Back",
+  "commonClose": "Close",
+  "commonRetry": "Try again",
+  "commonDone": "Done",
+
+  "profileLevelLabel": "Level",
+  "profileDailyGoalLabel": "Daily Goal",
+  "profilePlanLabel": "Plan",
+  "profilePlanFree": "Free",
+  "profilePlanPremium": "Premium",
+  "profileGoalsTitle": "Goals",
+  "profileTopicsTitle": "Topics",
+  "profileEditRowLabel": "Edit profile",
+  "profileEditRowSubtitle": "Name, avatar, level, daily goal",
+  "profileSettingsRowLabel": "Settings",
+  "profileSettingsRowSubtitle": "Language, notifications, privacy",
+  "profileUpgradeRowLabel": "Upgrade to Premium",
+  "profileUpgradeRowSubtitle": "Unlimited practice + AI illustrations",
+  "profileSignOutLabel": "Sign out",
+  "profileSignOutEndSession": "End your session",
+  "profileSignOutSignedInAs": "Signed in as {name}",
+  "@profileSignOutSignedInAs": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "profileSignOutTitle": "Sign out?",
+  "profileSignOutBody": "You can sign back in anytime.",
+  "profileNotAvailable": "Profile not available",
+  "profileDailyMinutes": "{minutes} min",
+  "@profileDailyMinutes": {
+    "placeholders": { "minutes": { "type": "int" } }
+  },
+  "profileLevelBeginner": "Beginner",
+  "profileLevelIntermediate": "Intermediate",
+  "profileLevelAdvanced": "Advanced",
+
+  "settingsTitle": "Settings",
+  "settingsGroupPractice": "Practice",
+  "settingsGroupApp": "App",
+  "settingsGroupPrivacy": "Privacy",
+  "settingsRowDailyReminders": "Daily reminders",
+  "settingsRowReminderTime": "Reminder time",
+  "settingsRowAutoPlayAudio": "Auto-play audio",
+  "settingsRowDisplayLanguage": "Display language",
+  "settingsRowTheme": "Theme (Dark mode)",
+  "settingsRowDataPrivacy": "Data & privacy",
+  "settingsRowDeleteAccount": "Delete account",
+  "settingsThemePickerTitle": "Theme",
+  "settingsThemeSystem": "Match system",
+  "settingsThemeLight": "Light",
+  "settingsThemeDark": "Dark",
+  "settingsLanguagePickerTitle": "Display language",
+  "settingsLanguageEnglish": "English",
+  "settingsLanguageVietnamese": "Tiếng Việt",
+  "settingsReminderTimeHelp": "Daily reminder time",
+  "settingsDeleteTitle": "Delete account?",
+  "settingsDeleteBody": "This permanently removes your profile, conversations, saved words, mind maps, and stats. This action cannot be undone.",
+  "settingsDeleteSuccess": "Account deleted.",
+  "settingsDeleteRequiresLogin": "For security, sign in again before deleting your account.",
+  "settingsDeleteFailed": "Could not delete the account. Please try again later.",
+
+  "editProfileTitle": "Edit profile",
+  "editProfileSectionBuddy": "YOUR BUDDY",
+  "editProfileSectionName": "YOUR NAME",
+  "editProfileSectionLevel": "ENGLISH LEVEL",
+  "editProfileSectionDailyGoal": "DAILY GOAL",
+  "editProfileSaveButton": "Save changes",
+  "editProfileNameRequired": "Name cannot be empty.",
+  "editProfileSaveSuccess": "Profile updated.",
+  "editProfileSaveFailed": "Could not save changes. Please try again.",
+  "editProfileDiscardTitle": "Discard changes?",
+  "editProfileDiscardBody": "You haven't saved your edits. If you leave now, your changes will be lost.",
+  "editProfileDiscardKeepEditing": "Keep editing",
+  "editProfileDiscardConfirm": "Discard",
+
+  "homeGreeting": "Hi, {name}",
+  "@homeGreeting": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "homePickMode": "Pick a learning mode",
+  "homeStorageFull": "Storage full. Delete a conversation or upgrade to start a new one.",
+  "homeStorageUpgradeAction": "Upgrade",
+  "homePaywallSnack": "Paywall coming soon.",
+  "homeDailyLimitReachedSessions": "Daily limit reached. Upgrade for more sessions.",
+  "homeDailyLimitReachedStories": "Daily limit reached. Upgrade for more stories.",
+
+  "modeScenarioTitle": "Scenario Coach",
+  "modeScenarioDescription": "Practice real-life situations with AI roleplay. Get instant feedback on grammar, vocabulary & tone.",
+  "modeScenarioBadge": "MOST POPULAR",
+  "modeScenarioCta": "Start Practice",
+  "modeScenarioQuota": "5 free sessions / day",
+  "modeStoryTitle": "Story Mode",
+  "modeStoryBadge": "INTERACTIVE",
+  "modeStoryCta": "Begin Story",
+  "modeStoryQuota": "3 free stories / day",
+  "modeToneTitle": "Tone Translator",
+  "modeToneDescription": "Master the art of tone. See how one sentence sounds formal, friendly, casual & neutral.",
+  "modeToneBadge": "UNIQUE",
+  "modeToneCta": "Translate Now",
+  "modeToneQuota": "10 free translations / day",
+  "modeGrammarTitle": "Grammar Coach",
+  "modeGrammarDescription": "Master English grammar level by level. Pick a structure, drill it, and track your mastery.",
+  "modeGrammarBadge": "STRUCTURED",
+  "modeGrammarCta": "Start drilling",
+  "modeGrammarQuota": "Unlimited practice",
+  "modeVocabTitle": "Vocab Hub",
+  "modeVocabDescription": "Deep-dive into any word. Get analysis, mind maps, examples & spaced repetition flashcards.",
+  "modeVocabBadge": "BUILD SKILLS",
+  "modeVocabCta": "Explore Words",
+  "modeVocabQuota": "Unlimited",
+
+  "navHome": "Home",
+  "navInsight": "Insight",
+  "navAiAgent": "AI Agent",
+  "navAlerts": "Alerts",
+  "navProfile": "Profile",
+  "navUnreadCount": "{count, plural, =1{1 unread} other{{count} unread}}",
+  "@navUnreadCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "libraryTitle": "My Learning Library",
+  "librarySearchHint": "Search saved items",
+  "libraryFilterAll": "All",
+  "libraryFilterVocabulary": "Vocabulary",
+  "libraryFilterGrammar": "Grammar",
+  "libraryFilterAllPos": "All POS",
+  "libraryFilterAllCategories": "All Categories",
+  "libraryItemsCount": "{count} items",
+  "@libraryItemsCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "libraryDueCount": "{count} due",
+  "@libraryDueCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "libraryCategoriesCount": "{count} categories",
+  "@libraryCategoriesCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "libraryEmptyTitle": "No saved items yet",
+  "libraryEmptyBody": "Tap any word in a conversation, story, or translation to save it here.",
+  "libraryShowMore": "Show more",
+  "libraryShowLess": "Show less",
+  "libraryLoadingExplanation": "Loading explanation...",
+  "libraryGenerate": "Generate",
+  "libraryGeneratePro": "Generate (Pro)",
+  "libraryProUpsell": "AI illustrations are part of the Pro plan. Upgrade to unlock.",
+  "libraryReviewDueIn": "{days}d",
+  "@libraryReviewDueIn": {
+    "placeholders": { "days": { "type": "int" } }
+  },
+  "libraryReviewDueNow": "Due",
+  "libraryBadgeVocab": "VOCAB",
+  "libraryBadgeGrammar": "GRAMMAR",
+
+  "aiAgentTitle": "AI Agent",
+  "aiAgentSubtitle": "Help Center + Ask AI",
+  "aiAgentCategoryGettingStarted": "Getting Started",
+  "aiAgentCategoryFeatures": "Features",
+  "aiAgentCategoryAccount": "Account",
+  "aiAgentCategorySubscription": "Subscription & Billing",
+  "aiAgentCategoryTroubleshooting": "Troubleshooting",
+  "aiAgentCategoryContact": "Contact Support",
+  "aiAgentAskAiCardTitle": "Ask AI",
+  "aiAgentAskAiCardSubtitle": "Get instant answers about how Aura works",
+  "aiAgentAskAiCardCta": "Ask now",
+
+  "vocabHubTitle": "Vocab Hub",
+  "vocabHubSectionFreeTools": "Free tools",
+  "vocabHubSectionProTools": "Pro tools",
+  "vocabHubCardWordAnalysis": "Word Analysis",
+  "vocabHubCardDescribeWord": "Describe Word",
+  "vocabHubCardFlashcards": "Flashcards",
+  "vocabHubCardCompareWords": "Compare Words",
+  "vocabHubCardLearningLibrary": "Learning Library",
+  "vocabHubCardProgressDashboard": "Progress Dashboard",
+  "vocabHubCardMindMaps": "Mind Maps",
+  "vocabWordAnalysisHint": "Enter a word to analyze",
+  "vocabWordAnalyzeCta": "Analyze",
+  "vocabWordSavedSnack": "Saved \"{word}\" to your library",
+  "@vocabWordSavedSnack": {
+    "placeholders": { "word": { "type": "String" } }
+  },
+  "vocabMindMapTitle": "Mind Maps",
+  "vocabMindMapHint": "Enter a topic, e.g. Travel",
+  "vocabMindMapGenerate": "Generate",
+  "vocabMindMapMyMaps": "My maps",
+  "vocabMindMapUndo": "Undo",
+  "vocabMindMapProTitle": "Mind Map is a Pro feature",
+  "vocabMindMapMyMapsTitle": "My mind maps",
+  "vocabMindMapDeleteSnack": "Deleted \"{topic}\"",
+  "@vocabMindMapDeleteSnack": {
+    "placeholders": { "topic": { "type": "String" } }
+  },
+  "vocabMindMapNodesCount": "{count, plural, =1{1 node} other{{count} nodes}}",
+  "@vocabMindMapNodesCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "vocabMindMapDepth": "depth {value}",
+  "@vocabMindMapDepth": {
+    "placeholders": { "value": { "type": "int" } }
+  },
+  "vocabMindMapFromLibrary": "from Library",
+  "vocabMindMapNodeRemovedSnack": "Removed \"{label}\" from library",
+  "@vocabMindMapNodeRemovedSnack": {
+    "placeholders": { "label": { "type": "String" } }
+  },
+  "vocabMindMapNodeAddedSnack": "Added \"{word}\" under this node",
+  "@vocabMindMapNodeAddedSnack": {
+    "placeholders": { "word": { "type": "String" } }
+  },
+  "vocabMindMapNodeDeletedSnack": "Deleted \"{label}\"",
+  "@vocabMindMapNodeDeletedSnack": {
+    "placeholders": { "label": { "type": "String" } }
+  },
+  "vocabMindMapExpandViaAi": "Expand via AI",
+  "vocabMindMapAddWord": "+ Add word",
+  "vocabMindMapSaveToLibrary": "Save to library",
+  "vocabMindMapAddWordHint": "e.g. boarding pass",
+  "vocabMindMapMindMapCta": "Mind Map 🧠",
+
+  "vocabFlashcardsTitle": "Flashcards",
+  "vocabFlashcardsPracticeCta": "Practice 10 cards",
+  "vocabFlashcardsStudyMoreCta": "Study 10 more",
+  "vocabFlashcardsAddedSnack": "Added {count} {topic} cards to your library",
+  "@vocabFlashcardsAddedSnack": {
     "placeholders": {
-      "error": {
-        "type": "String"
-      }
+      "count": { "type": "int" },
+      "topic": { "type": "String" }
     }
-  }
+  },
+  "vocabFlashcardsAlreadyHaveSnack": "All {topic} picks are already in your library",
+  "@vocabFlashcardsAlreadyHaveSnack": {
+    "placeholders": { "topic": { "type": "String" } }
+  },
+  "vocabFlashcardsRatingHard": "Hard",
+  "vocabFlashcardsRatingGood": "Good",
+  "vocabFlashcardsRatingEasy": "Easy",
+
+  "vocabCompareTitle": "Compare Words",
+  "vocabCompareTryAPair": "Try a pair",
+  "vocabCompareWordA": "WORD A",
+  "vocabCompareWordB": "WORD B",
+  "vocabCompareKeyDifference": "Key difference",
+  "vocabCompareWhenToUse": "Use \"{word}\" when",
+  "@vocabCompareWhenToUse": {
+    "placeholders": { "word": { "type": "String" } }
+  },
+  "vocabCompareSectionDefinition": "Definition",
+  "vocabCompareSectionExample": "Example",
+  "vocabCompareSectionCollocations": "Collocations",
+
+  "vocabDescribeTitle": "Describe Word",
+  "vocabDescribeHint": "VD: cảm giác buồn nhẹ khi nhớ chuyện cũ",
+
+  "vocabAnalysisExamples": "Examples",
+  "vocabAnalysisExamplePositive": "Positive",
+  "vocabAnalysisExampleNeutral": "Neutral",
+  "vocabAnalysisExampleNegative": "Negative",
+  "vocabAnalysisCollocations": "Collocations",
+  "vocabAnalysisWordFamily": "Word family",
+  "vocabAnalysisSynonyms": "Synonyms",
+  "vocabAnalysisAntonyms": "Antonyms",
+
+  "vocabProgressTitle": "Progress Dashboard",
+  "vocabProgressSaved": "Saved",
+  "vocabProgressDueToday": "Due today",
+  "vocabProgressMastered": "Mastered",
+  "vocabProgressByPos": "By part of speech",
+  "vocabProgressKeepGoing": "Keep going",
+  "vocabProgressLegendMastered": "Mastered · {count}",
+  "@vocabProgressLegendMastered": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "vocabProgressLegendLearning": "Learning · {count}",
+  "@vocabProgressLegendLearning": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "vocabProgressLegendNew": "New · {count}",
+  "@vocabProgressLegendNew": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "vocabProgressEmptyTitle": "No saved words yet",
+  "vocabProgressEmptyAnalyze": "Analyze a word",
+
+  "vocabLearningLibraryTitle": "Learning Library",
+  "vocabHubCardWordAnalysisDesc": "Pronunciation, 3 examples, synonyms & antonyms",
+  "vocabHubCardDescribeWordDesc": "Describe in Vietnamese → get the English word",
+  "vocabHubCardFlashcardsDesc": "SM-2 spaced repetition — review at the perfect time",
+  "vocabHubCardCompareWordsDesc": "Side-by-side nuance: \"affect\" vs \"effect\"",
+  "vocabHubCardLearningLibraryDesc": "All saved words from every mode in one place",
+  "vocabHubCardProgressDashboardDesc": "Track total, due reviews & mastered at a glance",
+  "vocabHubCardMindMapsDesc": "Visual word relationships — synonyms, antonyms & related",
+
+  "notificationsTitle": "Notifications",
+  "notificationsSectionNew": "New",
+  "notificationsSectionEarlier": "Earlier",
+  "notificationsRemovedSnack": "Removed \"{title}\"",
+  "@notificationsRemovedSnack": {
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "notificationsEmptyTitle": "You're all caught up",
+  "notificationsEmptyBody": "Reminders, streak nudges, and review prompts will show up here.",
+  "notificationsMarkAllRead": "Mark all as read",
+
+  "helpTitle": "Help & support",
+  "helpSectionQuickGuides": "Quick guides",
+  "helpSectionFaq": "FAQ",
+  "helpSectionContact": "Contact",
+  "helpAskAuraTitle": "Ask Aura",
+  "helpAskAuraSubtitle": "Ask anything about how to use the app — Aura answers right away in your language.",
+  "helpAskAuraStartChat": "Start chat",
+  "helpContactEmailLabel": "Email",
+  "helpContactHotlineLabel": "Hotline",
+  "helpContactCopyEmailToast": "Copied email to clipboard",
+  "helpContactCopyHotlineToast": "Copied hotline to clipboard",
+  "helpFeedbackButton": "Send feedback",
+  "helpFeedbackTitle": "Send us feedback",
+  "helpFeedbackBody": "Bug, idea, or just a thought — drop it below. We read every one.",
+  "helpFeedbackHint": "What's on your mind?",
+  "helpFeedbackSendButton": "Send",
+  "helpFeedbackThanksToast": "Thanks! We'll review your feedback shortly.",
+
+  "insightsTitle": "Insight",
+  "insightsTabLibrary": "Library",
+  "insightsTabStats": "Stats",
+
+  "conversationHistoryTitle": "Conversation History",
+  "conversationHistoryFilterAll": "All",
+  "conversationHistoryFilterScenario": "Scenario",
+  "conversationHistoryFilterStory": "Story",
+  "conversationHistoryFilterTranslator": "Translator",
+  "conversationHistoryRenameTitle": "Rename conversation",
+  "conversationHistoryRenameHint": "Conversation title",
+  "conversationHistoryRenameFailed": "Rename failed. Please try again.",
+  "conversationHistoryDeleteTitle": "Delete conversation?",
+  "conversationHistoryDeleteBody": "This conversation will be permanently removed from your history.",
+  "conversationHistoryDeleteFailed": "Delete failed. Please try again.",
+  "conversationHistoryEmptyTitle": "No conversation history yet",
+  "conversationHistoryEmptyBody": "Start a roleplay scenario to see your history here",
+  "conversationHistoryStatusCompleted": "Completed",
+  "conversationHistoryStatusInProgress": "In Progress",
+  "conversationHistoryDateLabel": "Date",
+  "conversationHistoryDurationLabel": "Duration",
+  "conversationHistoryTurnsLabel": "Turns",
+  "conversationHistoryScoreBreakdownTitle": "Score Breakdown",
+  "conversationHistoryScoreOverall": "Overall",
+  "conversationHistoryScoreGrammar": "Grammar",
+  "conversationHistoryScoreVocabulary": "Vocabulary",
+  "conversationHistoryScoreFluency": "Fluency",
+  "conversationHistoryReplayComingSoon": "Tap to replay coming soon",
+  "conversationHistoryYesterday": "Yesterday",
+  "conversationHistoryUnknownTopic": "Unknown",
+  "conversationHistoryFallbackTitle": "Roleplay",
+  "conversationHistoryMoreMenuTooltip": "More",
+  "conversationHistoryRenameAction": "Rename",
+  "conversationHistoryDeleteAction": "Delete",
+  "conversationHistoryModeVocab": "Vocab",
+  "conversationHistoryModeSession": "Session",
+  "conversationHistoryRelativeJustNow": "just now",
+  "conversationHistoryRelativeMinutesAgo": "{minutes}m ago",
+  "@conversationHistoryRelativeMinutesAgo": {
+    "placeholders": { "minutes": { "type": "int" } }
+  },
+  "conversationHistoryRelativeHoursAgo": "{hours}h ago",
+  "@conversationHistoryRelativeHoursAgo": {
+    "placeholders": { "hours": { "type": "int" } }
+  },
+  "conversationHistoryRelativeDaysAgo": "{days}d ago",
+  "@conversationHistoryRelativeDaysAgo": {
+    "placeholders": { "days": { "type": "int" } }
+  },
+
+  "storageQuotaCapTitle": "Storage full — delete or upgrade to start new",
+  "storageQuotaWarningTitle": "Storage almost full",
+  "storageQuotaUsage": "{used}/{cap} conversations used.",
+  "@storageQuotaUsage": {
+    "placeholders": {
+      "used": { "type": "int" },
+      "cap": { "type": "int" }
+    }
+  },
+  "storageQuotaManage": "Manage",
+  "storageQuotaUpgrade": "Upgrade",
+  "storageQuotaModeScenario": "Scenario",
+  "storageQuotaModeStory": "Story",
+
+  "scenarioAppBarMeta": "{emoji} {category} · {level} · Scenario #{index}",
+  "@scenarioAppBarMeta": {
+    "placeholders": {
+      "emoji": { "type": "String" },
+      "category": { "type": "String" },
+      "level": { "type": "String" },
+      "index": { "type": "int" }
+    }
+  },
+  "scenarioLoadingPreparing": "Preparing your scenario...",
+  "scenarioErrorNoScenarioLoaded": "No scenario loaded",
+  "scenarioErrorBackToHome": "Back to Home",
+  "scenarioEndSessionTitle": "End this session?",
+  "scenarioEndSessionBody": "We'll grade your conversation and add it to your history.",
+  "scenarioEndSessionConfirm": "End session",
+  "scenarioEndSessionKeepGoing": "Keep going",
+
+  "endSessionDefaultTitle": "End this session?",
+  "endSessionContinueLabel": "Keep going",
+  "endSessionEndReviewLabel": "End & review",
+  "endSessionStatTurns": "Turns",
+  "endSessionStatAvgScore": "Avg score",
+  "endSessionStatDuration": "Duration",
+  "endSessionBestLine": "Best line: \"{preview}\"",
+  "@endSessionBestLine": {
+    "placeholders": { "preview": { "type": "String" } }
+  },
+  "endSessionScenarioQuotaRemaining": "{remaining}/{limit} sessions left today",
+  "@endSessionScenarioQuotaRemaining": {
+    "placeholders": {
+      "remaining": { "type": "int" },
+      "limit": { "type": "int" }
+    }
+  },
+  "endSessionStoryQuotaRemaining": "{remaining}/{limit} stories left today",
+  "@endSessionStoryQuotaRemaining": {
+    "placeholders": {
+      "remaining": { "type": "int" },
+      "limit": { "type": "int" }
+    }
+  },
+
+  "storyEndSessionTitle": "End this story?",
+  "chatSavedSnack": "Saved: {item}",
+  "@chatSavedSnack": {
+    "placeholders": { "item": { "type": "String" } }
+  },
+
+  "grammarHubTitle": "Grammar Coach",
+  "grammarHubMasteredCounter": "{mastered}/{total} mastered",
+  "@grammarHubMasteredCounter": {
+    "placeholders": {
+      "mastered": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "grammarHubHeroTitle": "Master grammar by level",
+  "grammarHubHeroTagline": "Pick a structure, drill it, track mastery",
+  "grammarHubSearchHint": "Search topics",
+  "grammarHubFilterAll": "All",
+  "grammarHubCategoryAll": "All",
+  "grammarHubCategoryTense": "Tense",
+  "grammarHubCategoryModal": "Modal",
+  "grammarHubCategoryConditional": "Conditional",
+  "grammarHubCategoryPassive": "Passive",
+  "grammarHubCategoryReported": "Reported",
+  "grammarHubCategoryClause": "Clause",
+  "grammarHubCategoryComparison": "Comparison",
+  "grammarHubCategoryLinkingInversion": "Linking & Inversion",
+  "grammarHubCategoryArticleQuantifier": "Articles & Quantifiers",
+  "grammarHubCategoryOther": "Other",
+  "grammarHubMasteryNotStarted": "Not started",
+  "grammarHubMasteryLearning": "Learning",
+  "grammarHubMasteryMastered": "Mastered",
+  "grammarHubTopicMetaNew": "Tap to learn the formula",
+  "grammarHubTopicMetaProgress": "{attempts} attempts · {accuracy}% accuracy",
+  "@grammarHubTopicMetaProgress": {
+    "placeholders": {
+      "attempts": { "type": "int" },
+      "accuracy": { "type": "int" }
+    }
+  },
+  "grammarHubEmptyTitle": "No topics match this filter",
+  "grammarHubEmptyBody": "Try clearing the level or category filter.",
+
+  "grammarTopicNotFoundTitle": "Topic not found",
+  "grammarTopicNotFoundBody": "The grammar topic you're looking for is no longer in the catalog.",
+  "grammarTopicSummaryTitle": "Summary",
+  "grammarTopicWhenToUseTitle": "When to use",
+  "grammarTopicExamplesTitle": "Examples",
+  "grammarTopicMistakesTitle": "Common mistakes",
+  "grammarTopicRelatedTitle": "Related topics",
+  "grammarTopicListenA11y": "Play example audio",
+  "grammarTopicNoContentBody": "Detailed content for this topic is coming soon.",
+  "grammarStartPracticeCta": "Start practice",
+
+  "grammarPracticePickerTitle": "Pick your practice mode",
+  "grammarPracticePickerSubtitle": "Each mode focuses on a different skill. You can switch between sessions.",
+  "grammarPracticeModeTranslate": "Translate",
+  "grammarPracticeModeTranslateSub": "EN ↔ VI sentence translation using this structure.",
+  "grammarPracticeModeFillBlank": "Fill in the blank",
+  "grammarPracticeModeFillBlankSub": "Pick or type the correct form to complete a sentence.",
+  "grammarPracticeModeTransform": "Transform",
+  "grammarPracticeModeTransformSub": "Rewrite an English sentence into the correct tense from a Vietnamese hint.",
+
+  "grammarPracticeAttemptsLabel": "Attempts",
+  "grammarPracticeAccuracyLabel": "Accuracy",
+  "grammarPracticeStreakLabel": "Streak",
+  "grammarPracticeModeTagTranslateEnVi": "TRANSLATE · EN → VI",
+  "grammarPracticeModeTagTranslateViEn": "TRANSLATE · VI → EN",
+  "grammarPracticeModeTagFillBlank": "FILL IN THE BLANK",
+  "grammarPracticeModeTagTransform": "TRANSFORM",
+  "grammarPracticeHintLabel": "Hint",
+  "grammarPracticeInputHintTranslate": "Type your translation…",
+  "grammarPracticeInputHintFillBlank": "Type the missing word(s)…",
+  "grammarPracticeInputHintTransform": "Rewrite the sentence using the target structure…",
+  "grammarPracticeCheck": "Check",
+  "grammarPracticeNext": "Next →",
+  "grammarPracticeEndSession": "End session",
+  "grammarPracticeEndConfirmTitle": "End this session?",
+  "grammarPracticeEndConfirmBody": "Your attempts will be saved and you'll see the summary.",
+  "grammarPracticeEndKeepGoing": "Keep going",
+  "grammarPracticeEndConfirm": "End",
+  "grammarPracticeResultCorrect": "Correct!",
+  "grammarPracticeResultIncorrect": "Not quite",
+  "grammarPracticeResultYourAnswer": "Your answer",
+  "grammarPracticeResultAccepted": "Accepted",
+  "grammarPracticeResultCorrectAnswer": "Correct answer",
+  "grammarPracticeSaveToLibrary": "⭐ Save to Library",
+  "grammarPracticeSavedSnack": "Saved to Library",
+  "grammarPracticeGenerating": "Building your next exercise…",
+  "grammarPracticeError": "Couldn't generate exercise",
+  "grammarPracticeRetry": "Try another",
+  "grammarSummaryTitle": "Session summary",
+  "grammarSummaryHeadlineMastered": "Great work! You mastered this round.",
+  "grammarSummaryHeadlineProgress": "Solid progress — keep practicing.",
+  "grammarSummaryHeadlineRough": "Tough round. Review and retry.",
+  "grammarSummaryHeadlineEmpty": "Session ended without any attempts.",
+  "grammarSummaryStatAttempts": "Attempts",
+  "grammarSummaryStatAccuracy": "Accuracy",
+  "grammarSummaryStatDuration": "Time",
+  "grammarSummaryStatMastery": "Mastery",
+  "grammarSummaryMasteryDelta": "{sign}{value}%",
+  "@grammarSummaryMasteryDelta": {
+    "placeholders": { "sign": {"type": "String"}, "value": {"type": "String"} }
+  },
+  "grammarSummaryDurationMinutes": "{minutes}m {seconds}s",
+  "@grammarSummaryDurationMinutes": {
+    "placeholders": { "minutes": {"type": "int"}, "seconds": {"type": "int"} }
+  },
+  "grammarSummaryDurationSeconds": "{seconds}s",
+  "@grammarSummaryDurationSeconds": {
+    "placeholders": { "seconds": {"type": "int"} }
+  },
+  "grammarSummaryMistakesTitle": "What to revisit",
+  "grammarSummaryMistakesEmpty": "No mistakes this round — nicely done.",
+  "grammarSummaryMistakeYou": "You",
+  "grammarSummaryMistakeCorrect": "Correct",
+  "grammarSummarySaveAllMistakes": "Save mistakes to Library",
+  "grammarSummarySaveAllSnack": "{count} mistake(s) saved to Library",
+  "@grammarSummarySaveAllSnack": {
+    "placeholders": { "count": {"type": "int"} }
+  },
+  "grammarSummaryPracticeAgain": "Practice again",
+  "grammarSummaryBackToTopic": "Back to topic",
+  "grammarSummaryBackToHub": "Back to all topics"
 }

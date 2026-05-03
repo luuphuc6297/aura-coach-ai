@@ -3,6 +3,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/theme/clay_palette.dart';
 import '../../../shared/widgets/clay_card.dart';
 
 /// GitHub-style 13-week contribution grid. `grid` is 13 (weeks) × 7 (days).
@@ -72,7 +73,7 @@ class StreakHeatmap extends StatelessWidget {
                               width: cellSize,
                               height: cellSize,
                               decoration: BoxDecoration(
-                                color: _shadeFor(count),
+                                color: _shadeFor(context, count),
                                 borderRadius: BorderRadius.circular(3),
                               ),
                             ),
@@ -91,7 +92,7 @@ class StreakHeatmap extends StatelessWidget {
             children: [
               Text(
                 'Less',
-                style: AppTypography.micro.copyWith(color: AppColors.warmLight),
+                style: AppTypography.micro.copyWith(color: context.clay.textFaint),
               ),
               const SizedBox(width: AppSpacing.xs),
               ...[0, 1, 2, 3, 4].map((level) {
@@ -101,7 +102,7 @@ class StreakHeatmap extends StatelessWidget {
                     width: 10,
                     height: 10,
                     decoration: BoxDecoration(
-                      color: _shadeFor(level),
+                      color: _shadeFor(context, level),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -110,7 +111,7 @@ class StreakHeatmap extends StatelessWidget {
               const SizedBox(width: 2),
               Text(
                 'More',
-                style: AppTypography.micro.copyWith(color: AppColors.warmLight),
+                style: AppTypography.micro.copyWith(color: context.clay.textFaint),
               ),
             ],
           ),
@@ -119,8 +120,8 @@ class StreakHeatmap extends StatelessWidget {
     );
   }
 
-  Color _shadeFor(int count) {
-    if (count <= 0) return AppColors.clayBeige;
+  Color _shadeFor(BuildContext context, int count) {
+    if (count <= 0) return context.clay.surfaceAlt;
     if (count == 1) return AppColors.teal.withValues(alpha: 0.35);
     if (count == 2) return AppColors.teal.withValues(alpha: 0.6);
     if (count == 3) return AppColors.teal.withValues(alpha: 0.8);

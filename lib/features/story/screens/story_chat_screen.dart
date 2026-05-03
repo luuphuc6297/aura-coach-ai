@@ -8,12 +8,15 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/theme/clay_palette.dart';
 import '../../../shared/widgets/app_icon.dart';
 import '../../../shared/widgets/clay_pressable.dart';
+import '../../../l10n/app_loc_context.dart';
 import '../../../shared/widgets/end_session_dialog.dart';
 import '../../../shared/widgets/message_entrance.dart';
 import '../../../shared/widgets/thinking_indicator.dart';
 import '../../my_library/models/saved_item.dart';
+import '../../my_library/providers/dictionary_quota_guard.dart';
 import '../../my_library/providers/library_provider.dart';
 import '../../scenario/models/assessment.dart';
 import '../../scenario/widgets/assessment_card.dart';
@@ -67,8 +70,8 @@ class _StoryChatScreenState extends State<StoryChatScreen> {
     final confirmed = await showEndSessionDialog(
       context: context,
       accentColor: AppColors.purpleDeep,
-      stats: _buildStats(provider, session),
-      title: 'End this story?',
+      stats: _buildStats(context, provider, session),
+      title: context.loc.storyEndSessionTitle,
     );
     if (confirmed != true) return;
 
@@ -94,8 +97,8 @@ class _StoryChatScreenState extends State<StoryChatScreen> {
     final confirmed = await showEndSessionDialog(
       context: context,
       accentColor: AppColors.purpleDeep,
-      stats: _buildStats(provider, session),
-      title: 'End this story?',
+      stats: _buildStats(context, provider, session),
+      title: context.loc.storyEndSessionTitle,
     );
     if (!mounted) return;
 
@@ -114,7 +117,9 @@ class _StoryChatScreenState extends State<StoryChatScreen> {
     }
   }
 
-  EndSessionStats _buildStats(StoryProvider provider, StorySession session) {
+  EndSessionStats _buildStats(
+      BuildContext context, StoryProvider provider, StorySession session) {
+    final loc = context.loc;
     final turns = session.userTurnCount;
     final avg = session.averageScore;
     final duration = DateTime.now().difference(session.startedAt);
@@ -123,7 +128,8 @@ class _StoryChatScreenState extends State<StoryChatScreen> {
     final limit = provider.storyLimit;
     final remainingLabel = limit == -1
         ? null
-        : '${(limit - usedToday).clamp(0, limit)}/$limit stories left today';
+        : loc.endSessionStoryQuotaRemaining(
+            (limit - usedToday).clamp(0, limit), limit);
 
     String? highlight;
     final bestUser = _findBestUserTurn(session);
@@ -131,7 +137,7 @@ class _StoryChatScreenState extends State<StoryChatScreen> {
       final preview = bestUser.text.length > 48
           ? '${bestUser.text.substring(0, 48)}…'
           : bestUser.text;
-      highlight = 'Best line: "$preview"';
+      highlight = loc.endSessionBestLine(preview);
     }
 
     return EndSessionStats(
@@ -158,28 +164,38 @@ class _StoryChatScreenState extends State<StoryChatScreen> {
     return best;
   }
 
-  void _saveImprovement(Improvement imp) {
+  Future<void> _saveImprovement(Improvement imp) async {
+    final allowed = await ensureDictionaryQuota(context);
+    if (!allowed) return;
+    if (!mounted) return;
     final library = context.read<LibraryProvider>();
-    library.addItem(SavedItem.fromImprovement(
+    await library.addItem(SavedItem.fromImprovement(
       id: const Uuid().v4(),
       original: imp.original,
       correction: imp.correction,
       type: imp.type.value,
       context: '',
+      sourceTag: 'story',
     ));
+    if (!mounted) return;
+    await recordDictionaryUsage(context);
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Saved: ${imp.correction}'),
+        content: Text(context.loc.chatSavedSnack(imp.correction)),
         backgroundColor: AppColors.purpleDeep,
         duration: const Duration(seconds: 2),
       ),
     );
   }
 
-  void _saveVocabulary(KeyVocabulary vocab) {
+  Future<void> _saveVocabulary(KeyVocabulary vocab) async {
+    final allowed = await ensureDictionaryQuota(context);
+    if (!allowed) return;
+    if (!mounted) return;
     final library = context.read<LibraryProvider>();
     final now = DateTime.now().millisecondsSinceEpoch;
-    library.addItem(SavedItem(
+    await library.addItem(SavedItem(
       id: const Uuid().v4(),
       original: vocab.word,
       correction: vocab.word,
@@ -195,19 +211,26 @@ class _StoryChatScreenState extends State<StoryChatScreen> {
               {'en': vocab.example, 'vn': vocab.meaning},
             ],
       nextReviewDate: now.toDouble(),
+      sourceTag: 'story',
     ));
+    if (!mounted) return;
+    await recordDictionaryUsage(context);
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Saved: ${vocab.word}'),
+        content: Text(context.loc.chatSavedSnack(vocab.word)),
         backgroundColor: AppColors.purple,
         duration: const Duration(seconds: 2),
       ),
     );
   }
 
-  void _saveSelection(String selected, String fullContext) {
+  Future<void> _saveSelection(String selected, String fullContext) async {
+    final allowed = await ensureDictionaryQuota(context);
+    if (!allowed) return;
+    if (!mounted) return;
     final library = context.read<LibraryProvider>();
-    library.addItem(SavedItem(
+    await library.addItem(SavedItem(
       id: const Uuid().v4(),
       original: selected,
       correction: selected,
@@ -219,10 +242,14 @@ class _StoryChatScreenState extends State<StoryChatScreen> {
       interval: 0,
       reviewCount: 0,
       nextReviewDate: DateTime.now().millisecondsSinceEpoch.toDouble(),
+      sourceTag: 'story',
     ));
+    if (!mounted) return;
+    await recordDictionaryUsage(context);
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Saved: $selected'),
+        content: Text(context.loc.chatSavedSnack(selected)),
         duration: const Duration(seconds: 2),
         backgroundColor: AppColors.purpleDeep,
       ),
@@ -250,7 +277,7 @@ class _StoryChatScreenState extends State<StoryChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: context.clay.background,
       body: SafeArea(
         bottom: false,
         child: Consumer<StoryProvider>(
@@ -415,12 +442,12 @@ class _NoSessionView extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             'No active story',
-            style: AppTypography.h2.copyWith(color: AppColors.warmDark),
+            style: AppTypography.h2.copyWith(color: context.clay.text),
           ),
           const SizedBox(height: 4),
           Text(
             'Head back and pick one from the library.',
-            style: AppTypography.bodySm.copyWith(color: AppColors.warmMuted),
+            style: AppTypography.bodySm.copyWith(color: context.clay.textMuted),
           ),
           const SizedBox(height: 16),
           TextButton(
@@ -524,12 +551,12 @@ class _HintAffordance extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: hasRevealed
                       ? AppColors.purple.withValues(alpha: 0.16)
-                      : AppColors.clayBeige,
+                      : context.clay.surfaceAlt,
                   borderRadius: AppRadius.fullBorder,
                   border: Border.all(
                     color: hasRevealed
                         ? AppColors.purple.withValues(alpha: 0.5)
-                        : AppColors.clayBorder,
+                        : context.clay.border,
                     width: 1.2,
                   ),
                 ),
@@ -596,9 +623,9 @@ class _HintSheet extends StatelessWidget {
             right: 16,
             bottom: MediaQuery.of(context).viewInsets.bottom + 20,
           ),
-          decoration: const BoxDecoration(
-            color: AppColors.clayWhite,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          decoration: BoxDecoration(
+            color: context.clay.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -609,7 +636,7 @@ class _HintSheet extends StatelessWidget {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: AppColors.clayBorder,
+                    color: context.clay.border,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -636,7 +663,7 @@ class _HintSheet extends StatelessWidget {
               Text(
                 'Reveal hints one step at a time.',
                 style: AppTypography.caption
-                    .copyWith(color: AppColors.warmMuted, fontSize: 11),
+                    .copyWith(color: context.clay.textMuted, fontSize: 11),
               ),
               const SizedBox(height: 14),
               if (provider.hintError != null)
@@ -672,7 +699,7 @@ class _HintSheet extends StatelessWidget {
                     child: Text(
                       'Tap "Reveal next hint" to get started.',
                       style: AppTypography.bodySm
-                          .copyWith(color: AppColors.warmMuted),
+                          .copyWith(color: context.clay.textMuted),
                     ),
                   ),
               ],
@@ -682,19 +709,19 @@ class _HintSheet extends StatelessWidget {
                   Expanded(
                     child: ClayPressable(
                       onTap: () => Navigator.of(context).pop(),
-                      builder: (_, __) => Container(
+                      builder: (ctx, __) => Container(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
-                          color: AppColors.clayBeige,
+                          color: ctx.clay.surfaceAlt,
                           borderRadius: AppRadius.mdBorder,
                           border: Border.all(
-                              color: AppColors.clayBorder, width: 1.5),
+                              color: ctx.clay.border, width: 1.5),
                         ),
                         child: Text(
                           'Close',
                           textAlign: TextAlign.center,
                           style: AppTypography.labelMd.copyWith(
-                            color: AppColors.warmDark,
+                            color: ctx.clay.text,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -823,7 +850,7 @@ class _HintCard extends StatelessWidget {
             Text(
               body,
               style: AppTypography.bodySm.copyWith(
-                color: AppColors.warmDark,
+                color: context.clay.text,
                 height: 1.45,
               ),
             ),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../../core/theme/app_colors.dart';
+import '../../core/theme/clay_palette.dart';
 import 'shimmer_placeholder.dart';
 
 class CloudImage extends StatelessWidget {
@@ -32,7 +32,7 @@ class CloudImage extends StatelessWidget {
       errorWidget: (_, __, ___) => SizedBox(
         width: size,
         height: size,
-        child: const Icon(Icons.broken_image, color: AppColors.warmLight),
+        child: Icon(Icons.broken_image, color: context.clay.textFaint),
       ),
     );
 

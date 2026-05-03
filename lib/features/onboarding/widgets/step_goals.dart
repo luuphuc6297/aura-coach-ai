@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/onboarding_provider.dart';
 import '../../../core/constants/onboarding_constants.dart';
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/clay_palette.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../l10n/app_loc_context.dart';
 import '../../../shared/widgets/clay_card.dart';
 import '../../../shared/widgets/selection_check_circle.dart';
 import '../../../shared/widgets/staggered_entrance.dart';
@@ -22,13 +23,13 @@ class StepGoals extends StatelessWidget {
       child: StaggeredEntrance(
         children: [
           Text(
-            'What are your goals?',
+            context.loc.onboardingGoalsTitle,
             style: AppTypography.displayMd,
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            'Select all that apply',
-            style: AppTypography.bodyMd.copyWith(color: AppColors.warmMuted),
+            context.loc.onboardingGoalsSubtitle,
+            style: AppTypography.bodyMd.copyWith(color: context.clay.textMuted),
           ),
           const SizedBox(height: AppSpacing.xxl),
           ...learningGoals.map((goal) {
@@ -60,7 +61,7 @@ class StepGoals extends StatelessWidget {
                             goal.description,
                             style: AppTypography.bodySm.copyWith(
                               fontSize: 13,
-                              color: AppColors.warmMuted,
+                              color: context.clay.textMuted,
                             ),
                           ),
                         ],

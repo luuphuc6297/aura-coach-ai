@@ -4,6 +4,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/theme/clay_palette.dart';
 import '../../../shared/widgets/app_icon.dart';
 import '../../../shared/widgets/clay_pressable.dart';
 
@@ -46,12 +47,12 @@ class _StartPracticeSheet extends StatelessWidget {
     return Container(
       constraints: BoxConstraints(maxHeight: maxHeight),
       decoration: BoxDecoration(
-        color: AppColors.clayWhite,
+        color: context.clay.surface,
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(AppRadius.xl),
         ),
-        border: Border.all(color: AppColors.clayBorder, width: 2),
-        boxShadow: AppShadows.card,
+        border: Border.all(color: context.clay.border, width: 2),
+        boxShadow: AppShadows.card(context),
       ),
       child: SafeArea(
         top: false,
@@ -66,7 +67,7 @@ class _StartPracticeSheet extends StatelessWidget {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: AppColors.clayBorder,
+                    color: context.clay.border,
                     borderRadius: AppRadius.fullBorder,
                   ),
                 ),
@@ -75,7 +76,7 @@ class _StartPracticeSheet extends StatelessWidget {
               Text(
                 'Start Practice',
                 style: AppTypography.title.copyWith(
-                  color: AppColors.warmDark,
+                  color: context.clay.text,
                   fontSize: 18,
                 ),
               ),
@@ -83,7 +84,7 @@ class _StartPracticeSheet extends StatelessWidget {
               Text(
                 'Pick up where you left off or begin a fresh scenario.',
                 style: AppTypography.bodySm.copyWith(
-                  color: AppColors.warmMuted,
+                  color: context.clay.textMuted,
                   fontSize: 12,
                 ),
               ),
@@ -98,7 +99,7 @@ class _StartPracticeSheet extends StatelessWidget {
                 Text(
                   'In Progress',
                   style: AppTypography.caption.copyWith(
-                    color: AppColors.warmMuted,
+                    color: context.clay.textMuted,
                     fontSize: 11,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 1.0,
@@ -254,9 +255,9 @@ class _ResumeCard extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: AppColors.cream,
+            color: context.clay.background,
             borderRadius: AppRadius.mdBorder,
-            border: Border.all(color: AppColors.clayBorder, width: 1.5),
+            border: Border.all(color: context.clay.border, width: 1.5),
           ),
           child: Row(
             children: [
@@ -279,7 +280,7 @@ class _ResumeCard extends StatelessWidget {
                     Text(
                       displayTitle,
                       style: AppTypography.bodySm.copyWith(
-                        color: AppColors.warmDark,
+                        color: context.clay.text,
                         fontWeight: FontWeight.w700,
                         fontFamily: 'Nunito',
                         fontSize: 13,
@@ -295,7 +296,7 @@ class _ResumeCard extends StatelessWidget {
                         _formatRelative(createdAt),
                       ].join(' · '),
                       style: AppTypography.caption.copyWith(
-                        color: AppColors.warmMuted,
+                        color: context.clay.textMuted,
                         fontSize: 11,
                       ),
                       maxLines: 1,

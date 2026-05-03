@@ -4,6 +4,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_shadows.dart';
+import '../../../core/theme/clay_palette.dart';
 import '../../../core/constants/cloudinary_assets.dart';
 import '../../../shared/widgets/cloud_image.dart';
 import '../../../shared/widgets/app_icon.dart';
@@ -58,7 +59,7 @@ class _AssessmentCardState extends State<AssessmentCard> {
     return 'Keep Practicing!';
   }
 
-  Color _getToneColor(String tone) {
+  Color _getToneColor(BuildContext context, String tone) {
     final lower = tone.toLowerCase();
     if (lower.contains('formal')) return AppColors.formalTone;
     if (lower.contains('friendly')) return AppColors.friendlyTone;
@@ -66,7 +67,7 @@ class _AssessmentCardState extends State<AssessmentCard> {
       return AppColors.casualTone;
     }
     if (lower.contains('conversational')) return AppColors.teal;
-    return AppColors.warmMuted;
+    return context.clay.textMuted;
   }
 
   @override
@@ -83,8 +84,8 @@ class _AssessmentCardState extends State<AssessmentCard> {
           height: 36,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(color: AppColors.clayBorder, width: 2),
-            boxShadow: AppShadows.card,
+            border: Border.all(color: context.clay.border, width: 2),
+            boxShadow: AppShadows.card(context),
           ),
           child: ClipOval(
             child: CloudImage(url: CloudinaryAssets.chatbot, size: 32),
@@ -105,24 +106,25 @@ class _AssessmentCardState extends State<AssessmentCard> {
               const SizedBox(height: 4),
               Container(
                 decoration: BoxDecoration(
-                  color: AppColors.clayWhite,
-                  border: Border.all(color: AppColors.clayBorder, width: 2),
+                  color: context.clay.surface,
+                  border: Border.all(color: context.clay.border, width: 2),
                   borderRadius: AppRadius.lgBorder,
-                  boxShadow: AppShadows.lifted,
+                  boxShadow: AppShadows.lifted(context),
                 ),
                 child: Column(
                   children: [
-                    _buildHeaderSection(scoreColor, gradeText, displayScore),
-                    _divider(),
-                    _buildRadarSection(),
-                    _divider(),
-                    _buildToneVariationsSection(),
+                    _buildHeaderSection(
+                        context, scoreColor, gradeText, displayScore),
+                    _divider(context),
+                    _buildRadarSection(context),
+                    _divider(context),
+                    _buildToneVariationsSection(context),
                     if (widget.assessment.keyVocabulary.isNotEmpty) ...[
-                      _divider(),
-                      _buildKeyVocabularySection(),
+                      _divider(context),
+                      _buildKeyVocabularySection(context),
                     ],
-                    _divider(),
-                    _buildFooterSection(),
+                    _divider(context),
+                    _buildFooterSection(context),
                   ],
                 ),
               ),
@@ -133,8 +135,8 @@ class _AssessmentCardState extends State<AssessmentCard> {
     );
   }
 
-  Widget _buildHeaderSection(
-      Color scoreColor, String gradeText, int displayScore) {
+  Widget _buildHeaderSection(BuildContext context, Color scoreColor,
+      String gradeText, int displayScore) {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -153,12 +155,12 @@ class _AssessmentCardState extends State<AssessmentCard> {
                       spacing: 6,
                       runSpacing: 6,
                       children: [
-                        _gradeBadge(gradeText, scoreColor),
+                        _gradeBadge(context, gradeText, scoreColor),
                         _badge(
                           widget.assessment.userTone,
-                          _getToneColor(widget.assessment.userTone),
-                          bgColor: AppColors.clayBeige,
-                          borderColor: AppColors.clayBorder,
+                          _getToneColor(context, widget.assessment.userTone),
+                          bgColor: context.clay.surfaceAlt,
+                          borderColor: context.clay.border,
                         ),
                       ],
                     ),
@@ -166,7 +168,7 @@ class _AssessmentCardState extends State<AssessmentCard> {
                     Text(
                       widget.assessment.feedback,
                       style: AppTypography.bodySm.copyWith(
-                        color: AppColors.warmMuted,
+                        color: context.clay.textMuted,
                         fontSize: 13,
                         height: 1.5,
                       ),
@@ -178,18 +180,18 @@ class _AssessmentCardState extends State<AssessmentCard> {
           ),
           if (widget.assessment.correction != null) ...[
             const SizedBox(height: 14),
-            _buildCorrectionSection(),
+            _buildCorrectionSection(context),
           ],
           if (widget.assessment.betterAlternative != null) ...[
             const SizedBox(height: 10),
-            _buildBetterAlternativeSection(),
+            _buildBetterAlternativeSection(context),
           ],
         ],
       ),
     );
   }
 
-  Widget _buildCorrectionSection() {
+  Widget _buildCorrectionSection(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -224,7 +226,7 @@ class _AssessmentCardState extends State<AssessmentCard> {
           Text(
             widget.assessment.correction!,
             style: AppTypography.bodySm.copyWith(
-              color: AppColors.warmDark,
+              color: context.clay.text,
               fontSize: 13,
               fontWeight: FontWeight.w500,
               height: 1.5,
@@ -235,7 +237,7 @@ class _AssessmentCardState extends State<AssessmentCard> {
     );
   }
 
-  Widget _buildBetterAlternativeSection() {
+  Widget _buildBetterAlternativeSection(BuildContext context) {
     return ClayPressable(
       onTap: () =>
           setState(() => _showBetterWayExpanded = !_showBetterWayExpanded),
@@ -291,7 +293,7 @@ class _AssessmentCardState extends State<AssessmentCard> {
                   child: Text(
                     widget.assessment.betterAlternative!,
                     style: AppTypography.bodySm.copyWith(
-                      color: AppColors.warmDark,
+                      color: context.clay.text,
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
                       height: 1.5,
@@ -311,7 +313,7 @@ class _AssessmentCardState extends State<AssessmentCard> {
     );
   }
 
-  Widget _buildRadarSection() {
+  Widget _buildRadarSection(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
       child: Column(
@@ -322,7 +324,7 @@ class _AssessmentCardState extends State<AssessmentCard> {
             style: AppTypography.sentenceLabel.copyWith(
               fontSize: 11,
               letterSpacing: 1.0,
-              color: AppColors.warmMuted,
+              color: context.clay.textMuted,
             ),
           ),
           const SizedBox(height: 14),
@@ -333,14 +335,14 @@ class _AssessmentCardState extends State<AssessmentCard> {
             size: 200,
           ),
           const SizedBox(height: 18),
-          _buildAnalysisBlock(
-              AppIcons.grammar, 'Grammar', widget.assessment.grammarAnalysis),
+          _buildAnalysisBlock(context, AppIcons.grammar, 'Grammar',
+              widget.assessment.grammarAnalysis),
           const SizedBox(height: 10),
-          _buildAnalysisBlock(AppIcons.vocabulary, 'Vocabulary',
+          _buildAnalysisBlock(context, AppIcons.vocabulary, 'Vocabulary',
               widget.assessment.vocabularyAnalysis),
           if (widget.assessment.improvements.isNotEmpty) ...[
             const SizedBox(height: 10),
-            _buildImprovementsBlock(),
+            _buildImprovementsBlock(context),
           ],
         ],
       ),
@@ -386,9 +388,10 @@ class _AssessmentCardState extends State<AssessmentCard> {
     return spans;
   }
 
-  Widget _buildAnalysisBlock(String icon, String title, String content) {
+  Widget _buildAnalysisBlock(
+      BuildContext context, String icon, String title, String content) {
     final contentStyle = AppTypography.bodySm.copyWith(
-      color: AppColors.warmDark,
+      color: context.clay.text,
       fontSize: 13,
       fontWeight: FontWeight.w400,
       height: 1.5,
@@ -397,22 +400,22 @@ class _AssessmentCardState extends State<AssessmentCard> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.clayBeige.withValues(alpha: 0.6),
+        color: context.clay.surfaceAlt.withValues(alpha: 0.6),
         borderRadius: AppRadius.mdBorder,
-        border: Border.all(color: AppColors.clayBorder, width: 1.5),
+        border: Border.all(color: context.clay.border, width: 1.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              AppIcon(iconId: icon, size: 18, color: AppColors.warmDark),
+              AppIcon(iconId: icon, size: 18, color: context.clay.text),
               const SizedBox(width: 8),
               Text(
                 title,
                 style: AppTypography.sectionTitle.copyWith(
                   fontWeight: FontWeight.w700,
-                  color: AppColors.warmDark,
+                  color: context.clay.text,
                   fontSize: 14,
                 ),
               ),
@@ -429,7 +432,7 @@ class _AssessmentCardState extends State<AssessmentCard> {
     );
   }
 
-  Widget _buildImprovementsBlock() {
+  Widget _buildImprovementsBlock(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -467,7 +470,7 @@ class _AssessmentCardState extends State<AssessmentCard> {
                 child: Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppColors.clayWhite,
+                    color: context.clay.surface,
                     borderRadius: AppRadius.smBorder,
                     border: Border.all(
                       color: AppColors.purple.withValues(alpha: 0.2),
@@ -484,6 +487,7 @@ class _AssessmentCardState extends State<AssessmentCard> {
                             _ImprovementTypeBadge(type: imp.type),
                             const SizedBox(height: 6),
                             _improvementLine(
+                              context: context,
                               label: 'Original',
                               value: imp.original,
                               color: AppColors.error,
@@ -491,6 +495,7 @@ class _AssessmentCardState extends State<AssessmentCard> {
                             ),
                             const SizedBox(height: 4),
                             _improvementLine(
+                              context: context,
                               label: 'Better',
                               value: imp.correction,
                               color: AppColors.success,
@@ -500,7 +505,7 @@ class _AssessmentCardState extends State<AssessmentCard> {
                             Text(
                               imp.explanation,
                               style: AppTypography.bodySm.copyWith(
-                                color: AppColors.warmMuted,
+                                color: context.clay.textMuted,
                                 fontSize: 12,
                                 height: 1.4,
                               ),
@@ -542,6 +547,7 @@ class _AssessmentCardState extends State<AssessmentCard> {
   }
 
   Widget _improvementLine({
+    required BuildContext context,
     required String label,
     required String value,
     required Color color,
@@ -562,7 +568,7 @@ class _AssessmentCardState extends State<AssessmentCard> {
           TextSpan(
             text: value,
             style: AppTypography.bodySm.copyWith(
-              color: AppColors.warmDark,
+              color: context.clay.text,
               fontSize: 12,
               fontStyle: italic ? FontStyle.italic : FontStyle.normal,
               fontWeight: bold ? FontWeight.w600 : FontWeight.w400,
@@ -574,7 +580,7 @@ class _AssessmentCardState extends State<AssessmentCard> {
     );
   }
 
-  Widget _buildToneVariationsSection() {
+  Widget _buildToneVariationsSection(BuildContext context) {
     final tones = [
       ('Formal', widget.assessment.alternativeTones.formal),
       ('Friendly', widget.assessment.alternativeTones.friendly),
@@ -590,7 +596,7 @@ class _AssessmentCardState extends State<AssessmentCard> {
           Text(
             'ALTERNATIVE TONES',
             style: AppTypography.sentenceLabel.copyWith(
-              color: AppColors.warmMuted,
+              color: context.clay.textMuted,
               fontSize: 11,
               letterSpacing: 1.0,
             ),
@@ -632,7 +638,7 @@ class _AssessmentCardState extends State<AssessmentCard> {
                           Text(
                             toneVar.text,
                             style: AppTypography.bodySm.copyWith(
-                              color: AppColors.warmDark,
+                              color: context.clay.text,
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
                               height: 1.45,
@@ -652,7 +658,7 @@ class _AssessmentCardState extends State<AssessmentCard> {
                               width: 32,
                               height: 32,
                               decoration: BoxDecoration(
-                                color: AppColors.clayWhite,
+                                color: context.clay.surface,
                                 borderRadius: BorderRadius.circular(10),
                                 border: Border.all(
                                   color: toneColor.withValues(alpha: 0.3),
@@ -678,7 +684,7 @@ class _AssessmentCardState extends State<AssessmentCard> {
                               width: 32,
                               height: 32,
                               decoration: BoxDecoration(
-                                color: AppColors.clayWhite,
+                                color: context.clay.surface,
                                 borderRadius: BorderRadius.circular(10),
                                 border: Border.all(
                                   color: toneColor.withValues(alpha: 0.3),
@@ -707,7 +713,7 @@ class _AssessmentCardState extends State<AssessmentCard> {
     );
   }
 
-  Widget _buildKeyVocabularySection() {
+  Widget _buildKeyVocabularySection(BuildContext context) {
     final vocab = widget.assessment.keyVocabulary;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -725,7 +731,7 @@ class _AssessmentCardState extends State<AssessmentCard> {
               Text(
                 'KEY VOCABULARY',
                 style: AppTypography.sentenceLabel.copyWith(
-                  color: AppColors.warmMuted,
+                  color: context.clay.textMuted,
                   fontSize: 11,
                   letterSpacing: 1.0,
                 ),
@@ -734,7 +740,7 @@ class _AssessmentCardState extends State<AssessmentCard> {
               Text(
                 '${vocab.length} ${vocab.length == 1 ? 'word' : 'words'}',
                 style: AppTypography.caption.copyWith(
-                  color: AppColors.warmLight,
+                  color: context.clay.textFaint,
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                 ),
@@ -745,7 +751,7 @@ class _AssessmentCardState extends State<AssessmentCard> {
           Text(
             'Tap bookmark to save to your dictionary',
             style: AppTypography.caption.copyWith(
-              color: AppColors.warmLight,
+              color: context.clay.textFaint,
               fontSize: 11,
             ),
           ),
@@ -769,7 +775,7 @@ class _AssessmentCardState extends State<AssessmentCard> {
     );
   }
 
-  Widget _buildFooterSection() {
+  Widget _buildFooterSection(BuildContext context) {
     final hasCallbacks = widget.onEasier != null ||
         widget.onSameDifficulty != null ||
         widget.onHarder != null;
@@ -786,7 +792,7 @@ class _AssessmentCardState extends State<AssessmentCard> {
           Text(
             'ROLEPLAY DIFFICULTY',
             style: AppTypography.sentenceLabel.copyWith(
-              color: AppColors.warmMuted,
+              color: context.clay.textMuted,
               fontSize: 11,
               letterSpacing: 1.0,
             ),
@@ -796,6 +802,7 @@ class _AssessmentCardState extends State<AssessmentCard> {
             children: [
               Expanded(
                 child: _difficultyButton(
+                  context,
                   'Easier',
                   widget.onEasier,
                   AppColors.error,
@@ -804,6 +811,7 @@ class _AssessmentCardState extends State<AssessmentCard> {
               const SizedBox(width: 8),
               Expanded(
                 child: _difficultyButton(
+                  context,
                   'Same',
                   widget.onSameDifficulty,
                   AppColors.gold,
@@ -812,6 +820,7 @@ class _AssessmentCardState extends State<AssessmentCard> {
               const SizedBox(width: 8),
               Expanded(
                 child: _difficultyButton(
+                  context,
                   'Harder',
                   widget.onHarder,
                   AppColors.success,
@@ -824,7 +833,8 @@ class _AssessmentCardState extends State<AssessmentCard> {
     );
   }
 
-  Widget _difficultyButton(String label, VoidCallback? onTap, Color color) {
+  Widget _difficultyButton(BuildContext context, String label,
+      VoidCallback? onTap, Color color) {
     return ClayPressable(
       onTap: onTap,
       scaleDown: 0.95,
@@ -841,7 +851,7 @@ class _AssessmentCardState extends State<AssessmentCard> {
             textAlign: TextAlign.center,
             style: AppTypography.labelSm.copyWith(
               fontWeight: FontWeight.w700,
-              color: AppColors.warmDark,
+              color: context.clay.text,
               fontSize: 12,
             ),
           ),
@@ -850,7 +860,7 @@ class _AssessmentCardState extends State<AssessmentCard> {
     );
   }
 
-  Widget _gradeBadge(String text, Color color) {
+  Widget _gradeBadge(BuildContext context, String text, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
       decoration: BoxDecoration(
@@ -862,7 +872,7 @@ class _AssessmentCardState extends State<AssessmentCard> {
         text,
         style: AppTypography.labelSm.copyWith(
           fontWeight: FontWeight.w800,
-          color: AppColors.warmDark,
+          color: context.clay.text,
           fontSize: 13,
         ),
       ),
@@ -896,10 +906,10 @@ class _AssessmentCardState extends State<AssessmentCard> {
     );
   }
 
-  Widget _divider() {
+  Widget _divider(BuildContext context) {
     return Container(
       height: 2,
-      color: AppColors.clayBorder,
+      color: context.clay.border,
     );
   }
 }
@@ -949,7 +959,7 @@ class _KeyVocabularyTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.clayWhite,
+        color: context.clay.surface,
         borderRadius: AppRadius.mdBorder,
         border: Border.all(
           color: AppColors.purple.withValues(alpha: 0.25),
@@ -970,7 +980,7 @@ class _KeyVocabularyTile extends StatelessWidget {
                       child: Text(
                         item.word,
                         style: AppTypography.sectionTitle.copyWith(
-                          color: AppColors.warmDark,
+                          color: context.clay.text,
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
                         ),
@@ -1008,7 +1018,7 @@ class _KeyVocabularyTile extends StatelessWidget {
                   Text(
                     item.meaning,
                     style: AppTypography.bodySm.copyWith(
-                      color: AppColors.warmMuted,
+                      color: context.clay.textMuted,
                       fontSize: 12,
                       height: 1.4,
                     ),
@@ -1019,7 +1029,7 @@ class _KeyVocabularyTile extends StatelessWidget {
                   Text(
                     item.example,
                     style: AppTypography.bodySm.copyWith(
-                      color: AppColors.warmLight,
+                      color: context.clay.textFaint,
                       fontSize: 12,
                       fontStyle: FontStyle.italic,
                       height: 1.4,

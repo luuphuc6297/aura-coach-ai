@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/theme/clay_palette.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../providers/analytics_provider.dart';
 import '../widgets/hero_stats_row.dart';
@@ -22,7 +23,11 @@ import '../widgets/weak_words_card.dart';
 /// Heavier future widgets (radar, tone donut, trend line, AI read-out) plug
 /// into this same scroll column as they're built — no restructure needed.
 class InsightsScreen extends StatefulWidget {
-  const InsightsScreen({super.key});
+  /// When `true`, omit the in-screen "Insights" header — the parent
+  /// [InsightsHubScreen] already provides the page title via its AppBar.
+  final bool embedded;
+
+  const InsightsScreen({super.key, this.embedded = false});
 
   @override
   State<InsightsScreen> createState() => _InsightsScreenState();
@@ -46,7 +51,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
       builder: (context, analytics, _) {
         return RefreshIndicator(
           color: AppColors.teal,
-          backgroundColor: AppColors.clayWhite,
+          backgroundColor: context.clay.surface,
           onRefresh: analytics.refresh,
           child: ListView(
             physics: const AlwaysScrollableScrollPhysics(),
@@ -57,8 +62,10 @@ class _InsightsScreenState extends State<InsightsScreen> {
               AppSpacing.huge,
             ),
             children: [
-              const _Header(),
-              const SizedBox(height: AppSpacing.lg),
+              if (!widget.embedded) ...[
+                const _Header(),
+                const SizedBox(height: AppSpacing.lg),
+              ],
               PeriodPicker(
                 value: analytics.period,
                 onChanged: analytics.setPeriod,
@@ -117,7 +124,7 @@ class _Header extends StatelessWidget {
         const SizedBox(height: AppSpacing.xxs),
         Text(
           'See how your practice is paying off.',
-          style: AppTypography.bodySm.copyWith(color: AppColors.warmMuted),
+          style: AppTypography.bodySm.copyWith(color: context.clay.textMuted),
         ),
       ],
     );
@@ -145,7 +152,7 @@ class _LoadingPlaceholder extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
             Text(
               'Crunching your practice data...',
-              style: AppTypography.caption.copyWith(color: AppColors.warmMuted),
+              style: AppTypography.caption.copyWith(color: context.clay.textMuted),
             ),
           ],
         ),

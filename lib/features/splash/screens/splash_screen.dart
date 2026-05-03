@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_animations.dart';
+import '../../../core/theme/clay_palette.dart';
 import '../../../shared/widgets/cloud_image.dart';
 import '../../../core/constants/cloudinary_assets.dart';
 import '../../auth/providers/auth_provider.dart';
@@ -81,7 +82,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: context.clay.background,
       body: Center(
         child: Stack(
           alignment: Alignment.center,

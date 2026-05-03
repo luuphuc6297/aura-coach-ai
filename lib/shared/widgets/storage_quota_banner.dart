@@ -3,7 +3,9 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_shadows.dart';
 import '../../core/theme/app_typography.dart';
+import '../../core/theme/clay_palette.dart';
 import '../../features/shared/providers/storage_quota_provider.dart';
+import '../../l10n/app_loc_context.dart';
 import 'clay_pressable.dart';
 
 /// Displayed on the Home screen whenever storage is in `warning` or `cap`
@@ -28,7 +30,8 @@ class StorageQuotaBanner extends StatelessWidget {
     }
     final isCap = snapshot.state == StorageQuotaState.cap;
     final accent = isCap ? AppColors.error : AppColors.gold;
-    final breakdown = _breakdown(snapshot.perMode);
+    final loc = context.loc;
+    final breakdown = _breakdown(context, snapshot.perMode);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
@@ -38,7 +41,7 @@ class StorageQuotaBanner extends StatelessWidget {
           color: accent.withValues(alpha: 0.12),
           borderRadius: AppRadius.lgBorder,
           border: Border.all(color: accent.withValues(alpha: 0.45), width: 1.3),
-          boxShadow: AppShadows.clay,
+          boxShadow: AppShadows.clay(context),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -54,8 +57,8 @@ class StorageQuotaBanner extends StatelessWidget {
                 Expanded(
                   child: Text(
                     isCap
-                        ? 'Storage full — delete or upgrade to start new'
-                        : 'Storage almost full',
+                        ? loc.storageQuotaCapTitle
+                        : loc.storageQuotaWarningTitle,
                     style: AppTypography.labelMd.copyWith(
                       color: accent,
                       fontWeight: FontWeight.w800,
@@ -70,15 +73,15 @@ class StorageQuotaBanner extends StatelessWidget {
               Text(
                 breakdown,
                 style: AppTypography.caption.copyWith(
-                  color: AppColors.warmMuted,
+                  color: context.clay.textMuted,
                   fontSize: 11,
                 ),
               ),
             const SizedBox(height: 4),
             Text(
-              '${snapshot.total}/${snapshot.cap} conversations used.',
+              loc.storageQuotaUsage(snapshot.total, snapshot.cap),
               style: AppTypography.caption.copyWith(
-                color: AppColors.warmDark,
+                color: context.clay.text,
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
               ),
@@ -92,18 +95,18 @@ class StorageQuotaBanner extends StatelessWidget {
                     builder: (_, __) => Container(
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       decoration: BoxDecoration(
-                        color: AppColors.clayBeige,
+                        color: context.clay.surfaceAlt,
                         borderRadius: AppRadius.mdBorder,
                         border: Border.all(
-                          color: AppColors.clayBorder,
+                          color: context.clay.border,
                           width: 1.2,
                         ),
                       ),
                       child: Text(
-                        'Manage',
+                        loc.storageQuotaManage,
                         textAlign: TextAlign.center,
                         style: AppTypography.labelMd.copyWith(
-                          color: AppColors.warmDark,
+                          color: context.clay.text,
                           fontWeight: FontWeight.w700,
                           fontSize: 12,
                         ),
@@ -122,7 +125,7 @@ class StorageQuotaBanner extends StatelessWidget {
                         borderRadius: AppRadius.mdBorder,
                       ),
                       child: Text(
-                        'Upgrade',
+                        loc.storageQuotaUpgrade,
                         textAlign: TextAlign.center,
                         style: AppTypography.labelMd.copyWith(
                           color: Colors.white,
@@ -141,11 +144,12 @@ class StorageQuotaBanner extends StatelessWidget {
     );
   }
 
-  String _breakdown(Map<String, int> perMode) {
+  String _breakdown(BuildContext context, Map<String, int> perMode) {
     if (perMode.isEmpty) return '';
-    const labels = {
-      'roleplay': 'Scenario',
-      'story': 'Story',
+    final loc = context.loc;
+    final labels = <String, String>{
+      'roleplay': loc.storageQuotaModeScenario,
+      'story': loc.storageQuotaModeStory,
     };
     final parts = <String>[];
     for (final entry in perMode.entries) {

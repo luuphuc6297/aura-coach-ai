@@ -18,7 +18,8 @@ For the root node AND each child node, provide:
 1. The English word (label)
 2. The Vietnamese translation (translation)
 3. The part of speech (partOfSpeech) - e.g., "Noun", "Verb", "Adjective"
-4. A short English sentence explaining its context or usage (context)
+4. The IPA phonetic transcription wrapped in slashes (phonetic), e.g. "/ˈtrævəl/". For topic/category nodes that aren't single words, return an empty string.
+5. A short English sentence explaining its context or usage (context)
 
 Respond with ONLY a JSON object:
 {
@@ -26,6 +27,7 @@ Respond with ONLY a JSON object:
     "label": "$topic",
     "translation": "Vietnamese translation of topic",
     "partOfSpeech": "Noun",
+    "phonetic": "/IPA/",
     "context": "Example sentence using the topic"
   },
   "children": [
@@ -33,12 +35,14 @@ Respond with ONLY a JSON object:
       "label": "ConcreteWord1",
       "translation": "Vietnamese translation",
       "partOfSpeech": "Noun",
+      "phonetic": "/IPA/",
       "context": "Example sentence"
     },
     {
       "label": "ConcreteWord2",
       "translation": "Vietnamese translation",
       "partOfSpeech": "Noun",
+      "phonetic": "/IPA/",
       "context": "Example sentence"
     }
   ]
@@ -92,12 +96,13 @@ Examples of BAD expansions (DO NOT do this):
 1. **label**: The English word (1-2 words)
 2. **translation**: Vietnamese translation
 3. **partOfSpeech**: "Noun", "Verb", "Adjective", "Adverb", etc.
-4. **context**: A natural example sentence using this word in the context of "$rootTopic" (max 15 words)
+4. **phonetic**: IPA transcription wrapped in slashes, e.g. "/ˈtrævəl/"
+5. **context**: A natural example sentence using this word in the context of "$rootTopic" (max 15 words)
 
 Respond with ONLY a JSON array of exactly 2 objects:
 [
-  {"label": "Word1", "translation": "...", "partOfSpeech": "Noun", "context": "Example sentence"},
-  {"label": "Word2", "translation": "...", "partOfSpeech": "Noun", "context": "Example sentence"}
+  {"label": "Word1", "translation": "...", "partOfSpeech": "Noun", "phonetic": "/IPA/", "context": "Example sentence"},
+  {"label": "Word2", "translation": "...", "partOfSpeech": "Noun", "phonetic": "/IPA/", "context": "Example sentence"}
 ]
 ''';
 }
@@ -119,7 +124,8 @@ If it is related, find the BEST parent node for it and return status "connected"
 Also provide:
 1. The Vietnamese translation (translation)
 2. The part of speech (partOfSpeech) - e.g., "Noun", "Verb", "Adjective"
-3. A short English sentence explaining its context or usage (context)
+3. The IPA phonetic transcription wrapped in slashes (phonetic), e.g. "/ˈtrævəl/"
+4. A short English sentence explaining its context or usage (context)
 
 If it is NOT related to ANY of the nodes (including the root), return status "unrelated" and a brief message explaining why.
 
@@ -130,6 +136,7 @@ Respond with ONLY a JSON object:
   "label": "$customWord",
   "translation": "Vietnamese translation if connected, else null",
   "partOfSpeech": "Part of speech if connected, else null",
+  "phonetic": "/IPA/ if connected, else null",
   "context": "Example sentence if connected, else null",
   "message": "Explanation if unrelated, else null"
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_animations.dart';
+import '../../core/theme/clay_palette.dart';
 
 class SelectionCheckCircle extends StatelessWidget {
   final bool isSelected;
@@ -26,7 +27,7 @@ class SelectionCheckCircle extends StatelessWidget {
             shape: BoxShape.circle,
             color: isSelected ? AppColors.teal : Colors.transparent,
             border: Border.all(
-              color: isSelected ? AppColors.teal : AppColors.clayBorder,
+              color: isSelected ? AppColors.teal : context.clay.border,
               width: 2,
             ),
           ),

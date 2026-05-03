@@ -4,9 +4,19 @@ import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_shadows.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/theme/app_animations.dart';
+import '../../core/theme/clay_palette.dart';
 import 'clay_pressable.dart';
 
-enum ClayButtonVariant { primary, secondary, danger, ghost, pill, accentPurple }
+enum ClayButtonVariant {
+  primary,
+  secondary,
+  danger,
+  ghost,
+  pill,
+  accentPurple,
+  accentCoral,
+  accentGold,
+}
 
 class ClayButton extends StatelessWidget {
   final String text;
@@ -26,13 +36,13 @@ class ClayButton extends StatelessWidget {
     this.icon,
   });
 
-  Color get _bg {
-    if (onTap == null) return AppColors.clayBeige;
+  Color _bg(BuildContext context) {
+    if (onTap == null) return context.clay.surfaceAlt;
     switch (variant) {
       case ClayButtonVariant.primary:
         return AppColors.teal;
       case ClayButtonVariant.secondary:
-        return AppColors.clayWhite;
+        return context.clay.surface;
       case ClayButtonVariant.danger:
         return AppColors.error;
       case ClayButtonVariant.ghost:
@@ -41,43 +51,61 @@ class ClayButton extends StatelessWidget {
         return AppColors.teal;
       case ClayButtonVariant.accentPurple:
         return AppColors.purple;
+      case ClayButtonVariant.accentCoral:
+        return AppColors.coral;
+      case ClayButtonVariant.accentGold:
+        return AppColors.gold;
     }
   }
 
-  Color get _fg {
-    if (onTap == null) return AppColors.warmLight;
+  Color _fg(BuildContext context) {
+    if (onTap == null) return context.clay.textFaint;
     switch (variant) {
+      // Accent backgrounds (teal/coral/gold/purple) and danger are
+      // intentionally bright in BOTH modes — keep dark text on top so the
+      // label stays readable. Don't flip with theme.
       case ClayButtonVariant.primary:
       case ClayButtonVariant.danger:
       case ClayButtonVariant.pill:
-      case ClayButtonVariant.secondary:
       case ClayButtonVariant.accentPurple:
+      case ClayButtonVariant.accentCoral:
+      case ClayButtonVariant.accentGold:
         return AppColors.warmDark;
+      case ClayButtonVariant.secondary:
+        return context.clay.text;
       case ClayButtonVariant.ghost:
-        return AppColors.warmMuted;
+        return context.clay.textMuted;
     }
   }
 
-  List<BoxShadow> _shadow(bool isPressed) {
+  List<BoxShadow> _shadow(BuildContext context, bool isPressed) {
     if (onTap == null || variant == ClayButtonVariant.ghost) {
       return [];
     }
     if (variant == ClayButtonVariant.primary ||
-        variant == ClayButtonVariant.accentPurple) {
-      return isPressed ? AppShadows.clayBoldPressed : AppShadows.clayBold;
+        variant == ClayButtonVariant.accentPurple ||
+        variant == ClayButtonVariant.accentCoral ||
+        variant == ClayButtonVariant.accentGold) {
+      return isPressed
+          ? AppShadows.clayBoldPressed(context)
+          : AppShadows.clayBold(context);
     }
-    if (isPressed) return AppShadows.clayPressed;
-    return AppShadows.clay;
+    if (isPressed) return AppShadows.clayPressed(context);
+    return AppShadows.clay(context);
   }
 
-  Border? get _border {
+  Border? _border(BuildContext context) {
     if (onTap != null &&
         (variant == ClayButtonVariant.primary ||
-            variant == ClayButtonVariant.accentPurple)) {
-      return Border.all(color: AppColors.warmDark, width: 2);
+            variant == ClayButtonVariant.accentPurple ||
+            variant == ClayButtonVariant.accentCoral ||
+            variant == ClayButtonVariant.accentGold)) {
+      // Bold outline on accent buttons — dark in light mode, cream in dark.
+      // Both pop against the constant accent fill.
+      return Border.all(color: context.clay.text, width: 2);
     }
     if (variant == ClayButtonVariant.secondary) {
-      return Border.all(color: AppColors.clayBorder, width: 2);
+      return Border.all(color: context.clay.border, width: 2);
     }
     return null;
   }
@@ -101,12 +129,12 @@ class ClayButton extends StatelessWidget {
               vertical: variant == ClayButtonVariant.pill ? 10 : 14,
             ),
             decoration: BoxDecoration(
-              color: _bg,
+              color: _bg(context),
               borderRadius: variant == ClayButtonVariant.pill
                   ? AppRadius.fullBorder
                   : AppRadius.lgBorder,
-              border: _border,
-              boxShadow: _shadow(isPressed),
+              border: _border(context),
+              boxShadow: _shadow(context, isPressed),
             ),
             child: AnimatedOpacity(
               duration: AppAnimations.durationFast,
@@ -134,7 +162,7 @@ class ClayButton extends StatelessWidget {
                                     Text(
                                       text,
                                       style: AppTypography.button
-                                          .copyWith(color: _fg),
+                                          .copyWith(color: _fg(context)),
                                       textAlign: TextAlign.center,
                                     ),
                                   ],
@@ -145,7 +173,7 @@ class ClayButton extends StatelessWidget {
                                 height: 20,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2.5,
-                                  valueColor: AlwaysStoppedAnimation(_fg),
+                                  valueColor: AlwaysStoppedAnimation(_fg(context)),
                                 ),
                               ),
                             ],
@@ -161,7 +189,7 @@ class ClayButton extends StatelessWidget {
                               Text(
                                 text,
                                 style:
-                                    AppTypography.button.copyWith(color: _fg),
+                                    AppTypography.button.copyWith(color: _fg(context)),
                                 textAlign: TextAlign.center,
                               ),
                             ],

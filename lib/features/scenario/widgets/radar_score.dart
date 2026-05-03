@@ -1,6 +1,7 @@
 import 'dart:math' show cos, sin, pi;
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/clay_palette.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_radius.dart';
 
@@ -20,6 +21,7 @@ class RadarScore extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final clay = context.clay;
     return Column(
       children: [
         SizedBox(
@@ -30,6 +32,9 @@ class RadarScore extends StatelessWidget {
               accuracyScore: accuracyScore,
               naturalnessScore: naturalnessScore,
               complexityScore: complexityScore,
+              gridColor: clay.border,
+              dotRingColor: clay.surface,
+              labelColor: clay.text,
             ),
           ),
         ),
@@ -92,6 +97,15 @@ class _RadarChartPainter extends CustomPainter {
   final int naturalnessScore;
   final int complexityScore;
 
+  /// Grid polygon + axis stroke color (theme-aware clay border).
+  final Color gridColor;
+
+  /// White ring around each data dot (theme-aware clay surface).
+  final Color dotRingColor;
+
+  /// Axis label text color (theme-aware clay text).
+  final Color labelColor;
+
   static const int _maxScore = 10;
   static const int _gridLevels = 4;
   static const List<String> _labels = ['Accuracy', 'Naturalness', 'Complexity'];
@@ -100,6 +114,9 @@ class _RadarChartPainter extends CustomPainter {
     required this.accuracyScore,
     required this.naturalnessScore,
     required this.complexityScore,
+    required this.gridColor,
+    required this.dotRingColor,
+    required this.labelColor,
   });
 
   @override
@@ -120,7 +137,7 @@ class _RadarChartPainter extends CustomPainter {
       final isOuter = level == _gridLevels;
 
       final paint = Paint()
-        ..color = AppColors.clayBorder.withValues(alpha: isOuter ? 0.4 : 0.15)
+        ..color = gridColor.withValues(alpha: isOuter ? 0.4 : 0.15)
         ..style = PaintingStyle.stroke
         ..strokeWidth = isOuter ? 1.5 : 0.8;
 
@@ -130,7 +147,7 @@ class _RadarChartPainter extends CustomPainter {
 
   void _drawAxes(Canvas canvas, Offset center, double radius) {
     final paint = Paint()
-      ..color = AppColors.clayBorder.withValues(alpha: 0.25)
+      ..color = gridColor.withValues(alpha: 0.25)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0;
 
@@ -193,7 +210,7 @@ class _RadarChartPainter extends CustomPainter {
         point,
         4.5,
         Paint()
-          ..color = AppColors.clayWhite
+          ..color = dotRingColor
           ..style = PaintingStyle.fill,
       );
 
@@ -221,7 +238,7 @@ class _RadarChartPainter extends CustomPainter {
             fontFamily: 'Inter',
             fontSize: 11,
             fontWeight: FontWeight.w700,
-            color: AppColors.warmDark,
+            color: labelColor,
             letterSpacing: 0.2,
           ),
         ),
@@ -293,6 +310,9 @@ class _RadarChartPainter extends CustomPainter {
   bool shouldRepaint(covariant _RadarChartPainter oldDelegate) {
     return oldDelegate.accuracyScore != accuracyScore ||
         oldDelegate.naturalnessScore != naturalnessScore ||
-        oldDelegate.complexityScore != complexityScore;
+        oldDelegate.complexityScore != complexityScore ||
+        oldDelegate.gridColor != gridColor ||
+        oldDelegate.dotRingColor != dotRingColor ||
+        oldDelegate.labelColor != labelColor;
   }
 }

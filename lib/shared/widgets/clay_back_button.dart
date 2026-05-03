@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../core/theme/app_colors.dart';
+import '../../core/theme/clay_palette.dart';
 import 'clay_pressable.dart';
 
 /// Canonical back button used in every navigable header. Keeping this in one
@@ -8,13 +8,16 @@ import 'clay_pressable.dart';
 /// behavior stay consistent no matter which screen hosts it.
 class ClayBackButton extends StatelessWidget {
   final VoidCallback? onTap;
-  final Color iconColor;
+  /// Override icon color when the host header sits on a non-default surface
+  /// (e.g. a coral hero). Defaults to the active theme's text color so the
+  /// arrow flips with light/dark mode automatically.
+  final Color? iconColor;
   final double size;
 
   const ClayBackButton({
     super.key,
     this.onTap,
-    this.iconColor = AppColors.warmDark,
+    this.iconColor,
     this.size = 44,
   });
 
@@ -39,7 +42,7 @@ class ClayBackButton extends StatelessWidget {
             child: Icon(
               Icons.arrow_back_ios_rounded,
               size: 20,
-              color: iconColor,
+              color: iconColor ?? context.clay.text,
             ),
           ),
         );
