@@ -3,6 +3,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/theme/clay_palette.dart';
 import '../../../shared/widgets/clay_pressable.dart';
 
 /// Action returned from [showStartStorySheet]. Either indicates the user
@@ -69,12 +70,12 @@ class _StartStorySheet extends StatelessWidget {
     return Container(
       constraints: BoxConstraints(maxHeight: maxHeight),
       decoration: BoxDecoration(
-        color: AppColors.clayWhite,
+        color: context.clay.surface,
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(AppRadius.xl),
         ),
-        border: Border.all(color: AppColors.clayBorder, width: 2),
-        boxShadow: AppShadows.card,
+        border: Border.all(color: context.clay.border, width: 2),
+        boxShadow: AppShadows.card(context),
       ),
       child: SafeArea(
         top: false,
@@ -89,7 +90,7 @@ class _StartStorySheet extends StatelessWidget {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: AppColors.clayBorder,
+                    color: context.clay.border,
                     borderRadius: AppRadius.fullBorder,
                   ),
                 ),
@@ -105,7 +106,7 @@ class _StartStorySheet extends StatelessWidget {
                         Text(
                           'Begin a Story',
                           style: AppTypography.title.copyWith(
-                            color: AppColors.warmDark,
+                            color: context.clay.text,
                             fontSize: 18,
                           ),
                         ),
@@ -113,7 +114,7 @@ class _StartStorySheet extends StatelessWidget {
                         Text(
                           'Continue a story in progress or browse the library.',
                           style: AppTypography.bodySm.copyWith(
-                            color: AppColors.warmMuted,
+                            color: context.clay.textMuted,
                             fontSize: 12,
                           ),
                         ),
@@ -143,7 +144,7 @@ class _StartStorySheet extends StatelessWidget {
                     Text(
                       'In Progress',
                       style: AppTypography.caption.copyWith(
-                        color: AppColors.warmMuted,
+                        color: context.clay.textMuted,
                         fontSize: 11,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 1.0,
@@ -154,7 +155,7 @@ class _StartStorySheet extends StatelessWidget {
                       Text(
                         '• Disabled until tomorrow',
                         style: AppTypography.caption.copyWith(
-                          color: AppColors.warmMuted,
+                          color: context.clay.textMuted,
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
                           letterSpacing: 0.3,
@@ -206,9 +207,9 @@ class _QuotaBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color bg = exhausted
-        ? AppColors.warmMuted.withValues(alpha: 0.18)
+        ? context.clay.textMuted.withValues(alpha: 0.18)
         : AppColors.purple.withValues(alpha: 0.16);
-    final Color fg = exhausted ? AppColors.warmMuted : AppColors.purpleDeep;
+    final Color fg = exhausted ? context.clay.textMuted : AppColors.purpleDeep;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
@@ -255,11 +256,12 @@ class _BrowseLibraryCta extends StatelessWidget {
                         AppColors.purpleDeep,
                       ],
                     ),
-              color:
-                  disabled ? AppColors.warmMuted.withValues(alpha: 0.22) : null,
+              color: disabled
+                  ? context.clay.textMuted.withValues(alpha: 0.22)
+                  : null,
               borderRadius: AppRadius.lgBorder,
               border: disabled
-                  ? Border.all(color: AppColors.clayBorder, width: 1.5)
+                  ? Border.all(color: context.clay.border, width: 1.5)
                   : null,
               boxShadow: disabled
                   ? null
@@ -272,13 +274,13 @@ class _BrowseLibraryCta extends StatelessWidget {
                   height: 40,
                   decoration: BoxDecoration(
                     color: disabled
-                        ? AppColors.warmMuted.withValues(alpha: 0.20)
+                        ? context.clay.textMuted.withValues(alpha: 0.20)
                         : Colors.white.withValues(alpha: 0.22),
                     borderRadius: AppRadius.mdBorder,
                   ),
                   child: Icon(
                     Icons.auto_stories_rounded,
-                    color: disabled ? AppColors.warmMuted : Colors.white,
+                    color: disabled ? context.clay.textMuted : Colors.white,
                     size: 24,
                   ),
                 ),
@@ -290,7 +292,7 @@ class _BrowseLibraryCta extends StatelessWidget {
                       Text(
                         'Browse Stories',
                         style: AppTypography.title.copyWith(
-                          color: disabled ? AppColors.warmMuted : Colors.white,
+                          color: disabled ? context.clay.textMuted : Colors.white,
                           fontSize: 15,
                         ),
                       ),
@@ -301,7 +303,7 @@ class _BrowseLibraryCta extends StatelessWidget {
                             : 'Featured library or craft your own',
                         style: AppTypography.caption.copyWith(
                           color: disabled
-                              ? AppColors.warmMuted
+                              ? context.clay.textMuted
                               : Colors.white.withValues(alpha: 0.92),
                           fontSize: 11,
                           fontWeight: FontWeight.w500,
@@ -314,7 +316,7 @@ class _BrowseLibraryCta extends StatelessWidget {
                   disabled
                       ? Icons.lock_outline_rounded
                       : Icons.arrow_forward_rounded,
-                  color: disabled ? AppColors.warmMuted : Colors.white,
+                  color: disabled ? context.clay.textMuted : Colors.white,
                   size: 20,
                 ),
               ],
@@ -390,9 +392,9 @@ class _ResumeStoryCard extends StatelessWidget {
           return Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.cream,
+              color: context.clay.background,
               borderRadius: AppRadius.mdBorder,
-              border: Border.all(color: AppColors.clayBorder, width: 1.5),
+              border: Border.all(color: context.clay.border, width: 1.5),
             ),
             child: Row(
               children: [
@@ -406,7 +408,7 @@ class _ResumeStoryCard extends StatelessWidget {
                             colors: [AppColors.purple, AppColors.purpleDeep],
                           ),
                     color: disabled
-                        ? AppColors.warmMuted.withValues(alpha: 0.25)
+                        ? context.clay.textMuted.withValues(alpha: 0.25)
                         : null,
                     borderRadius: AppRadius.smBorder,
                   ),
@@ -414,7 +416,7 @@ class _ResumeStoryCard extends StatelessWidget {
                   child: Text(
                     characterInitial.isNotEmpty ? characterInitial : '?',
                     style: AppTypography.labelLg.copyWith(
-                      color: disabled ? AppColors.warmMuted : Colors.white,
+                      color: disabled ? context.clay.textMuted : Colors.white,
                       fontSize: 14,
                     ),
                   ),
@@ -428,8 +430,8 @@ class _ResumeStoryCard extends StatelessWidget {
                         displayTitle,
                         style: AppTypography.bodySm.copyWith(
                           color: disabled
-                              ? AppColors.warmMuted
-                              : AppColors.warmDark,
+                              ? context.clay.textMuted
+                              : context.clay.text,
                           fontWeight: FontWeight.w700,
                           fontFamily: 'Nunito',
                           fontSize: 13,
@@ -446,7 +448,7 @@ class _ResumeStoryCard extends StatelessWidget {
                           _formatRelative(updatedAt),
                         ].join(' · '),
                         style: AppTypography.caption.copyWith(
-                          color: AppColors.warmMuted,
+                          color: context.clay.textMuted,
                           fontSize: 11,
                         ),
                         maxLines: 1,
@@ -461,7 +463,7 @@ class _ResumeStoryCard extends StatelessWidget {
                       ? Icons.lock_outline_rounded
                       : Icons.play_arrow_rounded,
                   size: 24,
-                  color: disabled ? AppColors.warmMuted : AppColors.purpleDeep,
+                  color: disabled ? context.clay.textMuted : AppColors.purpleDeep,
                 ),
               ],
             ),

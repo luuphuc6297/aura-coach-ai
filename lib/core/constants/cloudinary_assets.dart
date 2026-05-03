@@ -32,6 +32,10 @@ abstract final class CloudinaryAssets {
       '$_base/w_216,h_216,c_fill,q_90/v1774779261/aura-coach-assets/mode-icons/national-park-icons_628f11.webp';
   static const modeTranslator =
       '$_base/w_216,h_216,c_fill,q_90/v1774766467/aura-coach-assets/mode-icons/tone-translator_327cd6.webp';
+  // Grammar Coach reuses the gold tone-translator artwork until we have
+  // a dedicated illustration. Keep as a separate constant so the asset
+  // can be swapped without touching call sites.
+  static const modeGrammarCoach = modeTranslator;
   static const modeVocabHub =
       '$_base/w_216,h_216,c_fill,q_90/v1774779311/aura-coach-assets/mode-icons/ringed-planet-icons_bbcaa8.webp';
 

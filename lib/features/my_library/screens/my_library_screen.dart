@@ -1,18 +1,22 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../../core/constants/icon_constants.dart';
 import '../../../core/services/tts_service.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/clay_palette.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_animations.dart';
 import '../../../shared/widgets/clay_back_button.dart';
+import '../../../l10n/app_loc_context.dart';
 import '../../../shared/widgets/clay_dialog.dart';
 import '../../../shared/widgets/clay_pressable.dart';
+import '../../../shared/widgets/clay_text_input.dart';
 import '../../../shared/widgets/app_icon.dart';
 import '../../home/providers/home_provider.dart';
 import '../models/saved_item.dart';
@@ -24,7 +28,16 @@ class MyLibraryScreen extends StatefulWidget {
   /// cleanly above the shared bottom nav.
   final bool embedded;
 
-  const MyLibraryScreen({super.key, this.embedded = false});
+  /// Controls whether the embedded mode renders its own "My Learning Library"
+  /// header. HomeScreen tab wants it; Vocab Hub Overview tab already has an
+  /// AppBar and should suppress it.
+  final bool showHeader;
+
+  const MyLibraryScreen({
+    super.key,
+    this.embedded = false,
+    this.showHeader = true,
+  });
 
   @override
   State<MyLibraryScreen> createState() => _MyLibraryScreenState();
@@ -35,16 +48,26 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
   final _tts = TtsService();
 
   static const _typeFilters = ['all', 'grammar', 'vocabulary'];
-  static const _typeLabels = {
-    'all': 'All',
-    'grammar': 'Grammar',
-    'vocabulary': 'Vocabulary'
-  };
 
+  String _typeLabel(BuildContext context, String type) {
+    switch (type) {
+      case 'grammar':
+        return context.loc.libraryFilterGrammar;
+      case 'vocabulary':
+        return context.loc.libraryFilterVocabulary;
+      case 'all':
+      default:
+        return context.loc.libraryFilterAll;
+    }
+  }
+
+  // Mode-color rule: vocab items belong to Vocab Hub which uses coral; the
+  // earlier purple choice clashed with that and confused users about what
+  // the badge meant. Grammar keeps gold to stay distinct.
   static const Map<String, Color> _typeAccents = {
     'all': AppColors.teal,
-    'grammar': AppColors.coral,
-    'vocabulary': AppColors.purple,
+    'grammar': AppColors.gold,
+    'vocabulary': AppColors.coral,
   };
 
   static const _posFilters = [
@@ -94,7 +117,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
       builder: (context, provider, _) {
         return Column(
           children: [
-            if (widget.embedded) _buildEmbeddedHeader(),
+            if (widget.embedded && widget.showHeader) _buildEmbeddedHeader(),
             _buildSearchBar(provider),
             _buildTypeFilters(provider),
             if (provider.filterType == 'vocabulary') _buildPosFilters(provider),
@@ -113,16 +136,16 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
     }
 
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: context.clay.background,
       appBar: AppBar(
-        backgroundColor: AppColors.cream,
+        backgroundColor: context.clay.background,
         elevation: 0,
         leading: const Padding(
           padding: EdgeInsets.only(left: 4),
           child: ClayBackButton(),
         ),
         title: Text(
-          'My Learning Library',
+          context.loc.libraryTitle,
           style: AppTypography.title,
         ),
         centerTitle: false,
@@ -137,7 +160,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
       child: Align(
         alignment: Alignment.centerLeft,
         child: Text(
-          'My Learning Library',
+          context.loc.libraryTitle,
           style: AppTypography.h1,
         ),
       ),
@@ -147,38 +170,28 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
   Widget _buildSearchBar(LibraryProvider provider) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: AppRadius.lgBorder,
-          boxShadow: AppShadows.clay,
-        ),
-        child: TextField(
-          controller: _searchController,
-          onChanged: provider.setSearch,
-          style: AppTypography.input,
-          cursorColor: AppColors.teal,
-          decoration: InputDecoration(
-            hintText: 'Search saved items...',
-            prefixIcon: const Icon(
-              Icons.search_rounded,
-              color: AppColors.warmMuted,
-              size: 22,
-            ),
-            suffixIcon: provider.searchQuery.isNotEmpty
-                ? IconButton(
-                    icon: const Icon(
-                      Icons.close_rounded,
-                      size: 20,
-                      color: AppColors.warmMuted,
-                    ),
-                    onPressed: () {
-                      _searchController.clear();
-                      provider.setSearch('');
-                    },
-                  )
-                : null,
-          ),
-        ),
+      child: ClayTextInput(
+        controller: _searchController,
+        onChanged: provider.setSearch,
+        hintText: context.loc.librarySearchHint,
+        prefixIcon: Icons.search_rounded,
+        suffix: provider.searchQuery.isNotEmpty
+            ? GestureDetector(
+                onTap: () {
+                  _searchController.clear();
+                  provider.setSearch('');
+                },
+                behavior: HitTestBehavior.opaque,
+                child: Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: Icon(
+                    Icons.close_rounded,
+                    size: 20,
+                    color: context.clay.textMuted,
+                  ),
+                ),
+              )
+            : null,
       ),
     );
   }
@@ -192,7 +205,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
           return Padding(
             padding: const EdgeInsets.only(right: 8),
             child: _FilterChip(
-              label: _typeLabels[type]!,
+              label: _typeLabel(context, type),
               isSelected: isSelected,
               accentColor: _typeAccents[type] ?? AppColors.teal,
               onTap: () => provider.setFilterType(type),
@@ -244,7 +257,8 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
           itemBuilder: (context, index) {
             final cat = allCats[index];
             final isSelected = provider.filterCategory == cat;
-            final label = cat == 'all' ? 'All Categories' : cat;
+            final label =
+                cat == 'all' ? context.loc.libraryFilterAllCategories : cat;
             final accent = cat == 'all'
                 ? AppColors.teal
                 : _categoryPalette[(index - 1).abs() % _categoryPalette.length];
@@ -270,26 +284,26 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
       child: Row(
         children: [
           Text(
-            '${provider.totalCount} items',
-            style: AppTypography.caption.copyWith(color: AppColors.warmMuted),
+            context.loc.libraryItemsCount(provider.totalCount),
+            style: AppTypography.caption.copyWith(color: context.clay.textMuted),
           ),
           const SizedBox(width: 4),
           Text('·',
               style:
-                  AppTypography.caption.copyWith(color: AppColors.warmLight)),
+                  AppTypography.caption.copyWith(color: context.clay.textFaint)),
           const SizedBox(width: 4),
           Text(
-            '${provider.dueCount} due',
+            context.loc.libraryDueCount(provider.dueCount),
             style: AppTypography.caption.copyWith(color: AppColors.gold),
           ),
           const SizedBox(width: 4),
           Text('·',
               style:
-                  AppTypography.caption.copyWith(color: AppColors.warmLight)),
+                  AppTypography.caption.copyWith(color: context.clay.textFaint)),
           const SizedBox(width: 4),
           Text(
-            '${provider.categoryCount} categories',
-            style: AppTypography.caption.copyWith(color: AppColors.warmMuted),
+            context.loc.libraryCategoriesCount(provider.categoryCount),
+            style: AppTypography.caption.copyWith(color: context.clay.textMuted),
           ),
         ],
       ),
@@ -325,7 +339,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
                 provider.error!,
                 textAlign: TextAlign.center,
                 style:
-                    AppTypography.bodySm.copyWith(color: AppColors.warmMuted),
+                    AppTypography.bodySm.copyWith(color: context.clay.textMuted),
               ),
               const SizedBox(height: 16),
               ClayPressable(
@@ -365,7 +379,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
                 'Save words and grammar corrections during practice to build your personal learning library.',
                 textAlign: TextAlign.center,
                 style:
-                    AppTypography.bodySm.copyWith(color: AppColors.warmMuted),
+                    AppTypography.bodySm.copyWith(color: context.clay.textMuted),
               ),
             ],
           ),
@@ -382,6 +396,9 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
           padding: const EdgeInsets.only(bottom: 10),
           child: _SavedItemCard(
             item: items[index],
+            // Type badge ("VOCAB" / "GRAMMAR") is redundant once the user
+            // has filtered to a single type — only show it on the All tab.
+            showTypeBadge: provider.filterType == 'all',
             onDelete: () => provider.deleteItem(items[index].id),
             onListen: () => _tts.speakEnglish(items[index].correction),
           ),
@@ -393,11 +410,13 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
 
 class _SavedItemCard extends StatefulWidget {
   final SavedItem item;
+  final bool showTypeBadge;
   final VoidCallback onDelete;
   final VoidCallback onListen;
 
   const _SavedItemCard({
     required this.item,
+    required this.showTypeBadge,
     required this.onDelete,
     required this.onListen,
   });
@@ -417,16 +436,18 @@ class _SavedItemCardState extends State<_SavedItemCard> {
   Widget build(BuildContext context) {
     final isGrammar = item.type == 'grammar';
     final badgeColor = isGrammar ? AppColors.error : AppColors.formalTone;
-    final badgeLabel = isGrammar ? 'GRAMMAR' : 'VOCAB';
+    final badgeLabel = isGrammar
+        ? context.loc.libraryBadgeGrammar
+        : context.loc.libraryBadgeVocab;
     final isDue = item.isDueForReview;
     final daysUntil = item.daysUntilReview;
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.clayWhite,
+        color: context.clay.surface,
         borderRadius: AppRadius.lgBorder,
-        border: Border.all(color: AppColors.clayBorder, width: 2),
-        boxShadow: AppShadows.card,
+        border: Border.all(color: context.clay.border, width: 2),
+        boxShadow: AppShadows.card(context),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -435,11 +456,15 @@ class _SavedItemCardState extends State<_SavedItemCard> {
           children: [
             Row(
               children: [
-                _typeBadge(badgeLabel, badgeColor),
-                if (item.partOfSpeech != null) ...[
+                // Type badge is only useful when the user is browsing "All"
+                // (so they can tell vocab from grammar at a glance). When
+                // they've already filtered to a single type the badge is
+                // redundant noise — drop it.
+                if (widget.showTypeBadge) _typeBadge(badgeLabel, badgeColor),
+                if (widget.showTypeBadge && item.partOfSpeech != null)
                   const SizedBox(width: 6),
+                if (item.partOfSpeech != null)
                   _posBadge(item.partOfSpeech!),
-                ],
                 const Spacer(),
                 _reviewBadge(isDue, daysUntil),
               ],
@@ -449,7 +474,12 @@ class _SavedItemCardState extends State<_SavedItemCard> {
               _VocabularyIllustration(item: item),
             ],
             const SizedBox(height: 12),
-            if (item.original != item.correction) ...[
+            // Strikethrough is only meaningful for grammar corrections
+            // ("I goes" → "I go"). Vocabulary items have original ==
+            // correction (or differ only on capitalization / punctuation),
+            // so showing a strikethrough on a saved word is misleading.
+            if (item.type != 'vocabulary' &&
+                item.original != item.correction) ...[
               Text(
                 item.original,
                 style: AppTypography.bodySm.copyWith(
@@ -464,61 +494,54 @@ class _SavedItemCardState extends State<_SavedItemCard> {
               style: AppTypography.sectionTitle.copyWith(
                 fontSize: 17,
                 fontWeight: FontWeight.w700,
-                color: AppColors.warmDark,
+                color: context.clay.text,
                 height: 1.25,
               ),
             ),
             if (item.explanation != null) ...[
               const SizedBox(height: 8),
-              Text(
-                item.explanation!,
-                style: AppTypography.bodySm.copyWith(
-                  color: AppColors.warmMuted,
-                  fontSize: 13,
-                  height: 1.45,
-                ),
-                maxLines: _explanationExpanded ? null : 3,
-                overflow: _explanationExpanded ? null : TextOverflow.ellipsis,
+              _ExplanationBlock(
+                text: item.explanation!,
+                expanded: _explanationExpanded,
+                onToggle: () => setState(
+                    () => _explanationExpanded = !_explanationExpanded),
               ),
-              const SizedBox(height: 4),
-              ClayPressable(
-                onTap: () => setState(() {
-                  _explanationExpanded = !_explanationExpanded;
-                }),
-                scaleDown: 0.95,
-                builder: (context, isPressed) {
-                  return Text(
-                    _explanationExpanded ? 'Show less' : 'Show more',
-                    style: AppTypography.caption.copyWith(
-                      color: AppColors.teal,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  );
-                },
+            ] else if (item.type == 'vocabulary')
+              // Show the loading hint ONLY while a request is actually in
+              // flight. Items without an explanation that aren't being
+              // enriched (e.g. backfill cap hit, request failed) render
+              // nothing — no perpetual ghost spinner.
+              Selector<LibraryProvider, bool>(
+                selector: (_, p) => p.isEnrichingItem(item.id),
+                builder: (_, isLoading, __) => isLoading
+                    ? Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(
+                          context.loc.libraryLoadingExplanation,
+                          style: AppTypography.caption.copyWith(
+                            color: context.clay.textFaint,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      )
+                    : const SizedBox.shrink(),
               ),
-            ] else if (item.type == 'vocabulary') ...[
-              const SizedBox(height: 8),
-              Text(
-                'Loading explanation...',
-                style: AppTypography.caption.copyWith(
-                  color: AppColors.warmLight,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-            ],
             if (item.examples != null && item.examples!.isNotEmpty) ...[
               const SizedBox(height: 12),
               Text(
                 'Examples',
                 style: AppTypography.caption.copyWith(
-                  color: AppColors.warmMuted,
+                  color: context.clay.textMuted,
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 0.8,
                 ),
               ),
               const SizedBox(height: 6),
-              ...item.examples!.take(2).map((ex) => Padding(
+              // Show whatever examples the source actually returned — never
+              // pad up to a fixed count. Cap at 5 only as a sanity guard
+              // against runaway AI responses.
+              ...item.examples!.take(5).map((ex) => Padding(
                     padding: const EdgeInsets.only(bottom: 6),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -528,9 +551,9 @@ class _SavedItemCardState extends State<_SavedItemCard> {
                           child: Container(
                             width: 4,
                             height: 4,
-                            decoration: const BoxDecoration(
+                            decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: AppColors.warmLight,
+                              color: context.clay.textFaint,
                             ),
                           ),
                         ),
@@ -542,7 +565,7 @@ class _SavedItemCardState extends State<_SavedItemCard> {
                               Text(
                                 ex['en'] ?? '',
                                 style: AppTypography.bodySm.copyWith(
-                                  color: AppColors.warmDark,
+                                  color: context.clay.text,
                                   fontSize: 13,
                                   fontStyle: FontStyle.italic,
                                   height: 1.4,
@@ -554,7 +577,7 @@ class _SavedItemCardState extends State<_SavedItemCard> {
                                   child: Text(
                                     ex['vn']!,
                                     style: AppTypography.caption.copyWith(
-                                      color: AppColors.warmLight,
+                                      color: context.clay.textFaint,
                                       fontSize: 12,
                                     ),
                                   ),
@@ -569,12 +592,12 @@ class _SavedItemCardState extends State<_SavedItemCard> {
             const SizedBox(height: 14),
             Container(
               height: 1,
-              color: AppColors.clayBorder.withValues(alpha: 0.5),
+              color: context.clay.border.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 10),
             Row(
               children: [
-                _masteryIndicator(item.masteryScore),
+                _masteryIndicator(context, item.masteryScore),
                 const Spacer(),
                 ClayPressable(
                   onTap: onListen,
@@ -584,16 +607,16 @@ class _SavedItemCardState extends State<_SavedItemCard> {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: AppColors.clayBeige,
+                        color: context.clay.surfaceAlt,
                         borderRadius: BorderRadius.circular(10),
                         border:
-                            Border.all(color: AppColors.clayBorder, width: 1.5),
+                            Border.all(color: context.clay.border, width: 1.5),
                       ),
-                      child: const Center(
+                      child: Center(
                         child: AppIcon(
                           iconId: AppIcons.listen,
                           size: 18,
-                          color: AppColors.warmDark,
+                          color: context.clay.text,
                         ),
                       ),
                     );
@@ -601,23 +624,7 @@ class _SavedItemCardState extends State<_SavedItemCard> {
                 ),
                 const SizedBox(width: 6),
                 ClayPressable(
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          'Practice mode coming soon',
-                          style: AppTypography.bodySm
-                              .copyWith(color: AppColors.warmDark),
-                        ),
-                        backgroundColor: AppColors.teal,
-                        behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: AppRadius.mdBorder,
-                        ),
-                        duration: const Duration(seconds: 2),
-                      ),
-                    );
-                  },
+                  onTap: () => _openPracticeTab(context),
                   scaleDown: 0.95,
                   builder: (context, isPressed) {
                     return Container(
@@ -634,16 +641,16 @@ class _SavedItemCardState extends State<_SavedItemCard> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const AppIcon(
+                          AppIcon(
                             iconId: AppIcons.practice,
                             size: 14,
-                            color: AppColors.warmDark,
+                            color: context.clay.text,
                           ),
                           const SizedBox(width: 5),
                           Text(
                             'Practice',
                             style: AppTypography.labelSm.copyWith(
-                              color: AppColors.warmDark,
+                              color: context.clay.text,
                               fontSize: 12,
                               fontWeight: FontWeight.w700,
                             ),
@@ -654,6 +661,33 @@ class _SavedItemCardState extends State<_SavedItemCard> {
                   },
                 ),
                 const SizedBox(width: 6),
+                if (item.type == 'vocabulary')
+                  ClayPressable(
+                    onTap: () => _openMindMapForWord(context, item.correction),
+                    scaleDown: 0.85,
+                    builder: (context, isPressed) {
+                      return Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: AppColors.coral.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: AppColors.coral.withValues(alpha: 0.45),
+                            width: 1.5,
+                          ),
+                        ),
+                        child: const Center(
+                          child: Icon(
+                            Icons.hub_outlined,
+                            size: 18,
+                            color: AppColors.coral,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                if (item.type == 'vocabulary') const SizedBox(width: 6),
                 ClayPressable(
                   onTap: () => _confirmDelete(context),
                   scaleDown: 0.85,
@@ -687,20 +721,45 @@ class _SavedItemCardState extends State<_SavedItemCard> {
     );
   }
 
+  void _openPracticeTab(BuildContext context) {
+    // Hosted inside Vocab Hub → jump to Flashcards tab (index 3).
+    // Elsewhere (HomeScreen bottom-nav, /my-library route) → open Vocab Hub.
+    final controller = DefaultTabController.maybeOf(context);
+    if (controller != null) {
+      controller.animateTo(3);
+    } else {
+      context.push('/vocab-hub');
+    }
+  }
+
+  /// Sends the learner straight into the Mind Map screen with this word as
+  /// the seed. The mind-map screen reads `?seed=` and auto-generates a tree
+  /// rooted on the word, marked with the `word_` id prefix so the My Mind
+  /// Maps list later shows the "from Library" pill.
+  void _openMindMapForWord(BuildContext context, String word) {
+    final clean = word.trim();
+    if (clean.isEmpty) {
+      context.push('/vocab-hub/mind-map');
+      return;
+    }
+    final encoded = Uri.encodeQueryComponent(clean);
+    context.push('/vocab-hub/mind-map?seed=$encoded');
+  }
+
   void _confirmDelete(BuildContext context) {
     showClayDialog(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: AppColors.clayWhite,
+        backgroundColor: context.clay.surface,
         title: Text('Remove Item?', style: AppTypography.title),
         content: Text(
           'This will permanently remove "${item.correction}" from your library.',
-          style: AppTypography.bodySm.copyWith(color: AppColors.warmMuted),
+          style: AppTypography.bodySm.copyWith(color: context.clay.textMuted),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel', style: TextStyle(color: AppColors.warmMuted)),
+            child: Text('Cancel', style: TextStyle(color: context.clay.textMuted)),
           ),
           TextButton(
             onPressed: () {
@@ -775,7 +834,7 @@ class _SavedItemCardState extends State<_SavedItemCard> {
     );
   }
 
-  Widget _masteryIndicator(int score) {
+  Widget _masteryIndicator(BuildContext context, int score) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: List.generate(5, (i) {
@@ -786,7 +845,7 @@ class _SavedItemCardState extends State<_SavedItemCard> {
           margin: const EdgeInsets.only(right: 3),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: filled ? AppColors.teal : AppColors.clayBorder,
+            color: filled ? AppColors.teal : context.clay.border,
           ),
         );
       }),
@@ -825,20 +884,20 @@ class _FilterChip extends StatelessWidget {
           decoration: BoxDecoration(
             color: isSelected
                 ? accentColor.withValues(alpha: 0.22)
-                : AppColors.clayWhite,
+                : context.clay.surface,
             borderRadius: AppRadius.fullBorder,
             border: Border.all(
-              color: isSelected ? accentColor : AppColors.clayBorder,
+              color: isSelected ? accentColor : context.clay.border,
               width: 2,
             ),
             boxShadow: isSelected
                 ? AppShadows.colored(accentColor, alpha: 0.45)
-                : AppShadows.card,
+                : AppShadows.card(context),
           ),
           child: Text(
             label,
             style: AppTypography.labelSm.copyWith(
-              color: AppColors.warmDark,
+              color: context.clay.text,
               fontSize: compact ? 12 : 13,
               fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
             ),
@@ -855,6 +914,75 @@ class _FilterChip extends StatelessWidget {
 ///   3. No image yet → neutral background with a tappable "Generate" CTA.
 ///      Tapping checks the user's subscription tier; free users are shown a
 ///      paywall hint, paid tiers trigger generation.
+/// Renders an explanation paragraph with a Show more / Show less toggle —
+/// but only when the text actually overflows the 3-line cap. Prevents a
+/// useless "Show more" button under one-liner definitions.
+class _ExplanationBlock extends StatelessWidget {
+  final String text;
+  final bool expanded;
+  final VoidCallback onToggle;
+
+  const _ExplanationBlock({
+    required this.text,
+    required this.expanded,
+    required this.onToggle,
+  });
+
+  static const _maxCollapsedLines = 3;
+
+  TextStyle _style(BuildContext context) => AppTypography.bodySm.copyWith(
+        color: context.clay.textMuted,
+        fontSize: 13,
+        height: 1.45,
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final style = _style(context);
+        // Measure with the same style + width to detect real overflow.
+        final tp = TextPainter(
+          text: TextSpan(text: text, style: style),
+          maxLines: _maxCollapsedLines,
+          textDirection: TextDirection.ltr,
+        )..layout(maxWidth: constraints.maxWidth);
+        final overflows = tp.didExceedMaxLines;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              text,
+              style: style,
+              maxLines: expanded ? null : _maxCollapsedLines,
+              overflow: expanded ? null : TextOverflow.ellipsis,
+            ),
+            if (overflows) ...[
+              const SizedBox(height: 4),
+              ClayPressable(
+                onTap: onToggle,
+                scaleDown: 0.95,
+                builder: (context, _) {
+                  return Text(
+                    expanded
+                        ? context.loc.libraryShowLess
+                        : context.loc.libraryShowMore,
+                    style: AppTypography.caption.copyWith(
+                      color: AppColors.teal,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  );
+                },
+              ),
+            ],
+          ],
+        );
+      },
+    );
+  }
+}
+
 class _VocabularyIllustration extends StatelessWidget {
   final SavedItem item;
 
@@ -877,9 +1005,9 @@ class _VocabularyIllustration extends StatelessWidget {
             height: 140,
             width: double.infinity,
             decoration: BoxDecoration(
-              color: AppColors.clayBeige,
+              color: context.clay.surfaceAlt,
               borderRadius: AppRadius.mdBorder,
-              border: Border.all(color: AppColors.clayBorder, width: 1.5),
+              border: Border.all(color: context.clay.border, width: 1.5),
             ),
             child: bytes != null
                 ? Image.memory(
@@ -890,7 +1018,7 @@ class _VocabularyIllustration extends StatelessWidget {
                         _generatePlaceholder(context, library, isPaid),
                   )
                 : isGenerating
-                    ? _shimmerPlaceholder()
+                    ? _shimmerPlaceholder(context)
                     : _generatePlaceholder(context, library, isPaid),
           ),
         );
@@ -898,18 +1026,18 @@ class _VocabularyIllustration extends StatelessWidget {
     );
   }
 
-  Widget _shimmerPlaceholder() {
+  Widget _shimmerPlaceholder(BuildContext context) {
     return Shimmer.fromColors(
-      baseColor: AppColors.clayBeige,
-      highlightColor: AppColors.clayWhite,
+      baseColor: context.clay.surfaceAlt,
+      highlightColor: context.clay.surface,
       period: const Duration(milliseconds: 1400),
       child: Container(
-        color: AppColors.clayBeige,
+        color: context.clay.surfaceAlt,
         child: Center(
           child: AppIcon(
             iconId: AppIcons.vocabulary,
             size: 32,
-            color: AppColors.warmLight.withValues(alpha: 0.8),
+            color: context.clay.textFaint.withValues(alpha: 0.8),
           ),
         ),
       ),
@@ -930,8 +1058,8 @@ class _VocabularyIllustration extends StatelessWidget {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                AppColors.clayBeige,
-                AppColors.clayBeige.withValues(alpha: 0.6),
+                context.clay.surfaceAlt,
+                context.clay.surfaceAlt.withValues(alpha: 0.6),
               ],
             ),
           ),
@@ -939,7 +1067,7 @@ class _VocabularyIllustration extends StatelessWidget {
             child: AppIcon(
               iconId: AppIcons.vocabulary,
               size: 32,
-              color: AppColors.warmLight.withValues(alpha: 0.7),
+              color: context.clay.textFaint.withValues(alpha: 0.7),
             ),
           ),
         ),
@@ -963,8 +1091,7 @@ class _VocabularyIllustration extends StatelessWidget {
     if (!isPaid) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text(
-              'AI illustrations are part of the Pro plan. Upgrade to unlock.'),
+          content: Text(context.loc.libraryProUpsell),
           backgroundColor: AppColors.gold,
           behavior: SnackBarBehavior.floating,
           duration: const Duration(seconds: 3),
@@ -997,7 +1124,7 @@ class _GenerateCtaButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = isPaid ? AppColors.teal : AppColors.gold;
-    final label = isPaid ? 'Generate' : 'Generate (Pro)';
+    final label = isPaid ? context.loc.libraryGenerate : context.loc.libraryGeneratePro;
     return ClayPressable(
       onTap: onTap,
       scaleDown: 0.95,
@@ -1005,10 +1132,10 @@ class _GenerateCtaButton extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
           decoration: BoxDecoration(
-            color: AppColors.clayWhite,
+            color: context.clay.surface,
             borderRadius: AppRadius.fullBorder,
             border: Border.all(color: color, width: 1.5),
-            boxShadow: AppShadows.card,
+            boxShadow: AppShadows.card(context),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -1024,7 +1151,7 @@ class _GenerateCtaButton extends StatelessWidget {
               Text(
                 label,
                 style: AppTypography.caption.copyWith(
-                  color: AppColors.warmDark,
+                  color: context.clay.text,
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
                 ),
@@ -1034,5 +1161,20 @@ class _GenerateCtaButton extends StatelessWidget {
         );
       },
     );
+  }
+}
+
+/// Thin wrapper exposing the embedded My Library body so other surfaces
+/// (e.g. Vocab Hub Overview tab) can host the same list/filters/search UX
+/// without duplicating state. [showHeader] is off by default because the
+/// host is expected to provide its own AppBar / title.
+class MyLibraryBody extends StatelessWidget {
+  final bool showHeader;
+
+  const MyLibraryBody({super.key, this.showHeader = false});
+
+  @override
+  Widget build(BuildContext context) {
+    return MyLibraryScreen(embedded: true, showHeader: showHeader);
   }
 }

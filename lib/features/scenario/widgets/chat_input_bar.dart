@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/icon_constants.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/clay_palette.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_shadows.dart';
@@ -78,19 +79,19 @@ class _ChatInputBarState extends State<ChatInputBar> {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return Container(
-      color: AppColors.cream,
+      color: context.clay.background,
       padding: EdgeInsets.fromLTRB(12, 8, 12, bottomPadding + 8),
       child: AnimatedContainer(
         duration: AppAnimations.durationFast,
         curve: AppAnimations.easeClay,
         decoration: BoxDecoration(
-          color: AppColors.clayBeige,
+          color: context.clay.surfaceAlt,
           borderRadius: AppRadius.fullBorder,
           border: Border.all(
-            color: _isFocused ? widget.accentColor : AppColors.clayBorder,
+            color: _isFocused ? widget.accentColor : context.clay.border,
             width: 2,
           ),
-          boxShadow: AppShadows.clay,
+          boxShadow: AppShadows.clay(context),
         ),
         padding: const EdgeInsets.fromLTRB(20, 8, 8, 8),
         child: Row(
@@ -103,8 +104,9 @@ class _ChatInputBarState extends State<ChatInputBar> {
                 enabled: widget.enabled,
                 style: AppTypography.input.copyWith(
                   fontSize: 15,
-                  color:
-                      widget.enabled ? AppColors.warmDark : AppColors.warmMuted,
+                  color: widget.enabled
+                      ? context.clay.text
+                      : context.clay.textMuted,
                 ),
                 cursorColor: widget.accentColor,
                 maxLines: 1,
@@ -115,7 +117,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
                       ? widget.placeholder
                       : 'Waiting for reply…',
                   hintStyle: AppTypography.input.copyWith(
-                    color: AppColors.warmLight,
+                    color: context.clay.textFaint,
                     fontSize: 15,
                   ),
                   filled: false,
@@ -143,7 +145,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
                     decoration: BoxDecoration(
                       color: AppColors.error,
                       borderRadius: BorderRadius.circular(14),
-                      boxShadow: AppShadows.clayBold,
+                      boxShadow: AppShadows.clayBold(context),
                     ),
                     child: const Center(
                       child: Icon(
@@ -164,7 +166,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: AppColors.warmLight.withValues(alpha: 0.15),
+                      color: context.clay.textFaint.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Center(
@@ -172,8 +174,8 @@ class _ChatInputBarState extends State<ChatInputBar> {
                         iconId: AppIcons.mic,
                         size: 22,
                         color: widget.enabled
-                            ? AppColors.warmDark
-                            : AppColors.warmLight,
+                            ? context.clay.text
+                            : context.clay.textFaint,
                       ),
                     ),
                   );
@@ -193,16 +195,17 @@ class _ChatInputBarState extends State<ChatInputBar> {
                     decoration: BoxDecoration(
                       color: isActive
                           ? widget.accentColor
-                          : AppColors.warmLight.withValues(alpha: 0.2),
+                          : context.clay.textFaint.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(14),
-                      boxShadow: isActive ? AppShadows.clayBold : null,
+                      boxShadow: isActive ? AppShadows.clayBold(context) : null,
                     ),
                     child: Center(
                       child: AppIcon(
                         iconId: AppIcons.send,
                         size: 22,
-                        color:
-                            isActive ? AppColors.warmDark : AppColors.warmLight,
+                        color: isActive
+                            ? context.clay.text
+                            : context.clay.textFaint,
                       ),
                     ),
                   );

@@ -3,6 +3,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/theme/clay_palette.dart';
 import '../../../shared/widgets/clay_pressable.dart';
 import '../../../core/constants/story_constants.dart';
 import '../models/story_character.dart';
@@ -42,9 +43,9 @@ class StoryCharacterHeader extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(8, 6, 14, 12),
       decoration: BoxDecoration(
-        color: AppColors.clayWhite,
+        color: context.clay.surface,
         border: Border(
-          bottom: BorderSide(color: AppColors.clayBorder, width: 1.5),
+          bottom: BorderSide(color: context.clay.border, width: 1.5),
         ),
       ),
       child: Column(
@@ -55,13 +56,13 @@ class StoryCharacterHeader extends StatelessWidget {
               ClayPressable(
                 onTap: onBack,
                 scaleDown: 0.9,
-                builder: (_, __) => const SizedBox(
+                builder: (ctx, __) => SizedBox(
                   width: 40,
                   height: 40,
                   child: Icon(
                     Icons.arrow_back_ios_new_rounded,
                     size: 20,
-                    color: AppColors.warmDark,
+                    color: ctx.clay.text,
                   ),
                 ),
               ),
@@ -75,7 +76,7 @@ class StoryCharacterHeader extends StatelessWidget {
                     Text(
                       character.name.isNotEmpty ? character.name : 'Character',
                       style: AppTypography.labelLg.copyWith(
-                        color: AppColors.warmDark,
+                        color: context.clay.text,
                         fontSize: 14,
                       ),
                       maxLines: 1,
@@ -86,7 +87,7 @@ class StoryCharacterHeader extends StatelessWidget {
                           ? character.role
                           : 'Conversation partner',
                       style: AppTypography.caption.copyWith(
-                        color: AppColors.warmMuted,
+                        color: context.clay.textMuted,
                         fontSize: 11,
                       ),
                       maxLines: 1,
@@ -101,21 +102,21 @@ class StoryCharacterHeader extends StatelessWidget {
               ClayPressable(
                 onTap: onEnd,
                 scaleDown: 0.92,
-                builder: (_, __) {
+                builder: (ctx, __) {
                   return Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
-                      color: AppColors.clayBeige,
+                      color: ctx.clay.surfaceAlt,
                       borderRadius: AppRadius.fullBorder,
                       border:
-                          Border.all(color: AppColors.clayBorder, width: 1.5),
+                          Border.all(color: ctx.clay.border, width: 1.5),
                     ),
                     child: Text(
                       'End',
                       style: AppTypography.button.copyWith(
                         fontSize: 12,
-                        color: AppColors.warmDark,
+                        color: ctx.clay.text,
                       ),
                     ),
                   );
@@ -147,7 +148,7 @@ class StoryCharacterHeader extends StatelessWidget {
                           Text(
                             title,
                             style: AppTypography.labelMd.copyWith(
-                              color: AppColors.warmDark,
+                              color: context.clay.text,
                               fontSize: 12,
                               fontWeight: FontWeight.w800,
                             ),
@@ -159,7 +160,7 @@ class StoryCharacterHeader extends StatelessWidget {
                           Text(
                             situation,
                             style: AppTypography.caption.copyWith(
-                              color: AppColors.warmDark,
+                              color: context.clay.text,
                               fontSize: 11,
                               height: 1.4,
                             ),
@@ -194,7 +195,7 @@ class _Avatar extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(colors: gradient),
         shape: BoxShape.circle,
-        boxShadow: AppShadows.card,
+        boxShadow: AppShadows.card(context),
       ),
       alignment: Alignment.center,
       child: Text(

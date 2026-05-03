@@ -45,7 +45,12 @@ class UserProfile {
     );
   }
 
-  Map<String, dynamic> toFirestore() => {
+  /// Serializes the profile for Firestore.
+  ///
+  /// `forUpdate: true` is used by the Edit Profile flow — it omits `createdAt`
+  /// so a `set(..., merge: true)` call doesn't overwrite the original creation
+  /// timestamp captured during onboarding.
+  Map<String, dynamic> toFirestore({bool forUpdate = false}) => {
         'name': name,
         'avatarId': avatarId,
         'avatarUrl': avatarUrl,
@@ -54,7 +59,33 @@ class UserProfile {
         'dailyMinutes': dailyMinutes,
         'selectedTopics': selectedTopics,
         'tier': tier,
-        'createdAt': FieldValue.serverTimestamp(),
+        if (!forUpdate) 'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       };
+
+  UserProfile copyWith({
+    String? name,
+    String? avatarId,
+    String? avatarUrl,
+    String? proficiencyLevel,
+    List<String>? selectedGoals,
+    int? dailyMinutes,
+    List<String>? selectedTopics,
+    String? tier,
+    DateTime? updatedAt,
+  }) {
+    return UserProfile(
+      uid: uid,
+      name: name ?? this.name,
+      avatarId: avatarId ?? this.avatarId,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+      proficiencyLevel: proficiencyLevel ?? this.proficiencyLevel,
+      selectedGoals: selectedGoals ?? this.selectedGoals,
+      dailyMinutes: dailyMinutes ?? this.dailyMinutes,
+      selectedTopics: selectedTopics ?? this.selectedTopics,
+      tier: tier ?? this.tier,
+      createdAt: createdAt,
+      updatedAt: updatedAt ?? DateTime.now(),
+    );
+  }
 }

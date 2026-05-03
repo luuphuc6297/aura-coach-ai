@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/constants/feature_flags.dart';
 import '../../../core/theme/app_colors.dart';
 
 class DeepDiveStep {
@@ -152,14 +153,62 @@ final List<ModeDeepDiveData> modeDeepDiveList = [
           description: 'Bookmark your story and continue any time'),
     ],
   ),
-  ModeDeepDiveData(
-    title: 'Tone Translator',
-    iconUrl:
-        'w_216,h_216,c_fill,q_90/v1774766467/aura-coach-assets/mode-icons/tone-translator_327cd6.webp',
-    accentColor: AppColors.gold,
-    tags: ['🎭 4 Tones', '🔊 TTS'],
-    ctaText: 'Translate Now',
-    quotaText: '10 free translations / day',
+  // Grammar Coach deep-dive — wins the third slot when its flag is on.
+  if (FeatureFlags.grammarCoachEnabled)
+    ModeDeepDiveData(
+      title: 'Grammar Coach',
+      iconUrl:
+          'w_216,h_216,c_fill,q_90/v1774766467/aura-coach-assets/mode-icons/tone-translator_327cd6.webp',
+      accentColor: AppColors.gold,
+      tags: ['📚 A1–C2', '🎯 3 Modes'],
+      ctaText: 'Start Drilling',
+      quotaText: 'Unlimited practice',
+      steps: [
+        DeepDiveStep(
+            number: '1',
+            title: 'Pick a level',
+            subtitle: 'A1 → C2 across 55 curated topics'),
+        DeepDiveStep(
+            number: '2',
+            title: 'Pick a structure',
+            subtitle: 'Tense, modal, conditional, passive…'),
+        DeepDiveStep(
+            number: '3',
+            title: 'Drill it 3 ways',
+            subtitle: 'Translate, fill the blank, transform'),
+      ],
+      featuresSectionTitle: 'Built for retention',
+      features: [
+        DeepDiveFeature(
+            iconId: 'feat_magnifier',
+            title: 'Cambridge + Oxford catalog',
+            description:
+                'Curated from authoritative grammar references'),
+        DeepDiveFeature(
+            iconId: 'feat_chartUp',
+            title: 'Mastery scoring',
+            description:
+                'EWMA per topic — see the % delta after each session'),
+        DeepDiveFeature(
+            iconId: 'feat_brain',
+            title: 'AI-graded practice',
+            description:
+                'Nuanced feedback on translate + transform answers'),
+        DeepDiveFeature(
+            iconId: 'feat_ribbonBookmark',
+            title: 'Save mistakes',
+            description: 'One-tap save wrong answers to your Library'),
+      ],
+    ),
+  if (!FeatureFlags.grammarCoachEnabled && FeatureFlags.toneTranslatorEnabled)
+    ModeDeepDiveData(
+      title: 'Tone Translator',
+      iconUrl:
+          'w_216,h_216,c_fill,q_90/v1774766467/aura-coach-assets/mode-icons/tone-translator_327cd6.webp',
+      accentColor: AppColors.gold,
+      tags: ['🎭 4 Tones', '🔊 TTS'],
+      ctaText: 'Translate Now',
+      quotaText: '10 free translations / day',
     steps: [
       DeepDiveStep(
           number: '1',
@@ -202,23 +251,23 @@ final List<ModeDeepDiveData> modeDeepDiveList = [
     title: 'Vocab Hub',
     iconUrl:
         'w_216,h_216,c_fill,q_90/v1774779311/aura-coach-assets/mode-icons/ringed-planet-icons_bbcaa8.webp',
-    accentColor: AppColors.purple,
-    tags: ['🧠 Mind Map', '📝 Quiz'],
+    accentColor: AppColors.coral,
+    tags: ['🔍 Analyze', '🧠 Mind Map', '⚖️ Compare'],
     ctaText: 'Explore Words',
     quotaText: 'Unlimited',
     steps: [],
-    featuresSectionTitle: '5 Powerful tools',
+    featuresSectionTitle: '7 Powerful tools',
     features: [
       DeepDiveFeature(
           iconId: 'feat_magnifier',
           title: 'Word Analysis',
           description:
-              'Deep breakdown with pronunciation, definitions & examples'),
+              'Pronunciation, 3 examples, synonyms & antonyms'),
       DeepDiveFeature(
-          iconId: 'feat_brain',
-          title: 'Mind Maps',
+          iconId: 'feat_describe',
+          title: 'Describe Word',
           description:
-              'Visual word relationships — synonyms, antonyms & related'),
+              'Describe in Vietnamese → get the English word'),
       DeepDiveFeature(
           iconId: 'feat_cards',
           title: 'Flashcards',
@@ -231,6 +280,15 @@ final List<ModeDeepDiveData> modeDeepDiveList = [
           iconId: 'feat_chartUp',
           title: 'Progress Dashboard',
           description: 'Track total, due reviews & mastered at a glance'),
+      DeepDiveFeature(
+          iconId: 'feat_brain',
+          title: 'Mind Maps · Pro',
+          description:
+              'Visual word relationships — synonyms, antonyms & related'),
+      DeepDiveFeature(
+          iconId: 'feat_compare',
+          title: 'Compare Words',
+          description: 'Side-by-side nuance: "affect" vs "effect"'),
     ],
   ),
 ];

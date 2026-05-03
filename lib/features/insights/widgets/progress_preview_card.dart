@@ -3,6 +3,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/theme/clay_palette.dart';
 import '../../../shared/widgets/clay_card.dart';
 import '../../../shared/widgets/clay_pressable.dart';
 import '../../my_library/models/saved_item.dart';
@@ -104,7 +105,7 @@ class ProgressPreviewCard extends StatelessWidget {
           else
             _EmptyWeakWordHint(),
           const SizedBox(height: AppSpacing.md),
-          const Divider(height: 1, color: AppColors.clayBorder),
+          Divider(height: 1, color: context.clay.border),
           const SizedBox(height: AppSpacing.smd),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -112,7 +113,7 @@ class ProgressPreviewCard extends StatelessWidget {
               Text(
                 'See full insights',
                 style: AppTypography.labelMd.copyWith(
-                  color: AppColors.warmMuted,
+                  color: context.clay.textMuted,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -166,7 +167,7 @@ class _MetricChip extends StatelessWidget {
           child: Text(
             label,
             style: AppTypography.labelMd.copyWith(
-              color: AppColors.warmDark,
+              color: context.clay.text,
               fontWeight: FontWeight.w700,
             ),
             maxLines: 1,
@@ -209,7 +210,7 @@ class _WeakWordHint extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               text: TextSpan(
                 style: AppTypography.labelMd.copyWith(
-                  color: AppColors.warmDark,
+                  color: context.clay.text,
                 ),
                 children: [
                   const TextSpan(text: 'Top word to revisit: '),
@@ -239,14 +240,14 @@ class _EmptyWeakWordHint extends StatelessWidget {
         vertical: AppSpacing.sm,
       ),
       decoration: BoxDecoration(
-        color: AppColors.clayBeige,
+        color: context.clay.surfaceAlt,
         borderRadius: AppRadius.mdBorder,
-        border: Border.all(color: AppColors.clayBorder, width: 1),
+        border: Border.all(color: context.clay.border, width: 1),
       ),
       child: Text(
         'Save your first word to start tracking review progress.',
         style: AppTypography.labelMd.copyWith(
-          color: AppColors.warmMuted,
+          color: context.clay.textMuted,
           fontWeight: FontWeight.w600,
         ),
       ),

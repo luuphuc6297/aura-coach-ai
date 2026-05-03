@@ -11,6 +11,7 @@ import '../prompts/vocab_prompts.dart';
 import '../prompts/mindmap_prompts.dart';
 import '../prompts/quiz_prompts.dart';
 import '../prompts/video_prompt.dart';
+import '../prompts/describe_word_prompt.dart';
 import 'config.dart';
 import 'helpers.dart';
 import 'schemas.dart';
@@ -263,6 +264,48 @@ class GeminiService {
     return WordAnalysis.fromJson(parseJsonObject(raw));
   }
 
+  /// Generates a flashcard-ready vocabulary batch for one onboarding topic
+  /// (e.g. "Travel", "Business"). Returns already-enriched items so the
+  /// library provider can skip its per-item dictionary enrichment call.
+  ///
+  /// [count] is capped to a small range so the round-trip stays snappy and
+  /// the user gets back a bite-sized study set. Temperature is moderate so
+  /// repeated taps on the same chip produce a somewhat different set rather
+  /// than identical words every time.
+  Future<TopicFlashcardBatch> generateTopicFlashcards({
+    required String topicLabel,
+    required CefrLevel level,
+    int count = 8,
+  }) async {
+    final clampedCount = count.clamp(4, 12);
+    final prompt = buildTopicFlashcardsPrompt(
+      topic: topicLabel,
+      cefrLevel: level.code,
+      count: clampedCount,
+    );
+    final model = GeminiConfig.flash(
+      temperature: 0.6,
+      responseSchema: GeminiSchemas.topicFlashcards,
+    );
+    final raw = await _run(model, prompt);
+    return TopicFlashcardBatch.fromJson(parseJsonObject(raw));
+  }
+
+  /// Side-by-side comparison for the Compare Words Pro screen. Low
+  /// temperature so the nuance payload stays grounded across retries.
+  Future<WordComparison> generateWordComparison({
+    required String wordA,
+    required String wordB,
+  }) async {
+    final prompt = buildWordComparisonPrompt(wordA: wordA, wordB: wordB);
+    final model = GeminiConfig.flash(
+      temperature: 0.3,
+      responseSchema: GeminiSchemas.wordComparison,
+    );
+    final raw = await _run(model, prompt);
+    return WordComparison.fromJson(parseJsonObject(raw));
+  }
+
   // ---------- Vocab Hub — Mind Map ----------
 
   Future<MindMapNode> generateTopicMindMap({
@@ -313,6 +356,23 @@ class GeminiService {
     );
     final raw = await _run(model, prompt);
     return CustomNodeResult.fromJson(parseJsonObject(raw));
+  }
+
+  // ---------- Describe-a-Word (Reverse dictionary) ----------
+
+  /// Reverse dictionary lookup: Vietnamese description → ranked English
+  /// candidates. Temperature is kept low (0.3) so answers stay grounded while
+  /// still offering a handful of near-matches for tip-of-the-tongue recovery.
+  Future<ReverseDictionaryResult> reverseDictionary(
+    String vietnameseDescription,
+  ) async {
+    final prompt = buildReverseDictionaryPrompt(vietnameseDescription);
+    final model = GeminiConfig.flash(
+      temperature: 0.3,
+      responseSchema: GeminiSchemas.reverseDictionary,
+    );
+    final raw = await _run(model, prompt);
+    return ReverseDictionaryResult.fromJson(parseJsonObject(raw));
   }
 
   // ---------- Image generation ----------

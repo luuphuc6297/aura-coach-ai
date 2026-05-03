@@ -3,6 +3,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/theme/clay_palette.dart';
 import '../../../shared/widgets/clay_pressable.dart';
 import '../providers/analytics_provider.dart';
 
@@ -23,9 +24,9 @@ class PeriodPicker extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.xs),
       decoration: BoxDecoration(
-        color: AppColors.clayWhite,
+        color: context.clay.surface,
         borderRadius: AppRadius.fullBorder,
-        border: Border.all(color: AppColors.clayBorder, width: 2),
+        border: Border.all(color: context.clay.border, width: 2),
       ),
       child: Row(
         children: AnalyticsPeriod.values.map((option) {
@@ -47,7 +48,7 @@ class PeriodPicker extends StatelessWidget {
                     child: Text(
                       option.label,
                       style: AppTypography.labelMd.copyWith(
-                        color: isActive ? AppColors.white : AppColors.warmMuted,
+                        color: isActive ? AppColors.white : context.clay.textMuted,
                         fontWeight: FontWeight.w700,
                       ),
                     ),

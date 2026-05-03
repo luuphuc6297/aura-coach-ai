@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_shadows.dart';
 import '../../core/theme/app_typography.dart';
+import '../../core/theme/clay_palette.dart';
+import '../../l10n/app_loc_context.dart';
 import 'clay_pressable.dart';
 
 /// Snapshot of session stats + quota state that a mode hands to
@@ -43,9 +44,9 @@ Future<bool?> showEndSessionDialog({
   required BuildContext context,
   required Color accentColor,
   required EndSessionStats stats,
-  String title = 'End this session?',
-  String continueLabel = 'Keep going',
-  String endLabel = 'End & review',
+  String? title,
+  String? continueLabel,
+  String? endLabel,
 }) {
   return showModalBottomSheet<bool>(
     context: context,
@@ -63,10 +64,10 @@ Future<bool?> showEndSessionDialog({
 
 class _EndSessionSheet extends StatelessWidget {
   final Color accentColor;
-  final String title;
+  final String? title;
   final EndSessionStats stats;
-  final String continueLabel;
-  final String endLabel;
+  final String? continueLabel;
+  final String? endLabel;
 
   const _EndSessionSheet({
     required this.accentColor,
@@ -78,6 +79,10 @@ class _EndSessionSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final loc = context.loc;
+    final resolvedTitle = title ?? loc.endSessionDefaultTitle;
+    final resolvedContinue = continueLabel ?? loc.endSessionContinueLabel;
+    final resolvedEnd = endLabel ?? loc.endSessionEndReviewLabel;
     return Padding(
       padding: EdgeInsets.only(
         top: 8,
@@ -86,9 +91,9 @@ class _EndSessionSheet extends StatelessWidget {
         bottom: MediaQuery.of(context).viewInsets.bottom + 20,
       ),
       child: Container(
-        decoration: const BoxDecoration(
-          color: AppColors.clayWhite,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        decoration: BoxDecoration(
+          color: context.clay.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         padding: const EdgeInsets.fromLTRB(20, 10, 20, 18),
         child: Column(
@@ -100,13 +105,14 @@ class _EndSessionSheet extends StatelessWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.clayBorder,
+                  color: context.clay.border,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
             ),
             const SizedBox(height: 14),
-            Text(title, style: AppTypography.title.copyWith(fontSize: 18)),
+            Text(resolvedTitle,
+                style: AppTypography.title.copyWith(fontSize: 18)),
             const SizedBox(height: 12),
             _StatsStrip(stats: stats, accentColor: accentColor),
             if (stats.highlight != null) ...[
@@ -118,7 +124,7 @@ class _EndSessionSheet extends StatelessWidget {
               Text(
                 stats.quotaReminder!,
                 style: AppTypography.caption.copyWith(
-                  color: AppColors.warmMuted,
+                  color: context.clay.textMuted,
                   fontSize: 11,
                 ),
               ),
@@ -132,18 +138,18 @@ class _EndSessionSheet extends StatelessWidget {
                     builder: (_, __) => Container(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       decoration: BoxDecoration(
-                        color: AppColors.clayBeige,
+                        color: context.clay.surfaceAlt,
                         borderRadius: AppRadius.mdBorder,
                         border: Border.all(
-                          color: AppColors.clayBorder,
+                          color: context.clay.border,
                           width: 1.5,
                         ),
                       ),
                       child: Text(
-                        continueLabel,
+                        resolvedContinue,
                         textAlign: TextAlign.center,
                         style: AppTypography.labelMd.copyWith(
-                          color: AppColors.warmDark,
+                          color: context.clay.text,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -162,7 +168,7 @@ class _EndSessionSheet extends StatelessWidget {
                         boxShadow: AppShadows.colored(accentColor, alpha: 0.35),
                       ),
                       child: Text(
-                        endLabel,
+                        resolvedEnd,
                         textAlign: TextAlign.center,
                         style: AppTypography.labelMd.copyWith(
                           color: Colors.white,
@@ -189,23 +195,24 @@ class _StatsStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final loc = context.loc;
     final tiles = <_StatTile>[
       _StatTile(
-        label: 'Turns',
+        label: loc.endSessionStatTurns,
         value: '${stats.turns}',
         accentColor: accentColor,
       ),
     ];
     if (stats.averageScore != null) {
       tiles.add(_StatTile(
-        label: 'Avg score',
+        label: loc.endSessionStatAvgScore,
         value: stats.averageScore!.toStringAsFixed(1),
         accentColor: accentColor,
       ));
     }
     if (stats.duration != null) {
       tiles.add(_StatTile(
-        label: 'Duration',
+        label: loc.endSessionStatDuration,
         value: _formatDuration(stats.duration!),
         accentColor: accentColor,
       ));
@@ -270,7 +277,7 @@ class _StatTile extends StatelessWidget {
           Text(
             label,
             style: AppTypography.caption.copyWith(
-              color: AppColors.warmMuted,
+              color: context.clay.textMuted,
               fontSize: 10,
             ),
           ),
@@ -296,7 +303,7 @@ class _HighlightLine extends StatelessWidget {
           child: Text(
             text,
             style: AppTypography.caption.copyWith(
-              color: AppColors.warmDark,
+              color: context.clay.text,
               fontSize: 11,
               fontStyle: FontStyle.italic,
             ),

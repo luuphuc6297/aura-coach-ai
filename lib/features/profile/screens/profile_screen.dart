@@ -7,15 +7,18 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_shadows.dart';
+import '../../../core/theme/clay_palette.dart';
 import '../../../shared/widgets/clay_button.dart';
 import '../../../shared/widgets/clay_dialog.dart';
 import '../../../shared/widgets/clay_card.dart';
 import '../../../shared/widgets/clay_pressable.dart';
 import '../../../shared/widgets/cloud_image.dart';
 import '../../../shared/widgets/app_icon.dart';
+import '../../../l10n/app_loc_context.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../home/providers/home_provider.dart';
 import '../../insights/providers/analytics_provider.dart';
+import '../../subscription/providers/subscription_provider.dart';
 import '../../insights/widgets/progress_preview_card.dart';
 
 /// Profile tab. Combines identity, preferences, a Your-Progress preview card
@@ -52,8 +55,9 @@ class ProfileScreen extends StatelessWidget {
             const AppIcon(iconId: AppIcons.profile, size: 48),
             const SizedBox(height: AppSpacing.lg),
             Text(
-              'Profile not available',
-              style: AppTypography.bodyMd.copyWith(color: AppColors.warmMuted),
+              context.loc.profileNotAvailable,
+              style: AppTypography.bodyMd
+                  .copyWith(color: context.clay.textMuted),
             ),
           ],
         ),
@@ -61,7 +65,12 @@ class ProfileScreen extends StatelessWidget {
     }
 
     final analytics = context.watch<AnalyticsProvider>();
-    final isPremium = profile.tier == 'premium';
+    // Tier source of truth is RevenueCat (live entitlement), not the
+    // Firestore `tier` field — that field lags behind the webhook so
+    // the row would briefly show "Upgrade" right after a successful
+    // purchase. SubscriptionProvider.isPro reflects the SDK's live
+    // CustomerInfo and updates the moment a receipt lands.
+    final isPro = context.watch<SubscriptionProvider>().isPro;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(
@@ -80,18 +89,18 @@ class ProfileScreen extends StatelessWidget {
             items: [
               _InfoItem(
                 iconUrl: AppIcons.level,
-                label: 'Level',
-                value: _formatLevel(profile.proficiencyLevel),
+                label: context.loc.profileLevelLabel,
+                value: _formatLevel(context, profile.proficiencyLevel),
               ),
               _InfoItem(
                 iconUrl: AppIcons.clock,
-                label: 'Daily Goal',
-                value: '${profile.dailyMinutes} min',
+                label: context.loc.profileDailyGoalLabel,
+                value: context.loc.profileDailyMinutes(profile.dailyMinutes),
               ),
               _InfoItem(
                 iconUrl: AppIcons.crown,
-                label: 'Plan',
-                value: _formatTier(profile.tier),
+                label: context.loc.profilePlanLabel,
+                value: _formatTier(context, profile.tier),
               ),
             ],
           ),
@@ -107,7 +116,7 @@ class ProfileScreen extends StatelessWidget {
           if (profile.selectedGoals.isNotEmpty) ...[
             _TagSection(
               iconUrl: AppIcons.goal,
-              title: 'Goals',
+              title: context.loc.profileGoalsTitle,
               tags: profile.selectedGoals,
               tagColor: AppColors.teal,
             ),
@@ -116,7 +125,7 @@ class ProfileScreen extends StatelessWidget {
           if (profile.selectedTopics.isNotEmpty) ...[
             _TagSection(
               iconUrl: AppIcons.topic,
-              title: 'Topics',
+              title: context.loc.profileTopicsTitle,
               tags: profile.selectedTopics,
               tagColor: AppColors.purple,
             ),
@@ -126,33 +135,34 @@ class ProfileScreen extends StatelessWidget {
             rows: [
               _ActionRow(
                 icon: Icons.edit_rounded,
-                label: 'Edit profile',
-                subtitle: 'Name, avatar, level, daily goal',
+                label: context.loc.profileEditRowLabel,
+                subtitle: context.loc.profileEditRowSubtitle,
                 accent: AppColors.teal,
                 onTap: () => context.push('/edit-profile'),
               ),
               _ActionRow(
                 icon: Icons.settings_rounded,
-                label: 'Settings',
-                subtitle: 'Language, notifications, privacy',
+                label: context.loc.profileSettingsRowLabel,
+                subtitle: context.loc.profileSettingsRowSubtitle,
                 accent: AppColors.purple,
                 onTap: () => context.push('/settings'),
               ),
-              if (!isPremium)
-                _ActionRow(
-                  icon: Icons.workspace_premium_rounded,
-                  label: 'Upgrade to Premium',
-                  subtitle: 'Unlimited practice + AI illustrations',
-                  accent: AppColors.goldDeep,
-                  onTap: () => context.push('/subscription'),
-                  showBadge: true,
-                ),
+              _ActionRow(
+                icon: Icons.workspace_premium_rounded,
+                label: isPro ? 'Aura Coach Pro' : context.loc.profileUpgradeRowLabel,
+                subtitle: isPro
+                    ? 'Manage subscription'
+                    : context.loc.profileUpgradeRowSubtitle,
+                accent: AppColors.goldDeep,
+                onTap: () => context.push('/subscription'),
+                showBadge: !isPro,
+              ),
               _ActionRow(
                 icon: Icons.logout_rounded,
-                label: 'Sign out',
+                label: context.loc.profileSignOutLabel,
                 subtitle: profile.name.isEmpty
-                    ? 'End your session'
-                    : 'Signed in as ${profile.name}',
+                    ? context.loc.profileSignOutEndSession
+                    : context.loc.profileSignOutSignedInAs(profile.name),
                 accent: AppColors.coral,
                 onTap: () => _showSignOutConfirmation(context),
                 isDanger: true,
@@ -165,14 +175,32 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  String _formatLevel(String level) {
-    if (level.isEmpty) return 'Not set';
-    return '${level[0].toUpperCase()}${level.substring(1)}';
+  String _formatLevel(BuildContext context, String level) {
+    switch (level) {
+      case 'beginner':
+        return context.loc.profileLevelBeginner;
+      case 'intermediate':
+        return context.loc.profileLevelIntermediate;
+      case 'advanced':
+        return context.loc.profileLevelAdvanced;
+      default:
+        return level.isEmpty
+            ? '—'
+            : '${level[0].toUpperCase()}${level.substring(1)}';
+    }
   }
 
-  String _formatTier(String tier) {
-    if (tier.isEmpty) return 'Free';
-    return '${tier[0].toUpperCase()}${tier.substring(1)}';
+  String _formatTier(BuildContext context, String tier) {
+    switch (tier) {
+      case 'premium':
+      case 'pro':
+        return context.loc.profilePlanPremium;
+      case 'free':
+      case '':
+        return context.loc.profilePlanFree;
+      default:
+        return '${tier[0].toUpperCase()}${tier.substring(1)}';
+    }
   }
 
   void _showSignOutConfirmation(BuildContext context) {
@@ -180,7 +208,7 @@ class ProfileScreen extends StatelessWidget {
       context: context,
       builder: (dialogContext) {
         return Dialog(
-          backgroundColor: AppColors.clayWhite,
+          backgroundColor: dialogContext.clay.surface,
           shape: RoundedRectangleBorder(borderRadius: AppRadius.lgBorder),
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.xxl),
@@ -189,12 +217,12 @@ class ProfileScreen extends StatelessWidget {
               children: [
                 const AppIcon(iconId: AppIcons.signOut, size: 40),
                 const SizedBox(height: AppSpacing.lg),
-                Text('Sign Out', style: AppTypography.title),
+                Text(context.loc.profileSignOutTitle, style: AppTypography.title),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
-                  'Are you sure you want to sign out?',
+                  context.loc.profileSignOutBody,
                   style: AppTypography.bodySm.copyWith(
-                    color: AppColors.warmMuted,
+                    color: dialogContext.clay.textMuted,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -203,7 +231,7 @@ class ProfileScreen extends StatelessWidget {
                   children: [
                     Expanded(
                       child: ClayButton(
-                        text: 'Cancel',
+                        text: context.loc.commonCancel,
                         variant: ClayButtonVariant.secondary,
                         onTap: () => Navigator.of(dialogContext).pop(),
                       ),
@@ -211,7 +239,7 @@ class ProfileScreen extends StatelessWidget {
                     const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: ClayButton(
-                        text: 'Sign Out',
+                        text: context.loc.profileSignOutLabel,
                         variant: ClayButtonVariant.danger,
                         onTap: () {
                           Navigator.of(dialogContext).pop();
@@ -251,8 +279,8 @@ class _AvatarHeader extends StatelessWidget {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             border: Border.all(color: AppColors.teal, width: 3),
-            boxShadow: AppShadows.clay,
-            color: AppColors.clayWhite,
+            boxShadow: AppShadows.clay(context),
+            color: context.clay.surface,
           ),
           child: ClipOval(
             child: CloudImage(url: avatarUrl, size: 82),
@@ -333,7 +361,7 @@ class _InfoSection extends StatelessWidget {
                     width: 1,
                     height: 36,
                     margin: const EdgeInsets.only(right: AppSpacing.md),
-                    color: AppColors.clayBorder,
+                    color: context.clay.border,
                   ),
                 Expanded(
                   child: Column(
@@ -344,7 +372,7 @@ class _InfoSection extends StatelessWidget {
                         item.value,
                         style: AppTypography.labelMd.copyWith(
                           fontWeight: FontWeight.w700,
-                          color: AppColors.warmDark,
+                          color: context.clay.text,
                         ),
                         textAlign: TextAlign.center,
                         maxLines: 1,
@@ -353,7 +381,7 @@ class _InfoSection extends StatelessWidget {
                       Text(
                         item.label,
                         style: AppTypography.micro.copyWith(
-                          color: AppColors.warmLight,
+                          color: context.clay.textFaint,
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -397,7 +425,7 @@ class _TagSection extends StatelessWidget {
                 title,
                 style: AppTypography.labelMd.copyWith(
                   fontWeight: FontWeight.w700,
-                  color: AppColors.warmDark,
+                  color: context.clay.text,
                 ),
               ),
             ],
@@ -477,12 +505,12 @@ class _ActionRowCard extends StatelessWidget {
             children: [
               _ActionRowWidget(row: row),
               if (i < rows.length - 1)
-                const Divider(
+                Divider(
                   height: 1,
                   thickness: 1,
                   indent: AppSpacing.lg,
                   endIndent: AppSpacing.lg,
-                  color: AppColors.clayBorder,
+                  color: context.clay.border,
                 ),
             ],
           );
@@ -535,7 +563,7 @@ class _ActionRowWidget extends StatelessWidget {
                           style: AppTypography.labelLg.copyWith(
                             color: row.isDanger
                                 ? AppColors.coral
-                                : AppColors.warmDark,
+                                : context.clay.text,
                             fontWeight: FontWeight.w700,
                           ),
                           maxLines: 1,
@@ -569,7 +597,7 @@ class _ActionRowWidget extends StatelessWidget {
                   Text(
                     row.subtitle,
                     style: AppTypography.caption.copyWith(
-                      color: AppColors.warmMuted,
+                      color: context.clay.textMuted,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -578,9 +606,9 @@ class _ActionRowWidget extends StatelessWidget {
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
-            const Icon(
+            Icon(
               Icons.chevron_right_rounded,
-              color: AppColors.warmLight,
+              color: context.clay.textFaint,
               size: 22,
             ),
           ],

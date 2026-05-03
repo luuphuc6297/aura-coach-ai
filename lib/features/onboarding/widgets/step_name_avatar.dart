@@ -3,12 +3,14 @@ import 'package:provider/provider.dart';
 import '../providers/onboarding_provider.dart';
 import '../../../core/constants/cloudinary_assets.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/clay_palette.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_animations.dart';
+import '../../../l10n/app_loc_context.dart';
 import '../../../shared/widgets/clay_pressable.dart';
+import '../../../shared/widgets/clay_text_input.dart';
 import '../../../shared/widgets/cloud_image.dart';
 import '../../../shared/widgets/staggered_entrance.dart';
 
@@ -31,42 +33,29 @@ class StepNameAvatar extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.xxl),
           Text(
-            'What should we call you?',
+            context.loc.onboardingNameTitle,
             style: AppTypography.displayMd,
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            'Pick a name and choose your avatar',
-            style: AppTypography.bodyMd.copyWith(color: AppColors.warmMuted),
+            context.loc.onboardingNameSubtitle,
+            style: AppTypography.bodyMd.copyWith(color: context.clay.textMuted),
           ),
           const SizedBox(height: AppSpacing.xxl),
-          Container(
-            decoration: BoxDecoration(
-              borderRadius: AppRadius.lgBorder,
-              boxShadow: AppShadows.clay,
-            ),
-            child: TextField(
-              onChanged: provider.setName,
-              textCapitalization: TextCapitalization.words,
-              style: AppTypography.input,
-              cursorColor: AppColors.teal,
-              decoration: const InputDecoration(
-                hintText: 'Enter your name',
-                prefixIcon: Icon(
-                  Icons.person_outline,
-                  size: 22,
-                  color: AppColors.warmMuted,
-                ),
-              ),
-            ),
+          ClayTextInput(
+            onChanged: provider.setName,
+            hintText: context.loc.onboardingNameHint,
+            prefixIcon: Icons.person_outline,
+            textCapitalization: TextCapitalization.words,
+            textInputAction: TextInputAction.done,
           ),
           const SizedBox(height: AppSpacing.xxxl),
           Text(
-            'CHOOSE YOUR BUDDY',
+            context.loc.onboardingBuddyLabel,
             style: AppTypography.caption.copyWith(
               fontWeight: FontWeight.w700,
               letterSpacing: 1.5,
-              color: AppColors.warmLight,
+              color: context.clay.textFaint,
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -91,7 +80,7 @@ class StepNameAvatar extends StatelessWidget {
                         border: Border.all(
                           color: isSelected
                               ? AppColors.teal
-                              : AppColors.clayBorder,
+                              : context.clay.border,
                           width: 3,
                         ),
                         boxShadow: isSelected
@@ -101,9 +90,9 @@ class StepNameAvatar extends StatelessWidget {
                                   blurRadius: 0,
                                   spreadRadius: 3,
                                 ),
-                                ...AppShadows.clay,
+                                ...AppShadows.clay(context),
                               ]
-                            : AppShadows.card,
+                            : AppShadows.card(context),
                       ),
                       child: ClipOval(
                         child: CloudImage(url: avatar.url, size: 60),

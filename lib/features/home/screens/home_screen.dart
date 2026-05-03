@@ -10,7 +10,9 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_shadows.dart';
+import '../../../core/theme/clay_palette.dart';
 import '../../../core/constants/cloudinary_assets.dart';
+import '../../../core/constants/feature_flags.dart';
 import '../../../core/constants/icon_constants.dart';
 import '../../../shared/widgets/cloud_image.dart';
 import '../../../shared/widgets/app_icon.dart';
@@ -18,16 +20,22 @@ import '../../../shared/widgets/aura_logo.dart';
 import '../../../shared/widgets/swipe_dots.dart';
 import '../../auth/providers/auth_provider.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/services/notification_service.dart';
+import '../../../core/services/notification_triggers.dart';
+import '../../ai_agent/screens/ai_agent_screen.dart';
 import '../../my_library/providers/library_provider.dart';
-import '../../my_library/screens/my_library_screen.dart';
+import '../../notifications/providers/notifications_provider.dart';
+import '../../notifications/screens/notifications_screen.dart';
+import '../../profile/providers/settings_provider.dart';
 import '../../scenario/providers/scenario_provider.dart';
 import '../../shared/providers/storage_quota_provider.dart';
 import '../../story/providers/story_provider.dart';
 import '../../../shared/widgets/storage_quota_banner.dart';
 import '../../profile/screens/profile_screen.dart';
 import '../../insights/providers/analytics_provider.dart';
-import '../../insights/screens/insights_screen.dart';
+import '../../insights/screens/insights_hub_screen.dart';
 import '../../../shared/widgets/clay_pressable.dart';
+import '../../../l10n/app_loc_context.dart';
 import '../widgets/start_practice_sheet.dart';
 import '../widgets/start_story_sheet.dart';
 
@@ -62,6 +70,29 @@ class _HomeScreenState extends State<HomeScreen> {
       if (!mounted) return;
       final tier = context.read<HomeProvider>().userProfile?.tier ?? 'free';
       await context.read<StorageQuotaProvider>().init(uid: uid, tier: tier);
+      if (!mounted) return;
+      // Refresh notification triggers (daily/review/streak/quota) using
+      // current library state. markActivity beacons that the user is alive
+      // right now, so the streak warning gets pushed forward.
+      await NotificationTriggers.instance.markActivity();
+      if (!mounted) return;
+      // Permission may not be granted yet on first launch — the user gets a
+      // chance to accept; after they do, scheduling will start working on
+      // the next refresh.
+      await NotificationService.instance.requestPermission();
+      if (!mounted) return;
+      // Honour the user's master toggle from Settings. Without this guard,
+      // every Home open would re-arm the schedule and override the user's
+      // explicit "Daily reminders off" choice.
+      final settings = context.read<SettingsProvider>();
+      if (settings.dailyRemindersEnabled) {
+        await NotificationTriggers.instance.refresh(
+          notifications: context.read<NotificationsProvider>(),
+          library: context.read<LibraryProvider>(),
+        );
+      } else {
+        await NotificationTriggers.instance.cancelAll();
+      }
     });
   }
 
@@ -73,11 +104,9 @@ class _HomeScreenState extends State<HomeScreen> {
     if (snapshot.canCreate) return true;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Text(
-          'Storage full. Delete a conversation or upgrade to start a new one.',
-        ),
+        content: Text(context.loc.homeStorageFull),
         action: SnackBarAction(
-          label: 'Upgrade',
+          label: context.loc.homeStorageUpgradeAction,
           onPressed: _openUpgradePage,
         ),
         duration: const Duration(seconds: 5),
@@ -89,7 +118,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _openUpgradePage() {
     // Hook: once the paywall screen ships, switch to context.push('/upgrade').
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Paywall coming soon.')),
+      SnackBar(content: Text(context.loc.homePaywallSnack)),
     );
   }
 
@@ -113,8 +142,8 @@ class _HomeScreenState extends State<HomeScreen> {
       if (!scenarioProvider.canStartSession()) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Daily limit reached. Upgrade for more sessions.'),
+            SnackBar(
+              content: Text(context.loc.homeDailyLimitReachedSessions),
             ),
           );
         }
@@ -183,7 +212,7 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to start: $e')),
+          SnackBar(content: Text(context.loc.failedToStart(e.toString()))),
         );
       }
     } finally {
@@ -224,8 +253,8 @@ class _HomeScreenState extends State<HomeScreen> {
         choice = const StartStoryAction.newStory();
       } else if (conversations.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Daily limit reached. Upgrade for more stories.'),
+          SnackBar(
+            content: Text(context.loc.homeDailyLimitReachedStories),
           ),
         );
         return;
@@ -274,7 +303,7 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to start: $e')),
+          SnackBar(content: Text(context.loc.failedToStart(e.toString()))),
         );
       }
     } finally {
@@ -301,38 +330,45 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: context.clay.background,
       body: SafeArea(
         bottom: false,
         // IndexedStack keeps each tab's state alive (scroll position, in-flight
         // network calls, filter selections) so switching tabs doesn't blow
         // away work-in-progress.
+        // Tab order: 0 Home / 1 Insight / 2 AI Agent / 3 Notifications /
+        // 4 Profile. Library lives inside Insight as a sub-tab.
         child: IndexedStack(
           index: _navIndex,
           children: [
             _buildHomeTab(),
-            const MyLibraryScreen(embedded: true),
-            const InsightsScreen(),
+            const InsightsHubScreen(),
+            const AIAgentScreen(),
+            const NotificationsScreen(),
             ProfileScreen(
-              onOpenInsights: () => setState(() => _navIndex = 2),
+              onOpenInsights: () => setState(() => _navIndex = 1),
             ),
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _navIndex,
-        onTap: (index) => setState(() => _navIndex = index),
+      bottomNavigationBar: Consumer<NotificationsProvider>(
+        builder: (_, notifs, __) => BottomNavBar(
+          currentIndex: _navIndex,
+          unreadNotificationCount: notifs.unreadCount,
+          onTap: (index) => setState(() => _navIndex = index),
+        ),
       ),
     );
   }
 
   Widget _buildHomeTab() {
+    final modes = _buildModes(context);
     return Consumer<StorageQuotaProvider>(
       builder: (context, quota, _) {
         final snap = quota.snapshot;
         return Column(
           children: [
-            _TopBar(accentColor: _modes[_currentMode].accentColor),
+            _TopBar(accentColor: modes[_currentMode].accentColor),
             if (snap.state != StorageQuotaState.healthy)
               StorageQuotaBanner(
                 snapshot: snap,
@@ -342,8 +378,8 @@ class _HomeScreenState extends State<HomeScreen> {
             Expanded(
               child: Stack(
                 children: [
-                  _buildModePageView(),
-                  _buildVerticalModeDots(),
+                  _buildModePageView(modes),
+                  _buildVerticalModeDots(modes),
                 ],
               ),
             ),
@@ -353,13 +389,13 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildModePageView() {
+  Widget _buildModePageView(List<_ModeConfig> modes) {
     return PageView.builder(
       controller: _modeController,
       scrollDirection: Axis.vertical,
-      itemCount: _modes.length,
+      itemCount: modes.length,
       itemBuilder: (context, modeIndex) {
-        final mode = _modes[modeIndex];
+        final mode = modes[modeIndex];
         final deepDive = modeDeepDiveList[modeIndex];
 
         final isRoleplay = mode.route == '/scenario';
@@ -395,15 +431,15 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildVerticalModeDots() {
-    final accentColor = _modes[_currentMode].accentColor;
+  Widget _buildVerticalModeDots(List<_ModeConfig> modes) {
+    final accentColor = modes[_currentMode].accentColor;
     return Positioned(
       right: 12,
       top: 0,
       bottom: 0,
       child: Center(
         child: SwipeDots(
-          total: _modes.length,
+          total: modes.length,
           current: _currentMode,
           activeColor: accentColor,
           axis: Axis.vertical,
@@ -413,54 +449,75 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-const _modes = [
-  _ModeConfig(
-    title: 'Scenario Coach',
-    description:
-        'Practice real-life situations with AI roleplay. Get instant feedback on grammar, vocabulary & tone.',
-    iconUrl: CloudinaryAssets.modeScenarioCoach,
-    accentColor: AppColors.teal,
-    badgeText: 'MOST POPULAR',
-    ctaText: 'Start Practice',
-    quotaText: '5 free sessions / day',
-    tags: ['🎯 Roleplay', '💬 4 Tones'],
-    route: '/scenario',
-  ),
-  _ModeConfig(
-    title: 'Story Mode',
-    description:
-        "Learn through interactive stories. You're the main character — your choices shape the narrative.",
-    iconUrl: CloudinaryAssets.modeStory,
-    accentColor: AppColors.purple,
-    badgeText: 'INTERACTIVE',
-    ctaText: 'Begin Story',
-    quotaText: '3 free stories / day',
-    tags: ['📖 Narrative', '🎭 Choices'],
-    route: '/story',
-  ),
-  _ModeConfig(
-    title: 'Tone Translator',
-    description:
-        'Master the art of tone. See how one sentence sounds formal, friendly, casual & neutral.',
-    iconUrl: CloudinaryAssets.modeTranslator,
-    accentColor: AppColors.gold,
-    badgeText: 'UNIQUE',
-    ctaText: 'Translate Now',
-    quotaText: '10 free translations / day',
-    tags: ['🎭 4 Tones', '🔊 TTS'],
-  ),
-  _ModeConfig(
-    title: 'Vocab Hub',
-    description:
-        'Deep-dive into any word. Get analysis, mind maps, examples & spaced repetition flashcards.',
-    iconUrl: CloudinaryAssets.modeVocabHub,
-    accentColor: AppColors.coral,
-    badgeText: 'BUILD SKILLS',
-    ctaText: 'Explore Words',
-    quotaText: 'Unlimited',
-    tags: ['🧠 Mind Map', '📝 Quiz'],
-  ),
-];
+/// Builds the home-screen mode card list. Used to be a top-level `const _modes`
+/// — converted to a function so titles / descriptions / CTAs / quota labels
+/// flow through AppLocalizations and flip with the user's display language.
+/// Accent colors, icon URLs, and route paths stay theme-invariant.
+List<_ModeConfig> _buildModes(BuildContext context) {
+  final loc = context.loc;
+  return [
+    _ModeConfig(
+      title: loc.modeScenarioTitle,
+      description: loc.modeScenarioDescription,
+      iconUrl: CloudinaryAssets.modeScenarioCoach,
+      accentColor: AppColors.teal,
+      badgeText: loc.modeScenarioBadge,
+      ctaText: loc.modeScenarioCta,
+      quotaText: loc.modeScenarioQuota,
+      tags: const ['🎯 Roleplay', '💬 4 Tones'],
+      route: '/scenario',
+    ),
+    _ModeConfig(
+      title: loc.modeStoryTitle,
+      description:
+          "Learn through interactive stories. You're the main character — your choices shape the narrative.",
+      iconUrl: CloudinaryAssets.modeStory,
+      accentColor: AppColors.purple,
+      badgeText: loc.modeStoryBadge,
+      ctaText: loc.modeStoryCta,
+      quotaText: loc.modeStoryQuota,
+      tags: const ['📖 Narrative', '🎭 Choices'],
+      route: '/story',
+    ),
+    // Third slot: Grammar Coach (default) or Tone Translator (legacy).
+    // Picked at compile-time via FeatureFlags so the inactive variant
+    // tree-shakes out. Grammar wins when both flags are on.
+    if (FeatureFlags.grammarCoachEnabled)
+      _ModeConfig(
+        title: loc.modeGrammarTitle,
+        description: loc.modeGrammarDescription,
+        iconUrl: CloudinaryAssets.modeGrammarCoach,
+        accentColor: AppColors.gold,
+        badgeText: loc.modeGrammarBadge,
+        ctaText: loc.modeGrammarCta,
+        quotaText: loc.modeGrammarQuota,
+        tags: const ['📚 A1–C2', '🎯 3 Modes'],
+        route: '/grammar',
+      ),
+    if (!FeatureFlags.grammarCoachEnabled && FeatureFlags.toneTranslatorEnabled)
+      _ModeConfig(
+        title: loc.modeToneTitle,
+        description: loc.modeToneDescription,
+        iconUrl: CloudinaryAssets.modeTranslator,
+        accentColor: AppColors.gold,
+        badgeText: loc.modeToneBadge,
+        ctaText: loc.modeToneCta,
+        quotaText: loc.modeToneQuota,
+        tags: const ['🎭 4 Tones', '🔊 TTS'],
+      ),
+    _ModeConfig(
+      title: loc.modeVocabTitle,
+      description: loc.modeVocabDescription,
+      iconUrl: CloudinaryAssets.modeVocabHub,
+      accentColor: AppColors.coral,
+      badgeText: loc.modeVocabBadge,
+      ctaText: loc.modeVocabCta,
+      quotaText: loc.modeVocabQuota,
+      tags: const ['🧠 Mind Map', '📝 Quiz'],
+      route: '/vocab-hub',
+    ),
+  ];
+}
 
 class _ModeConfig {
   final String title;
@@ -505,6 +562,9 @@ class _TopBar extends StatelessWidget {
         children: [
           AuraLogo(fontSize: 16, compact: true, color: accentColor),
           const Spacer(),
+          // Notifications bell intentionally NOT placed here — the BottomNav
+          // Bell tab is the single entry point. Keeping a bell in the header
+          // would be redundant and ambiguous (which one is "the" bell?).
           ClayPressable(
             onTap: () => context.push('/history'),
             scaleDown: 0.90,
@@ -521,10 +581,10 @@ class _TopBar extends StatelessWidget {
           const SizedBox(width: AppSpacing.sm),
           if (profile != null) ...[
             Text(
-              'Hi, ${profile.name}',
+              context.loc.homeGreeting(profile.name),
               style: AppTypography.labelMd.copyWith(
                 fontWeight: FontWeight.w600,
-                color: AppColors.warmDark,
+                color: context.clay.text,
               ),
             ),
             const SizedBox(width: AppSpacing.smd),
@@ -534,7 +594,7 @@ class _TopBar extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(color: accentColor, width: 2),
-                boxShadow: AppShadows.clay,
+                boxShadow: AppShadows.clay(context),
               ),
               child: ClipOval(
                 child: CloudImage(url: profile.avatarUrl, size: 32),
@@ -546,3 +606,4 @@ class _TopBar extends StatelessWidget {
     );
   }
 }
+

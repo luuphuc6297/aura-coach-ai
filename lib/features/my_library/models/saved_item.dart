@@ -15,6 +15,11 @@ class SavedItem {
   final double easeFactor;
   final int reviewCount;
   final String? category;
+  final String? pronunciation;
+  final String? sourceTag;
+  final String? illustrationEmoji;
+  final List<String>? synonyms;
+  final String? contextUsage;
 
   const SavedItem({
     required this.id,
@@ -33,6 +38,11 @@ class SavedItem {
     this.easeFactor = 2.5,
     this.reviewCount = 0,
     this.category,
+    this.pronunciation,
+    this.sourceTag,
+    this.illustrationEmoji,
+    this.synonyms,
+    this.contextUsage,
   });
 
   bool get isDueForReview {
@@ -63,6 +73,11 @@ class SavedItem {
     double? easeFactor,
     int? reviewCount,
     String? category,
+    String? pronunciation,
+    String? sourceTag,
+    String? illustrationEmoji,
+    List<String>? synonyms,
+    String? contextUsage,
   }) {
     return SavedItem(
       id: id ?? this.id,
@@ -81,6 +96,11 @@ class SavedItem {
       easeFactor: easeFactor ?? this.easeFactor,
       reviewCount: reviewCount ?? this.reviewCount,
       category: category ?? this.category,
+      pronunciation: pronunciation ?? this.pronunciation,
+      sourceTag: sourceTag ?? this.sourceTag,
+      illustrationEmoji: illustrationEmoji ?? this.illustrationEmoji,
+      synonyms: synonyms ?? this.synonyms,
+      contextUsage: contextUsage ?? this.contextUsage,
     );
   }
 
@@ -105,6 +125,13 @@ class SavedItem {
       easeFactor: (json['easeFactor'] as num?)?.toDouble() ?? 2.5,
       reviewCount: (json['reviewCount'] as num?)?.toInt() ?? 0,
       category: json['category'] as String?,
+      pronunciation: json['pronunciation'] as String?,
+      sourceTag: json['sourceTag'] as String?,
+      illustrationEmoji: json['illustrationEmoji'] as String?,
+      synonyms: (json['synonyms'] as List<dynamic>?)
+          ?.map((e) => e.toString())
+          .toList(),
+      contextUsage: json['contextUsage'] as String?,
     );
   }
 
@@ -127,6 +154,11 @@ class SavedItem {
       'easeFactor': easeFactor,
       'reviewCount': reviewCount,
       'category': category,
+      'pronunciation': pronunciation,
+      'sourceTag': sourceTag,
+      'illustrationEmoji': illustrationEmoji,
+      'synonyms': synonyms,
+      'contextUsage': contextUsage,
     };
   }
 
@@ -136,7 +168,14 @@ class SavedItem {
     required String correction,
     required String type,
     required String context,
+    String? sourceTag,
   }) {
+    // Schedule new items for tomorrow so they don't pollute today's review
+    // queue. SM-2 treats this as the first scheduled interval.
+    final tomorrow = DateTime.now()
+        .add(const Duration(days: 1))
+        .millisecondsSinceEpoch
+        .toDouble();
     return SavedItem(
       id: id,
       original: original,
@@ -144,7 +183,9 @@ class SavedItem {
       type: type,
       context: context,
       timestamp: DateTime.now().millisecondsSinceEpoch,
-      nextReviewDate: DateTime.now().millisecondsSinceEpoch.toDouble(),
+      nextReviewDate: tomorrow,
+      interval: 1,
+      sourceTag: sourceTag,
     );
   }
 }

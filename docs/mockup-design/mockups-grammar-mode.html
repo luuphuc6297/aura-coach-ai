@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aura Coach AI — Grammar Coach (Hub + Detail + Practice + Summary)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700;800&family=Nunito:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --cream: #FFF8F0;
+      --clay-white: #FEFCF9;
+      --clay-beige: #F5EDE3;
+      --clay-border: #E8DFD3;
+      --clay-shadow: #D4C9BB;
+      --warm-dark: #2D3047;
+      --warm-muted: #6B6D7B;
+      --warm-light: #9B9DAB;
+      --teal: #7ECEC5;
+      --teal-deep: #5FB5AB;
+      --purple: #A78BCA;
+      --purple-deep: #8A6FB0;
+      --gold: #E8C77B;
+      --gold-deep: #D4AF5F;
+      --gold-dark: #B8924A;
+      --coral: #E8927C;
+      --coral-deep: #C97359;
+      --success: #7BC6A0;
+      --error: #D98A8A;
+      --shadow-clay: 3px 3px 0px #D4C9BB;
+      --shadow-clay-bold: 3px 3px 0px var(--warm-dark);
+      --shadow-card: 0 2px 8px rgba(45,48,71,0.04);
+      --shadow-soft: 0 4px 12px rgba(45,48,71,0.06);
+      --r-sm: 8px; --r-md: 12px; --r-lg: 20px; --r-xl: 28px; --r-full: 9999px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { font-family: 'Inter', sans-serif; background: #EEEAE5; min-height: 100vh; }
+
+    .page-header { text-align: center; padding: 48px 20px 24px; }
+    .page-header h1 { font-family: 'Fredoka', sans-serif; font-size: 32px; font-weight: 800; color: var(--warm-dark); }
+    .page-header p { color: var(--warm-muted); font-size: 14px; margin-top: 6px; max-width: 760px; margin-left: auto; margin-right: auto; }
+    .page-header .label { font-size: 12px; color: var(--warm-light); text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; }
+
+    .screens-row {
+      display: flex; gap: 32px; padding: 24px 40px 24px;
+      justify-content: center; flex-wrap: wrap;
+    }
+    .screens-row.compact { padding-bottom: 0; }
+    .screens-row.last { padding-bottom: 60px; }
+
+    .column { display: flex; flex-direction: column; align-items: center; }
+    .column-header {
+      background: var(--clay-white);
+      border: 2px solid var(--clay-border);
+      box-shadow: var(--shadow-clay);
+      border-radius: var(--r-lg);
+      padding: 14px 18px; margin-bottom: 18px;
+      width: 375px; text-align: center;
+    }
+    .column-header .opt-tag {
+      display: inline-block;
+      background: var(--gold); color: var(--warm-dark);
+      font-family: 'Fredoka', sans-serif; font-weight: 700;
+      padding: 4px 12px; border-radius: var(--r-full);
+      font-size: 12px; margin-bottom: 6px;
+    }
+    .column-header h2 { font-family: 'Fredoka', sans-serif; font-size: 18px; font-weight: 700; color: var(--warm-dark); }
+    .column-header p { font-size: 12px; color: var(--warm-muted); margin-top: 4px; }
+
+    /* ═══ PHONE FRAME (375 × 760) — slightly taller for practice screens ═══ */
+    .phone {
+      flex-shrink: 0; width: 375px; height: 760px;
+      background: var(--cream); border-radius: 44px;
+      border: 3px solid var(--clay-border);
+      box-shadow: 0 8px 32px rgba(45,48,71,0.08), 0 2px 8px rgba(45,48,71,0.04);
+      overflow: hidden; display: flex; flex-direction: column; position: relative;
+    }
+    .phone-status {
+      height: 38px; display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 24px 0; font-size: 12px; color: var(--warm-muted); font-weight: 600; flex-shrink: 0;
+    }
+    .phone-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+    .phone-home-bar { height: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .phone-home-bar::after { content: ''; width: 120px; height: 4px; background: var(--warm-dark); border-radius: 2px; opacity: 0.3; }
+
+    /* ═══ APP BAR ═══ */
+    .app-bar {
+      height: 56px; display: flex; align-items: center; justify-content: space-between;
+      padding: 0 20px; flex-shrink: 0;
+    }
+    .app-bar-left { display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1; }
+    .icon-btn {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: var(--clay-white); border: 1.5px solid var(--clay-border);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--warm-dark); font-size: 18px;
+      flex-shrink: 0;
+    }
+    .app-title { font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 18px; color: var(--warm-dark); }
+    .app-subtitle { font-size: 11px; color: var(--warm-muted); margin-top: 1px; }
+    .mode-pill {
+      background: var(--gold); color: var(--warm-dark);
+      padding: 4px 12px; border-radius: var(--r-full);
+      font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 11px;
+      letter-spacing: 0.04em;
+    }
+
+    .scroll-content { flex: 1; overflow-y: auto; padding: 8px 20px 20px; }
+    .scroll-content::-webkit-scrollbar { width: 4px; }
+    .scroll-content::-webkit-scrollbar-thumb { background: var(--clay-shadow); border-radius: 2px; }
+
+    /* ═══ MODE HERO ═══ */
+    .mode-hero {
+      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-deep) 100%);
+      border: 2px solid var(--warm-dark);
+      box-shadow: var(--shadow-clay);
+      border-radius: var(--r-lg);
+      padding: 16px 18px;
+      color: var(--warm-dark);
+      display: flex; align-items: center; gap: 14px;
+      margin-bottom: 14px;
+      position: relative; overflow: hidden;
+    }
+    .mode-hero .hero-icon {
+      width: 52px; height: 52px; border-radius: var(--r-md);
+      background: rgba(255,255,255,0.4); border: 1.5px solid rgba(45,48,71,0.18);
+      display: flex; align-items: center; justify-content: center; font-size: 26px;
+      flex-shrink: 0;
+    }
+    .mode-hero h3 { font-family: 'Fredoka', sans-serif; font-size: 17px; font-weight: 800; }
+    .mode-hero .sub { font-size: 12px; opacity: 0.85; margin-top: 2px; line-height: 1.4; }
+
+    /* ═══ FILTER ROW (CEFR levels, sticky) ═══ */
+    .filter-row {
+      display: flex; gap: 6px; overflow-x: auto;
+      padding: 8px 0 10px; margin-bottom: 6px;
+      scrollbar-width: none;
+    }
+    .filter-row::-webkit-scrollbar { display: none; }
+    .lvl-chip {
+      flex-shrink: 0;
+      background: var(--clay-white);
+      border: 1.5px solid var(--clay-border);
+      border-radius: var(--r-full);
+      padding: 7px 14px;
+      font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 12px;
+      color: var(--warm-dark);
+      box-shadow: var(--shadow-card);
+    }
+    .lvl-chip.active {
+      background: rgba(232,199,123,0.32); /* gold @ 32% */
+      border: 2px solid var(--gold-deep);
+      box-shadow: 2px 2px 0 var(--gold-deep);
+    }
+
+    /* ═══ CATEGORY ROW (smaller, secondary) ═══ */
+    .cat-row {
+      display: flex; gap: 6px; overflow-x: auto;
+      padding-bottom: 10px;
+      scrollbar-width: none;
+    }
+    .cat-row::-webkit-scrollbar { display: none; }
+    .cat-chip {
+      flex-shrink: 0;
+      background: var(--clay-white);
+      border: 1.5px solid var(--clay-border);
+      border-radius: var(--r-full);
+      padding: 5px 11px;
+      font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 11px;
+      color: var(--warm-muted);
+    }
+    .cat-chip.active {
+      background: var(--warm-dark); color: #fff;
+      border-color: var(--warm-dark);
+    }
+
+    /* ═══ TOPIC CARD (grammar list item) ═══ */
+    .topic-card {
+      background: var(--clay-white);
+      border: 1.5px solid var(--clay-border);
+      border-radius: var(--r-md);
+      padding: 14px;
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 10px;
+      box-shadow: var(--shadow-card);
+    }
+    .topic-mastery {
+      width: 42px; height: 42px; flex-shrink: 0;
+      position: relative;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .topic-mastery svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+    .topic-mastery .ring-bg { stroke: var(--clay-border); }
+    .topic-mastery .ring-fg { stroke: var(--gold-deep); transition: stroke-dashoffset 0.3s; }
+    .topic-mastery .pct {
+      position: absolute; font-family: 'Fredoka', sans-serif; font-weight: 700;
+      font-size: 11px; color: var(--warm-dark);
+    }
+    .topic-body { flex: 1; min-width: 0; }
+    .topic-title-row {
+      display: flex; align-items: center; gap: 6px;
+      font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 14px;
+      color: var(--warm-dark);
+    }
+    .topic-pills { display: flex; gap: 4px; margin-top: 4px; }
+    .pill {
+      font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 9px;
+      letter-spacing: 0.04em; padding: 2px 7px; border-radius: 6px;
+      border: 1px solid transparent;
+    }
+    .pill-lvl { background: rgba(212,175,95,0.22); color: var(--gold-dark); border-color: rgba(212,175,95,0.45); }
+    .pill-cat { background: var(--clay-beige); color: var(--warm-muted); border-color: var(--clay-border); }
+    .pill-status { background: rgba(123,198,160,0.18); color: #4a8b6a; border-color: rgba(123,198,160,0.45); }
+    .pill-status.new { background: rgba(155,157,171,0.15); color: var(--warm-light); border-color: var(--clay-border); }
+    .pill-status.learning { background: rgba(232,199,123,0.22); color: var(--gold-dark); border-color: rgba(212,175,95,0.45); }
+    .topic-meta {
+      font-size: 10px; color: var(--warm-muted); margin-top: 4px; line-height: 1.3;
+    }
+    .topic-chevron { color: var(--warm-light); font-size: 18px; flex-shrink: 0; }
+
+    /* ═══ TOPIC DETAIL CARDS ═══ */
+    .summary-card {
+      background: var(--clay-white); border: 1.5px solid var(--clay-border);
+      border-radius: var(--r-lg); padding: 14px 16px; box-shadow: var(--shadow-card);
+      margin-bottom: 12px;
+    }
+    .summary-card .formula {
+      font-family: 'JetBrains Mono', 'Courier New', monospace;
+      background: var(--clay-beige); border: 1px dashed var(--clay-shadow);
+      padding: 8px 12px; border-radius: var(--r-sm);
+      font-size: 13px; color: var(--warm-dark); font-weight: 600;
+      margin-bottom: 10px; letter-spacing: -0.2px;
+    }
+    .summary-card .desc { font-size: 13px; color: var(--warm-dark); line-height: 1.55; }
+    .summary-card .desc-vi { font-size: 12px; color: var(--warm-muted); margin-top: 4px; line-height: 1.5; }
+
+    .section-label {
+      font-family: 'Nunito', sans-serif; font-size: 11px; font-weight: 800;
+      color: var(--warm-muted); text-transform: uppercase; letter-spacing: 0.06em;
+      margin: 14px 0 8px;
+    }
+    .use-list { list-style: none; padding: 0; }
+    .use-list li {
+      font-size: 12px; color: var(--warm-dark); line-height: 1.5;
+      padding: 4px 0 4px 18px; position: relative;
+    }
+    .use-list li::before {
+      content: '✓'; position: absolute; left: 0; color: var(--gold-deep); font-weight: 800;
+    }
+
+    .ex-card {
+      background: var(--clay-white); border: 1.5px solid var(--clay-border);
+      border-radius: var(--r-md); padding: 12px; box-shadow: var(--shadow-card);
+      margin-bottom: 8px;
+      display: flex; align-items: flex-start; gap: 10px;
+    }
+    .ex-body { flex: 1; min-width: 0; }
+    .ex-en { font-size: 13px; color: var(--warm-dark); font-weight: 600; line-height: 1.4; }
+    .ex-en .hl { background: rgba(232,199,123,0.4); padding: 0 3px; border-radius: 3px; }
+    .ex-vi { font-size: 11px; color: var(--warm-muted); margin-top: 3px; line-height: 1.4; }
+    .listen-mini {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: rgba(232,199,123,0.25); border: 1.5px solid var(--gold-deep);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; flex-shrink: 0;
+    }
+
+    .mistake-card {
+      background: rgba(217,138,138,0.08); border: 1.5px solid rgba(217,138,138,0.3);
+      border-radius: var(--r-md); padding: 10px 12px;
+      margin-bottom: 8px;
+    }
+    .mistake-row { display: flex; align-items: center; gap: 6px; font-size: 12px; line-height: 1.5; }
+    .mistake-row.wrong { color: var(--error); font-weight: 600; }
+    .mistake-row.wrong::before { content: '✗'; font-weight: 800; }
+    .mistake-row.right { color: #4a8b6a; font-weight: 600; }
+    .mistake-row.right::before { content: '✓'; font-weight: 800; }
+    .mistake-why { font-size: 11px; color: var(--warm-muted); margin-top: 4px; line-height: 1.4; }
+
+    .related-row { display: flex; gap: 6px; flex-wrap: wrap; }
+    .related-chip {
+      background: var(--clay-white); border: 1.5px solid var(--clay-border);
+      border-radius: var(--r-full); padding: 5px 10px;
+      font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 11px;
+      color: var(--warm-dark);
+      display: inline-flex; align-items: center; gap: 4px;
+    }
+    .related-chip::before { content: '↗'; color: var(--gold-deep); font-weight: 800; }
+
+    /* ═══ STICKY BOTTOM CTA ═══ */
+    .bottom-cta {
+      flex-shrink: 0;
+      padding: 12px 20px 14px;
+      border-top: 1.5px solid var(--clay-border);
+      background: var(--cream);
+    }
+    .primary-btn {
+      width: 100%; background: var(--gold);
+      border: 2px solid var(--warm-dark);
+      box-shadow: 3px 3px 0px var(--warm-dark);
+      padding: 14px; border-radius: var(--r-md);
+      font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 15px;
+      color: var(--warm-dark); text-align: center;
+    }
+    .secondary-btn {
+      width: 100%; background: var(--clay-white);
+      border: 2px solid var(--warm-dark);
+      box-shadow: 3px 3px 0px var(--warm-dark);
+      padding: 12px; border-radius: var(--r-md);
+      font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 13px;
+      color: var(--warm-dark); text-align: center;
+    }
+    .ghost-btn {
+      width: 100%; background: transparent;
+      border: 1.5px dashed var(--clay-shadow);
+      padding: 11px; border-radius: var(--r-md);
+      font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 13px;
+      color: var(--warm-muted); text-align: center;
+    }
+    .danger-btn {
+      width: 100%; background: rgba(217,138,138,0.18);
+      border: 2px solid var(--error);
+      padding: 11px; border-radius: var(--r-md);
+      font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 13px;
+      color: var(--error); text-align: center;
+    }
+
+    /* ═══ PRACTICE MODE PICKER (bottom sheet) ═══ */
+    .sheet {
+      position: absolute; left: 0; right: 0; bottom: 0;
+      background: var(--clay-white);
+      border-top-left-radius: var(--r-xl); border-top-right-radius: var(--r-xl);
+      border: 2px solid var(--clay-border); border-bottom: none;
+      box-shadow: 0 -6px 24px rgba(45,48,71,0.12);
+      padding: 14px 20px 24px;
+    }
+    .sheet .grabber {
+      width: 40px; height: 4px; background: var(--clay-shadow);
+      border-radius: 2px; margin: 0 auto 14px;
+    }
+    .sheet h3 {
+      font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 18px;
+      color: var(--warm-dark); margin-bottom: 4px;
+    }
+    .sheet .sub {
+      font-size: 12px; color: var(--warm-muted); margin-bottom: 14px; line-height: 1.4;
+    }
+    .mode-card {
+      background: var(--cream); border: 1.5px solid var(--clay-border);
+      border-radius: var(--r-md); padding: 12px;
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 10px;
+      box-shadow: var(--shadow-card);
+    }
+    .mode-card.featured {
+      background: rgba(232,199,123,0.16);
+      border: 2px solid var(--gold-deep);
+      box-shadow: 2px 2px 0 var(--gold-deep);
+    }
+    .mode-card-icon {
+      width: 44px; height: 44px; border-radius: var(--r-md);
+      background: rgba(232,199,123,0.24);
+      border: 1.5px solid rgba(212,175,95,0.45);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; flex-shrink: 0;
+    }
+    .mode-card-body { flex: 1; min-width: 0; }
+    .mode-card-title {
+      font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 14px;
+      color: var(--warm-dark);
+    }
+    .mode-card-sub { font-size: 11px; color: var(--warm-muted); margin-top: 2px; line-height: 1.4; }
+
+    /* ═══ PRACTICE SCREEN ═══ */
+    .practice-header {
+      flex-shrink: 0;
+      padding: 8px 20px 12px;
+      border-bottom: 1.5px solid var(--clay-border);
+      background: var(--cream);
+    }
+    .practice-counter-row {
+      display: flex; align-items: center; gap: 12px; padding-top: 4px;
+    }
+    .practice-stat {
+      flex: 1;
+      background: var(--clay-white); border: 1.5px solid var(--clay-border);
+      border-radius: var(--r-md);
+      padding: 6px 8px; text-align: center;
+    }
+    .practice-stat .v {
+      font-family: 'Fredoka', sans-serif; font-size: 16px; font-weight: 800;
+      color: var(--warm-dark); line-height: 1;
+    }
+    .practice-stat .v.gold { color: var(--gold-dark); }
+    .practice-stat .v.success { color: #4a8b6a; }
+    .practice-stat .l {
+      font-size: 9px; color: var(--warm-muted); margin-top: 3px;
+      text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700;
+    }
+
+    .practice-prompt-card {
+      background: var(--clay-white); border: 2px solid var(--warm-dark);
+      box-shadow: var(--shadow-clay);
+      border-radius: var(--r-lg);
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    .practice-mode-tag {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: rgba(232,199,123,0.24);
+      border: 1.5px solid var(--gold-deep);
+      padding: 3px 10px; border-radius: var(--r-full);
+      font-family: 'Nunito', sans-serif; font-size: 10px; font-weight: 800;
+      color: var(--gold-dark); letter-spacing: 0.05em;
+      margin-bottom: 10px;
+    }
+    .practice-prompt {
+      font-size: 17px; color: var(--warm-dark); line-height: 1.5;
+      font-family: 'Inter', sans-serif; font-weight: 500;
+    }
+    .practice-hint {
+      font-size: 13px; color: var(--warm-muted); margin-top: 8px;
+      padding: 8px 10px; background: var(--clay-beige);
+      border-left: 3px solid var(--gold-deep); border-radius: 0 var(--r-sm) var(--r-sm) 0;
+      line-height: 1.45;
+    }
+    .practice-hint .label {
+      font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 10px;
+      color: var(--gold-dark); text-transform: uppercase; letter-spacing: 0.05em;
+      margin-right: 4px;
+    }
+    .practice-input-shell {
+      background: var(--clay-beige); border: 2px solid var(--clay-border);
+      border-radius: var(--r-md); padding: 12px 14px;
+      min-height: 80px;
+      margin-bottom: 12px;
+    }
+    .practice-input-shell .typed {
+      font-size: 15px; color: var(--warm-dark); line-height: 1.5;
+      font-family: 'Inter', sans-serif;
+    }
+    .practice-input-shell .typed .caret {
+      display: inline-block; width: 1.5px; height: 18px; background: var(--gold-deep);
+      vertical-align: middle; margin-left: 1px; animation: blink 1s steps(1) infinite;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* ═══ RESULT CARD (correct/incorrect feedback) ═══ */
+    .result-card {
+      border-radius: var(--r-lg); padding: 14px 16px;
+      margin-bottom: 12px;
+    }
+    .result-card.correct {
+      background: rgba(123,198,160,0.16);
+      border: 2px solid var(--success);
+      box-shadow: 2px 2px 0 var(--success);
+    }
+    .result-card.incorrect {
+      background: rgba(217,138,138,0.12);
+      border: 2px solid var(--error);
+      box-shadow: 2px 2px 0 var(--error);
+    }
+    .result-head { display: flex; align-items: center; gap: 8px; }
+    .result-badge {
+      width: 28px; height: 28px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; font-weight: 800; color: #fff;
+    }
+    .result-card.correct .result-badge { background: var(--success); }
+    .result-card.incorrect .result-badge { background: var(--error); }
+    .result-card.correct .result-title { color: #4a8b6a; }
+    .result-card.incorrect .result-title { color: var(--error); }
+    .result-title {
+      font-family: 'Fredoka', sans-serif; font-weight: 800; font-size: 16px;
+    }
+    .result-row { font-size: 12px; color: var(--warm-dark); margin-top: 8px; line-height: 1.5; }
+    .result-row .lbl { font-weight: 800; color: var(--warm-muted); margin-right: 4px; font-size: 11px; }
+    .result-feedback {
+      font-size: 12px; color: var(--warm-dark); line-height: 1.5;
+      margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--clay-border);
+    }
+
+    .result-ctas { display: flex; gap: 8px; margin-top: 12px; }
+    .save-btn {
+      flex: 1; background: var(--clay-white);
+      border: 1.5px solid var(--coral); color: var(--coral-deep);
+      padding: 9px; border-radius: var(--r-md);
+      font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 12px;
+      display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+    }
+    .next-btn {
+      flex: 1; background: var(--gold);
+      border: 2px solid var(--warm-dark);
+      box-shadow: 2px 2px 0 var(--warm-dark);
+      padding: 9px; border-radius: var(--r-md);
+      font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 13px;
+      color: var(--warm-dark);
+    }
+
+    /* ═══ SUMMARY SCREEN ═══ */
+    .score-ring-wrap {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 16px 0 12px;
+    }
+    .score-ring {
+      width: 120px; height: 120px; position: relative;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .score-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+    .score-ring .ring-bg { stroke: var(--clay-border); }
+    .score-ring .ring-fg { stroke: var(--gold-deep); stroke-linecap: round; }
+    .score-ring .center {
+      position: absolute; text-align: center;
+    }
+    .score-ring .pct-v {
+      font-family: 'Fredoka', sans-serif; font-size: 28px; font-weight: 800;
+      color: var(--warm-dark); line-height: 1;
+    }
+    .score-ring .pct-l {
+      font-size: 10px; color: var(--warm-muted); margin-top: 2px;
+      text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700;
+    }
+    .score-caption {
+      font-size: 13px; color: var(--warm-muted); margin-top: 8px;
+      font-family: 'Nunito', sans-serif;
+    }
+    .score-caption strong { color: var(--warm-dark); font-weight: 800; }
+
+    .summary-stats { display: flex; gap: 8px; margin-bottom: 14px; }
+    .summary-stat {
+      flex: 1; background: var(--clay-white); border: 1.5px solid var(--clay-border);
+      border-radius: var(--r-md); padding: 10px; text-align: center;
+      box-shadow: var(--shadow-card);
+    }
+    .summary-stat .v { font-family: 'Fredoka', sans-serif; font-size: 22px; font-weight: 800; color: var(--warm-dark); line-height: 1; }
+    .summary-stat .l { font-size: 10px; color: var(--warm-muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
+    .summary-stat .delta {
+      display: inline-block; font-size: 9px; color: var(--success);
+      font-weight: 800; margin-left: 4px;
+    }
+
+    .summary-mistakes {
+      background: var(--clay-white); border: 1.5px solid var(--clay-border);
+      border-radius: var(--r-md); padding: 12px; box-shadow: var(--shadow-card);
+      margin-bottom: 12px;
+    }
+    .summary-mistakes-head {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .summary-mistakes-head h4 {
+      font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 14px;
+      color: var(--warm-dark);
+    }
+    .save-all-btn {
+      background: rgba(232,146,124,0.14); color: var(--coral-deep);
+      border: 1.5px solid rgba(232,146,124,0.5);
+      padding: 4px 10px; border-radius: var(--r-full);
+      font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 10px;
+    }
+    .mini-mistake {
+      padding: 8px 0; border-bottom: 1px dashed var(--clay-border);
+    }
+    .mini-mistake:last-child { border-bottom: none; }
+    .mm-prompt { font-size: 12px; color: var(--warm-muted); }
+    .mm-row { font-size: 12px; color: var(--warm-dark); margin-top: 2px; }
+    .mm-row .x { color: var(--error); font-weight: 800; }
+    .mm-row .v { color: #4a8b6a; font-weight: 800; }
+
+    .summary-ctas { display: flex; flex-direction: column; gap: 8px; }
+
+    /* ═══ EMPTY STATE LIVE BADGE ═══ */
+    .empty-hint {
+      text-align: center; padding: 24px 16px;
+      color: var(--warm-muted); font-size: 12px; line-height: 1.5;
+    }
+
+    /* ═══ FAUX MODAL OVERLAY (sheet backdrop) ═══ */
+    .sheet-backdrop {
+      position: absolute; inset: 0;
+      background: rgba(45,48,71,0.45);
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>📚 Grammar Coach</h1>
+  <p>Mockup spec for Grammar mode replacing Tone Translator. 5 screens: Hub · Topic Detail · Practice mode picker · Practice (mid-session, Translate mode w/ feedback) · Summary.</p>
+  <div class="label">Visual lineage: Story Mode + Vocab Hub · Mode color: gold · Phase A2</div>
+</div>
+
+<!-- ═══ ROW 1: HUB + TOPIC DETAIL ═══ -->
+<div class="screens-row">
+
+  <!-- Screen 1: Grammar Hub -->
+  <div class="column">
+    <div class="column-header">
+      <div class="opt-tag">SCREEN 1</div>
+      <h2>Grammar Hub</h2>
+      <p>Level filter · category filter · topic list with mastery rings</p>
+    </div>
+
+    <div class="phone">
+      <div class="phone-status"><span>9:41</span><span>•••• 5G  100%</span></div>
+      <div class="phone-content">
+
+        <div class="app-bar">
+          <div class="app-bar-left">
+            <div class="icon-btn">‹</div>
+            <div>
+              <div class="app-title">Grammar Coach</div>
+              <div class="app-subtitle">B1 · 14/55 mastered</div>
+            </div>
+          </div>
+          <div class="icon-btn">🔍</div>
+        </div>
+
+        <div class="scroll-content">
+          <div class="mode-hero">
+            <div class="hero-icon">📚</div>
+            <div>
+              <h3>Master grammar by level</h3>
+              <div class="sub">Pick a structure, drill it, track mastery</div>
+            </div>
+          </div>
+
+          <div class="filter-row">
+            <div class="lvl-chip">All</div>
+            <div class="lvl-chip">A1</div>
+            <div class="lvl-chip">A2</div>
+            <div class="lvl-chip active">B1</div>
+            <div class="lvl-chip">B2</div>
+            <div class="lvl-chip">C1</div>
+            <div class="lvl-chip">C2</div>
+          </div>
+
+          <div class="cat-row">
+            <div class="cat-chip active">All</div>
+            <div class="cat-chip">Tense</div>
+            <div class="cat-chip">Modal</div>
+            <div class="cat-chip">Conditional</div>
+            <div class="cat-chip">Passive</div>
+            <div class="cat-chip">Reported</div>
+            <div class="cat-chip">Clause</div>
+          </div>
+
+          <!-- Topic cards (B1) -->
+          <div class="topic-card">
+            <div class="topic-mastery">
+              <svg viewBox="0 0 36 36">
+                <circle class="ring-bg" cx="18" cy="18" r="15.5" stroke-width="3" fill="none"/>
+                <circle class="ring-fg" cx="18" cy="18" r="15.5" stroke-width="3" fill="none"
+                        stroke-dasharray="97.4" stroke-dashoffset="29.2"/>
+              </svg>
+              <span class="pct">70%</span>
+            </div>
+            <div class="topic-body">
+              <div class="topic-title-row">Present Perfect</div>
+              <div class="topic-pills">
+                <span class="pill pill-lvl">B1</span>
+                <span class="pill pill-cat">Tense</span>
+                <span class="pill pill-status learning">Learning</span>
+              </div>
+              <div class="topic-meta">28 attempts · 89% accuracy · 2d ago</div>
+            </div>
+            <div class="topic-chevron">›</div>
+          </div>
+
+          <div class="topic-card">
+            <div class="topic-mastery">
+              <svg viewBox="0 0 36 36">
+                <circle class="ring-bg" cx="18" cy="18" r="15.5" stroke-width="3" fill="none"/>
+                <circle class="ring-fg" cx="18" cy="18" r="15.5" stroke-width="3" fill="none"
+                        stroke-dasharray="97.4" stroke-dashoffset="2.9"/>
+              </svg>
+              <span class="pct">97%</span>
+            </div>
+            <div class="topic-body">
+              <div class="topic-title-row">Past Continuous</div>
+              <div class="topic-pills">
+                <span class="pill pill-lvl">B1</span>
+                <span class="pill pill-cat">Tense</span>
+                <span class="pill pill-status">Mastered</span>
+              </div>
+              <div class="topic-meta">42 attempts · 95% accuracy · 5d ago</div>
+            </div>
+            <div class="topic-chevron">›</div>
+          </div>
+
+          <div class="topic-card">
+            <div class="topic-mastery">
+              <svg viewBox="0 0 36 36">
+                <circle class="ring-bg" cx="18" cy="18" r="15.5" stroke-width="3" fill="none"/>
+                <circle class="ring-fg" cx="18" cy="18" r="15.5" stroke-width="3" fill="none"
+                        stroke-dasharray="97.4" stroke-dashoffset="68.2"/>
+              </svg>
+              <span class="pct">30%</span>
+            </div>
+            <div class="topic-body">
+              <div class="topic-title-row">1st Conditional</div>
+              <div class="topic-pills">
+                <span class="pill pill-lvl">B1</span>
+                <span class="pill pill-cat">Conditional</span>
+                <span class="pill pill-status learning">Learning</span>
+              </div>
+              <div class="topic-meta">9 attempts · 78% accuracy · today</div>
+            </div>
+            <div class="topic-chevron">›</div>
+          </div>
+
+          <div class="topic-card">
+            <div class="topic-mastery">
+              <svg viewBox="0 0 36 36">
+                <circle class="ring-bg" cx="18" cy="18" r="15.5" stroke-width="3" fill="none"/>
+                <circle class="ring-fg" cx="18" cy="18" r="15.5" stroke-width="3" fill="none"
+                        stroke-dasharray="97.4" stroke-dashoffset="97.4"/>
+              </svg>
+              <span class="pct">0%</span>
+            </div>
+            <div class="topic-body">
+              <div class="topic-title-row">Passive Voice (basic)</div>
+              <div class="topic-pills">
+                <span class="pill pill-lvl">B1</span>
+                <span class="pill pill-cat">Passive</span>
+                <span class="pill pill-status new">Not started</span>
+              </div>
+              <div class="topic-meta">Tap to learn the formula</div>
+            </div>
+            <div class="topic-chevron">›</div>
+          </div>
+
+          <div class="topic-card">
+            <div class="topic-mastery">
+              <svg viewBox="0 0 36 36">
+                <circle class="ring-bg" cx="18" cy="18" r="15.5" stroke-width="3" fill="none"/>
+                <circle class="ring-fg" cx="18" cy="18" r="15.5" stroke-width="3" fill="none"
+                        stroke-dasharray="97.4" stroke-dashoffset="48.7"/>
+              </svg>
+              <span class="pct">50%</span>
+            </div>
+            <div class="topic-body">
+              <div class="topic-title-row">Reported Speech (statements)</div>
+              <div class="topic-pills">
+                <span class="pill pill-lvl">B1</span>
+                <span class="pill pill-cat">Reported</span>
+                <span class="pill pill-status learning">Learning</span>
+              </div>
+              <div class="topic-meta">14 attempts · 84% accuracy · 1w ago</div>
+            </div>
+            <div class="topic-chevron">›</div>
+          </div>
+
+          <div class="topic-card">
+            <div class="topic-mastery">
+              <svg viewBox="0 0 36 36">
+                <circle class="ring-bg" cx="18" cy="18" r="15.5" stroke-width="3" fill="none"/>
+                <circle class="ring-fg" cx="18" cy="18" r="15.5" stroke-width="3" fill="none"
+                        stroke-dasharray="97.4" stroke-dashoffset="97.4"/>
+              </svg>
+              <span class="pct">0%</span>
+            </div>
+            <div class="topic-body">
+              <div class="topic-title-row">Gerund vs Infinitive</div>
+              <div class="topic-pills">
+                <span class="pill pill-lvl">B1</span>
+                <span class="pill pill-cat">Other</span>
+                <span class="pill pill-status new">Not started</span>
+              </div>
+              <div class="topic-meta">Tap to learn which verbs take which</div>
+            </div>
+            <div class="topic-chevron">›</div>
+          </div>
+        </div>
+
+        <div class="phone-home-bar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Screen 2: Topic Detail (Present Perfect) -->
+  <div class="column">
+    <div class="column-header">
+      <div class="opt-tag">SCREEN 2</div>
+      <h2>Topic Detail · Present Perfect</h2>
+      <p>Formula · summary · examples · common mistakes · related · sticky CTA</p>
+    </div>
+
+    <div class="phone">
+      <div class="phone-status"><span>9:41</span><span>•••• 5G  100%</span></div>
+      <div class="phone-content">
+
+        <div class="app-bar">
+          <div class="app-bar-left">
+            <div class="icon-btn">‹</div>
+            <div>
+              <div class="app-title">Present Perfect</div>
+              <div class="app-subtitle">B1 · Tense</div>
+            </div>
+          </div>
+          <div class="mode-pill">B1</div>
+        </div>
+
+        <div class="scroll-content">
+
+          <div class="summary-card">
+            <div class="formula">S + have/has + V3</div>
+            <div class="desc">Used for actions that started in the past and continue into the present, or finished actions whose result still matters now.</div>
+            <div class="desc-vi">Dùng cho hành động bắt đầu trong quá khứ và còn liên quan đến hiện tại, hoặc đã kết thúc nhưng kết quả vẫn còn ý nghĩa bây giờ.</div>
+          </div>
+
+          <div class="section-label">When to use</div>
+          <ul class="use-list">
+            <li>Actions that began in the past and are still happening now</li>
+            <li>Past actions with present consequences ("I've lost my keys" → I don't have them now)</li>
+            <li>Life experiences without specifying when ("I've been to Japan")</li>
+            <li>Actions completed in an unfinished time period (this week, today, this year)</li>
+          </ul>
+
+          <div class="section-label">Examples</div>
+
+          <div class="ex-card">
+            <div class="ex-body">
+              <div class="ex-en">I <span class="hl">have lived</span> in Hanoi for five years.</div>
+              <div class="ex-vi">Tôi đã sống ở Hà Nội được 5 năm rồi.</div>
+            </div>
+            <div class="listen-mini">🔊</div>
+          </div>
+
+          <div class="ex-card">
+            <div class="ex-body">
+              <div class="ex-en">She <span class="hl">has just finished</span> her homework.</div>
+              <div class="ex-vi">Cô ấy vừa làm xong bài tập về nhà.</div>
+            </div>
+            <div class="listen-mini">🔊</div>
+          </div>
+
+          <div class="ex-card">
+            <div class="ex-body">
+              <div class="ex-en">We <span class="hl">have never tried</span> Vietnamese coffee before.</div>
+              <div class="ex-vi">Chúng tôi chưa bao giờ thử cà phê Việt Nam.</div>
+            </div>
+            <div class="listen-mini">🔊</div>
+          </div>
+
+          <div class="section-label">Common mistakes</div>
+
+          <div class="mistake-card">
+            <div class="mistake-row wrong"> I have seen him yesterday.</div>
+            <div class="mistake-row right"> I saw him yesterday.</div>
+            <div class="mistake-why">Mốc thời gian rõ ràng (yesterday, last week…) → dùng Past Simple, không dùng Present Perfect.</div>
+          </div>
+
+          <div class="mistake-card">
+            <div class="mistake-row wrong"> She have finished.</div>
+            <div class="mistake-row right"> She has finished.</div>
+            <div class="mistake-why">Chủ ngữ ngôi thứ ba số ít (he/she/it) → dùng "has", không phải "have".</div>
+          </div>
+
+          <div class="section-label">Related topics</div>
+          <div class="related-row">
+            <span class="related-chip">Present Perfect Continuous</span>
+            <span class="related-chip">Past Simple</span>
+            <span class="related-chip">Past Perfect</span>
+          </div>
+
+          <div style="height: 16px;"></div>
+        </div>
+
+        <div class="bottom-cta">
+          <button class="primary-btn">▶  Start practice</button>
+        </div>
+
+        <div class="phone-home-bar"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ ROW 2: PICKER + PRACTICE + SUMMARY ═══ -->
+<div class="screens-row last">
+
+  <!-- Screen 3: Practice mode picker (sheet on top of Topic Detail) -->
+  <div class="column">
+    <div class="column-header">
+      <div class="opt-tag">SCREEN 3</div>
+      <h2>Practice mode picker</h2>
+      <p>Bottom sheet · 3 modes user picks at session start</p>
+    </div>
+
+    <div class="phone">
+      <div class="phone-status"><span>9:41</span><span>•••• 5G  100%</span></div>
+      <div class="phone-content">
+
+        <div class="app-bar">
+          <div class="app-bar-left">
+            <div class="icon-btn">‹</div>
+            <div>
+              <div class="app-title">Present Perfect</div>
+              <div class="app-subtitle">B1 · Tense</div>
+            </div>
+          </div>
+          <div class="mode-pill">B1</div>
+        </div>
+
+        <div class="scroll-content" style="opacity: 0.32;">
+          <div class="summary-card">
+            <div class="formula">S + have/has + V3</div>
+            <div class="desc">Used for actions that started in the past and continue into the present…</div>
+          </div>
+          <div class="section-label">When to use</div>
+          <ul class="use-list">
+            <li>Actions that began in the past and are still happening now</li>
+            <li>Past actions with present consequences</li>
+          </ul>
+        </div>
+
+        <div class="sheet-backdrop"></div>
+
+        <div class="sheet">
+          <div class="grabber"></div>
+          <h3>Pick your practice mode</h3>
+          <div class="sub">Mỗi mode tập trung một dạng kỹ năng. Có thể đổi giữa các session.</div>
+
+          <div class="mode-card featured">
+            <div class="mode-card-icon">🔁</div>
+            <div class="mode-card-body">
+              <div class="mode-card-title">Translate</div>
+              <div class="mode-card-sub">EN ↔ VI sentence translation using this structure. 12-word range.</div>
+            </div>
+            <div class="topic-chevron">›</div>
+          </div>
+
+          <div class="mode-card">
+            <div class="mode-card-icon">✎</div>
+            <div class="mode-card-body">
+              <div class="mode-card-title">Fill in the blank</div>
+              <div class="mode-card-sub">Pick or type the correct form to complete a sentence.</div>
+            </div>
+            <div class="topic-chevron">›</div>
+          </div>
+
+          <div class="mode-card">
+            <div class="mode-card-icon">⇄</div>
+            <div class="mode-card-body">
+              <div class="mode-card-title">Transform</div>
+              <div class="mode-card-sub">Rewrite an English sentence into the correct tense, given a Vietnamese hint.</div>
+            </div>
+            <div class="topic-chevron">›</div>
+          </div>
+
+          <button class="ghost-btn" style="margin-top: 12px;">Cancel</button>
+        </div>
+
+        <div class="phone-home-bar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Screen 4: Practice screen — Translate mode mid-session, just answered correct -->
+  <div class="column">
+    <div class="column-header">
+      <div class="opt-tag">SCREEN 4</div>
+      <h2>Practice · Translate mode</h2>
+      <p>Mid-session · just submitted · result card visible · session counters live</p>
+    </div>
+
+    <div class="phone">
+      <div class="phone-status"><span>9:41</span><span>•••• 5G  100%</span></div>
+      <div class="phone-content">
+
+        <div class="practice-header">
+          <div class="app-bar" style="height: 44px; padding: 0;">
+            <div class="app-bar-left">
+              <div class="icon-btn">‹</div>
+              <div>
+                <div class="app-title" style="font-size: 16px;">Present Perfect</div>
+                <div class="app-subtitle">Translate · EN→VI</div>
+              </div>
+            </div>
+            <div class="mode-pill">B1</div>
+          </div>
+          <div class="practice-counter-row">
+            <div class="practice-stat">
+              <div class="v">7</div>
+              <div class="l">Attempts</div>
+            </div>
+            <div class="practice-stat">
+              <div class="v success">86%</div>
+              <div class="l">Accuracy</div>
+            </div>
+            <div class="practice-stat">
+              <div class="v gold">3</div>
+              <div class="l">Streak</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="scroll-content">
+
+          <div class="practice-prompt-card">
+            <span class="practice-mode-tag">↗ TRANSLATE · EN → VI</span>
+            <div class="practice-prompt">She <strong>has lived</strong> in Hanoi for five years.</div>
+          </div>
+
+          <div class="practice-input-shell">
+            <div class="typed">Cô ấy đã sống ở Hà Nội được năm năm rồi.</div>
+          </div>
+
+          <div class="result-card correct">
+            <div class="result-head">
+              <div class="result-badge">✓</div>
+              <div class="result-title">Correct!</div>
+            </div>
+            <div class="result-row">
+              <span class="lbl">Your answer:</span>
+              <span style="color: #4a8b6a; font-weight: 600;">Cô ấy đã sống ở Hà Nội được năm năm rồi.</span>
+            </div>
+            <div class="result-row">
+              <span class="lbl">Accepted:</span>
+              Cô ấy đã sống ở Hà Nội được 5 năm. <span style="color: var(--warm-light);">·</span> Cô ấy sống ở Hà Nội đã 5 năm nay.
+            </div>
+            <div class="result-feedback">
+              "for five years" báo hiệu hành động kéo dài đến hiện tại — thì <strong>Present Perfect</strong> (has lived) là chính xác. Tránh đổi sang Past Simple ở đây.
+            </div>
+            <div class="result-ctas">
+              <button class="save-btn">⭐ Save to Library</button>
+              <button class="next-btn">Next →</button>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="bottom-cta" style="padding: 8px 20px 10px;">
+          <button class="ghost-btn">End session</button>
+        </div>
+
+        <div class="phone-home-bar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Screen 5: Summary screen -->
+  <div class="column">
+    <div class="column-header">
+      <div class="opt-tag">SCREEN 5</div>
+      <h2>Practice Summary</h2>
+      <p>Score ring · stats · top mistakes (Save all) · CTAs</p>
+    </div>
+
+    <div class="phone">
+      <div class="phone-status"><span>9:41</span><span>•••• 5G  100%</span></div>
+      <div class="phone-content">
+
+        <div class="app-bar">
+          <div class="app-bar-left">
+            <div class="icon-btn">×</div>
+            <div>
+              <div class="app-title">Session Summary</div>
+              <div class="app-subtitle">Present Perfect · Translate</div>
+            </div>
+          </div>
+          <div class="mode-pill">B1</div>
+        </div>
+
+        <div class="scroll-content">
+
+          <div class="score-ring-wrap">
+            <div class="score-ring">
+              <svg viewBox="0 0 120 120">
+                <circle class="ring-bg" cx="60" cy="60" r="52" stroke-width="9" fill="none"/>
+                <circle class="ring-fg" cx="60" cy="60" r="52" stroke-width="9" fill="none"
+                        stroke-dasharray="326.7" stroke-dashoffset="45.7"/>
+              </svg>
+              <div class="center">
+                <div class="pct-v">86%</div>
+                <div class="pct-l">Accuracy</div>
+              </div>
+            </div>
+            <div class="score-caption">12 of 14 correct · <strong>Mastery +8%</strong> · gold streak 3</div>
+          </div>
+
+          <div class="summary-stats">
+            <div class="summary-stat">
+              <div class="v">14</div>
+              <div class="l">Attempts</div>
+            </div>
+            <div class="summary-stat">
+              <div class="v">12</div>
+              <div class="l">Correct</div>
+            </div>
+            <div class="summary-stat">
+              <div class="v">62%<span class="delta">+8%</span></div>
+              <div class="l">Mastery</div>
+            </div>
+          </div>
+
+          <div class="summary-mistakes">
+            <div class="summary-mistakes-head">
+              <h4>Top mistakes (2)</h4>
+              <button class="save-all-btn">Save all to Library</button>
+            </div>
+
+            <div class="mini-mistake">
+              <div class="mm-prompt">EN→VI · "He has just finished his lunch."</div>
+              <div class="mm-row"><span class="x">✗</span> Anh ta vừa ăn trưa xong rồi rồi.</div>
+              <div class="mm-row"><span class="v">✓</span> Anh ấy vừa ăn xong bữa trưa.</div>
+            </div>
+
+            <div class="mini-mistake">
+              <div class="mm-prompt">VI→EN · "Tôi chưa bao giờ thử món phở."</div>
+              <div class="mm-row"><span class="x">✗</span> I never try pho before.</div>
+              <div class="mm-row"><span class="v">✓</span> I have never tried pho before.</div>
+            </div>
+          </div>
+
+          <div class="summary-ctas">
+            <button class="primary-btn">▶  Practice again</button>
+            <button class="secondary-btn">Back to topic</button>
+            <button class="ghost-btn">Browse other topics</button>
+          </div>
+
+          <div style="height: 16px;"></div>
+        </div>
+
+        <div class="phone-home-bar"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="page-header" style="padding-top: 0;">
+  <p style="font-size: 12px; color: var(--warm-light);">
+    Tokens: gold accent kế thừa từ Tone Translator · clay-bordered cards · dashed-mono formula chip · success/error result cards.
+    Practice screen sticky bottom = "End session" (open-ended per spec). Save-to-Library is explicit per item + batch on summary.
+  </p>
+</div>
+
+</body>
+</html>

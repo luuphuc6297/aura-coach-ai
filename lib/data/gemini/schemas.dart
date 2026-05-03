@@ -269,6 +269,7 @@ class GeminiSchemas {
   static final dictionary = Schema.object(
     properties: {
       'partOfSpeech': Schema.string(),
+      'pronunciation': Schema.string(),
       'explanation': Schema.string(),
       'examples': Schema.array(
         items: Schema.object(
@@ -279,22 +280,56 @@ class GeminiSchemas {
           requiredProperties: ['en', 'vn'],
         ),
       ),
+      'synonyms': Schema.array(items: Schema.string()),
+      'contextUsage': Schema.string(),
     },
-    requiredProperties: ['partOfSpeech', 'explanation', 'examples'],
+    requiredProperties: [
+      'partOfSpeech',
+      'pronunciation',
+      'explanation',
+      'examples',
+      'synonyms',
+      'contextUsage',
+    ],
+  );
+
+  // ---------- Reverse Dictionary (Describe a Word) ----------
+  static final reverseDictionary = Schema.object(
+    properties: {
+      'candidates': Schema.array(
+        items: Schema.object(
+          properties: {
+            'en': Schema.string(),
+            'vn': Schema.string(),
+            'definition': Schema.string(),
+            'confidence': Schema.number(),
+            'example': Schema.string(),
+          },
+          requiredProperties: [
+            'en',
+            'vn',
+            'definition',
+            'confidence',
+            'example',
+          ],
+        ),
+      ),
+    },
+    requiredProperties: ['candidates'],
   );
 
   // ---------- Word Analysis ----------
+  // Origin is informational — Gemini may not have a confident origin for
+  // every word (especially native Germanic English roots). Keep it as a
+  // declared property when withOrigin is true, but never require it: a
+  // missing origin should never fail the whole analysis.
   static Schema _morpheme({bool withOrigin = false}) => Schema.object(
         properties: {
           'morpheme': Schema.string(),
           'meaning': Schema.string(),
           if (withOrigin) 'origin': Schema.string(),
         },
-        requiredProperties: [
-          'morpheme',
-          'meaning',
-          if (withOrigin) 'origin',
-        ],
+        requiredProperties: ['morpheme', 'meaning'],
       );
 
   static Schema _exampleEnVn() => Schema.object(
@@ -309,6 +344,12 @@ class GeminiSchemas {
     properties: {
       'word': Schema.string(),
       'phonetic': Schema.string(),
+      'partOfSpeech': Schema.string(
+          description:
+              'Part of speech — one of: "Noun", "Verb", "Adjective", "Adverb", "Phrasal Verb", "Idiom", "Expression", "Other".'),
+      'definition': Schema.string(
+          description:
+              'Short English definition of the word — one concise sentence.'),
       'translation': Schema.string(),
       'morphology': Schema.object(
         properties: {
@@ -322,11 +363,13 @@ class GeminiSchemas {
       'contextualEmbedding': Schema.object(
         properties: {
           'positiveExample': _exampleEnVn(),
+          'neutralExample': _exampleEnVn(),
           'negativeExample': _exampleEnVn(),
           'collocations': Schema.array(items: Schema.string()),
         },
         requiredProperties: [
           'positiveExample',
+          'neutralExample',
           'negativeExample',
           'collocations',
         ],
@@ -346,12 +389,67 @@ class GeminiSchemas {
     requiredProperties: [
       'word',
       'phonetic',
+      'partOfSpeech',
+      'definition',
       'translation',
       'morphology',
       'contextualEmbedding',
       'derivatives',
       'synonyms',
       'antonyms',
+    ],
+  );
+
+  // ---------- Compare Words (Pro) ----------
+  static Schema _comparisonEntry() => Schema.object(
+        properties: {
+          'word': Schema.string(),
+          'phonetic': Schema.string(),
+          'translation': Schema.string(
+              description: 'Concise Vietnamese meaning of this word.'),
+          'partOfSpeech': Schema.string(),
+          'definition': Schema.string(
+              description: 'Short English definition — 1 sentence.'),
+          'register':
+              Schema.enumString(enumValues: ['Formal', 'Neutral', 'Casual']),
+          'connotation':
+              Schema.enumString(enumValues: ['Positive', 'Neutral', 'Negative']),
+          'example': _exampleEnVn(),
+          'collocations': Schema.array(items: Schema.string()),
+        },
+        requiredProperties: [
+          'word',
+          'phonetic',
+          'translation',
+          'partOfSpeech',
+          'definition',
+          'register',
+          'connotation',
+          'example',
+          'collocations',
+        ],
+      );
+
+  static final wordComparison = Schema.object(
+    properties: {
+      'wordA': _comparisonEntry(),
+      'wordB': _comparisonEntry(),
+      'keyDifference': Schema.string(
+          description:
+              'One short paragraph explaining the headline nuance between the two words.'),
+      'whenToUseA': Schema.string(
+          description:
+              'A single clear sentence describing when to pick the first word.'),
+      'whenToUseB': Schema.string(
+          description:
+              'A single clear sentence describing when to pick the second word.'),
+    },
+    requiredProperties: [
+      'wordA',
+      'wordB',
+      'keyDifference',
+      'whenToUseA',
+      'whenToUseB',
     ],
   );
 
@@ -362,9 +460,16 @@ class GeminiSchemas {
         'type': Schema.enumString(enumValues: ['topic', 'category', 'word']),
         'translation': Schema.string(),
         'partOfSpeech': Schema.string(),
+        'phonetic': Schema.string(
+          description:
+              'IPA pronunciation in slashes for word nodes (e.g. "/ˈtræv.əl/"). Optional — return an empty string for topic/category nodes that are not single lexical items.',
+        ),
         'context': Schema.string(),
       };
 
+  // `phonetic` is intentionally NOT required: only word-type nodes carry an
+  // IPA value, and forcing root/category nodes to populate it makes Gemini
+  // either invent fake transcriptions or reject the schema entirely.
   static const List<String> _mindMapNodeRequired = [
     'id',
     'label',
@@ -402,6 +507,8 @@ class GeminiSchemas {
       'message': Schema.string(description: 'Explanation if unrelated.'),
       'translation': Schema.string(),
       'partOfSpeech': Schema.string(),
+      'phonetic': Schema.string(
+          description: 'IPA transcription of the custom word, in slashes.'),
       'context': Schema.string(),
     },
     requiredProperties: ['status'],
@@ -430,5 +537,46 @@ class GeminiSchemas {
         'targetWord',
       ],
     ),
+  );
+
+  // ---------- Vocab Hub — Topic-based flashcard suggestions ----------
+  static final topicFlashcards = Schema.object(
+    properties: {
+      'topic': Schema.string(description: 'Echoes the requested topic label.'),
+      'items': Schema.array(
+        items: Schema.object(
+          properties: {
+            'word': Schema.string(
+                description:
+                    'English headword or short phrase (at most 3 tokens).'),
+            'phonetic':
+                Schema.string(description: 'IPA wrapped in slashes.'),
+            'partOfSpeech': Schema.string(
+                description:
+                    'One of: "Noun", "Verb", "Adjective", "Adverb", "Phrasal Verb", "Idiom", "Expression", "Other".'),
+            'definition': Schema.string(
+                description: 'Short English definition (≤ 18 words).'),
+            'translation': Schema.string(
+                description: 'Natural Vietnamese meaning (1-2 sentences).'),
+            'example': Schema.object(
+              properties: {
+                'en': Schema.string(),
+                'vn': Schema.string(),
+              },
+              requiredProperties: ['en', 'vn'],
+            ),
+          },
+          requiredProperties: [
+            'word',
+            'phonetic',
+            'partOfSpeech',
+            'definition',
+            'translation',
+            'example',
+          ],
+        ),
+      ),
+    },
+    requiredProperties: ['topic', 'items'],
   );
 }

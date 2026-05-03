@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_animations.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/clay_palette.dart';
 
 /// Animated CustomPainter icon for each learning goal.
 ///
@@ -47,11 +48,18 @@ class _GoalIconState extends State<GoalIcon>
   @override
   Widget build(BuildContext context) {
     final reduceMotion = AppAnimations.shouldReduceMotion(context);
+    final strokeColor = context.clay.text;
+    final trailColor = context.clay.textFaint;
 
     if (reduceMotion) {
       return CustomPaint(
         size: Size.square(widget.size),
-        painter: _GoalPainter(goalId: widget.goalId, t: 0),
+        painter: _GoalPainter(
+          goalId: widget.goalId,
+          t: 0,
+          strokeColor: strokeColor,
+          trailColor: trailColor,
+        ),
       );
     }
 
@@ -63,6 +71,8 @@ class _GoalIconState extends State<GoalIcon>
           painter: _GoalPainter(
             goalId: widget.goalId,
             t: _controller.value,
+            strokeColor: strokeColor,
+            trailColor: trailColor,
           ),
         );
       },
@@ -73,8 +83,15 @@ class _GoalIconState extends State<GoalIcon>
 class _GoalPainter extends CustomPainter {
   final String goalId;
   final double t;
+  final Color strokeColor;
+  final Color trailColor;
 
-  _GoalPainter({required this.goalId, required this.t});
+  _GoalPainter({
+    required this.goalId,
+    required this.t,
+    required this.strokeColor,
+    required this.trailColor,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -93,7 +110,11 @@ class _GoalPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_GoalPainter old) => old.t != t || old.goalId != goalId;
+  bool shouldRepaint(_GoalPainter old) =>
+      old.t != t ||
+      old.goalId != goalId ||
+      old.strokeColor != strokeColor ||
+      old.trailColor != trailColor;
 
   // ---------------------------------------------------------------------------
   // Career — Briefcase with bouncing clasp
@@ -112,7 +133,7 @@ class _GoalPainter extends CustomPainter {
 
     // Handle
     final handlePaint = Paint()
-      ..color = AppColors.warmDark
+      ..color = strokeColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = s * 0.06
       ..strokeCap = StrokeCap.round;
@@ -138,7 +159,7 @@ class _GoalPainter extends CustomPainter {
 
     // Belt line
     final beltPaint = Paint()
-      ..color = AppColors.warmDark.withValues(alpha: 0.25)
+      ..color = strokeColor.withValues(alpha: 0.25)
       ..strokeWidth = s * 0.03;
     canvas.drawLine(
       Offset(s * 0.12, s * 0.56),
@@ -189,7 +210,7 @@ class _GoalPainter extends CustomPainter {
 
     // Trail dashes
     final trailPaint = Paint()
-      ..color = AppColors.warmLight.withValues(alpha: 0.45)
+      ..color = trailColor.withValues(alpha: 0.45)
       ..strokeWidth = s * 0.025
       ..strokeCap = StrokeCap.round;
     for (var i = 0; i < 3; i++) {
@@ -200,7 +221,7 @@ class _GoalPainter extends CustomPainter {
       canvas.drawLine(
         Offset(x, y),
         Offset(x - s * 0.06, y + s * 0.02),
-        trailPaint..color = AppColors.warmLight.withValues(alpha: alpha),
+        trailPaint..color = trailColor.withValues(alpha: alpha),
       );
     }
 
@@ -215,7 +236,7 @@ class _GoalPainter extends CustomPainter {
     final tasselSwing = math.sin(t * 2 * math.pi) * s * 0.06;
 
     // Board (diamond)
-    final boardPaint = Paint()..color = AppColors.warmDark;
+    final boardPaint = Paint()..color = strokeColor;
     final boardPath = Path()
       ..moveTo(s * 0.50, s * 0.22)
       ..lineTo(s * 0.88, s * 0.42)
@@ -225,7 +246,7 @@ class _GoalPainter extends CustomPainter {
     canvas.drawPath(boardPath, boardPaint);
 
     // Top surface highlight
-    final topPaint = Paint()..color = AppColors.warmDark.withValues(alpha: 0.7);
+    final topPaint = Paint()..color = strokeColor.withValues(alpha: 0.7);
     final topPath = Path()
       ..moveTo(s * 0.50, s * 0.26)
       ..lineTo(s * 0.80, s * 0.42)
@@ -347,7 +368,7 @@ class _GoalPainter extends CustomPainter {
 
     // Fold lines — left
     final foldPaint = Paint()
-      ..color = AppColors.warmDark.withValues(alpha: 0.18)
+      ..color = strokeColor.withValues(alpha: 0.18)
       ..style = PaintingStyle.stroke
       ..strokeWidth = s * 0.02
       ..strokeCap = StrokeCap.round;
@@ -368,7 +389,7 @@ class _GoalPainter extends CustomPainter {
 
     // Center divider
     final dividerPaint = Paint()
-      ..color = AppColors.warmDark.withValues(alpha: 0.2)
+      ..color = strokeColor.withValues(alpha: 0.2)
       ..strokeWidth = s * 0.02;
     canvas.drawLine(
         Offset(s * 0.50, s * 0.26), Offset(s * 0.50, s * 0.78), dividerPaint);

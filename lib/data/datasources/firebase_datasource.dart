@@ -21,6 +21,15 @@ class FirebaseDatasource {
         );
   }
 
+  /// Update an existing profile without touching `createdAt`. Used by the
+  /// Edit Profile screen.
+  Future<void> updateUserProfile(UserProfile profile) async {
+    await _db.collection('users').doc(profile.uid).set(
+          profile.toFirestore(forUpdate: true),
+          SetOptions(merge: true),
+        );
+  }
+
   Future<bool> hasCompletedOnboarding(String uid) async {
     final doc = await _db.collection('users').doc(uid).get();
     if (!doc.exists) return false;
@@ -292,5 +301,137 @@ class FirebaseDatasource {
       },
       SetOptions(merge: true),
     );
+  }
+
+  // --- Mind Map persistence (Vocab Hub — Pro-only) ---
+
+  /// Returns the user's mind-map documents ordered by most recently updated.
+  /// Capped at 50 to match the storage UX budget.
+  Future<List<Map<String, dynamic>>> listMindMaps(String uid) async {
+    final snapshot = await _db
+        .collection('users')
+        .doc(uid)
+        .collection('mindMaps')
+        .orderBy('updatedAt', descending: true)
+        .limit(50)
+        .get();
+    return snapshot.docs
+        .map((doc) => {'id': doc.id, ...doc.data()})
+        .toList();
+  }
+
+  Future<Map<String, dynamic>?> getMindMap(String uid, String mapId) async {
+    final doc = await _db
+        .collection('users')
+        .doc(uid)
+        .collection('mindMaps')
+        .doc(mapId)
+        .get();
+    if (!doc.exists) return null;
+    return {'id': doc.id, ...doc.data()!};
+  }
+
+  /// Upserts a mind-map doc. Caller controls [mapId] so repeated saves
+  /// (e.g. node-expand writes during a session) stay idempotent.
+  Future<void> saveMindMap({
+    required String uid,
+    required String mapId,
+    required Map<String, dynamic> data,
+  }) async {
+    await _db
+        .collection('users')
+        .doc(uid)
+        .collection('mindMaps')
+        .doc(mapId)
+        .set(
+      {
+        ...data,
+        'updatedAt': FieldValue.serverTimestamp(),
+      },
+      SetOptions(merge: true),
+    );
+  }
+
+  Future<void> deleteMindMap(String uid, String mapId) async {
+    await _db
+        .collection('users')
+        .doc(uid)
+        .collection('mindMaps')
+        .doc(mapId)
+        .delete();
+  }
+
+  // --- Notifications log ---
+
+  /// Live stream of the user's notification log, newest-first. Capped to 100
+  /// to keep the list snappy and avoid unbounded reads.
+  Stream<QuerySnapshot<Map<String, dynamic>>> watchNotifications(String uid) {
+    return _db
+        .collection('users')
+        .doc(uid)
+        .collection('notifications')
+        .orderBy('createdAt', descending: true)
+        .limit(100)
+        .snapshots();
+  }
+
+  /// One-shot write: caller owns the [notifId] (typically the same id passed
+  /// to [NotificationService.scheduleAt] so the row + the scheduled local
+  /// notification can be cross-referenced).
+  Future<void> writeNotification({
+    required String uid,
+    required String notifId,
+    required Map<String, dynamic> data,
+  }) async {
+    await _db
+        .collection('users')
+        .doc(uid)
+        .collection('notifications')
+        .doc(notifId)
+        .set(data, SetOptions(merge: true));
+  }
+
+  Future<void> markNotificationRead({
+    required String uid,
+    required String notifId,
+  }) async {
+    await _db
+        .collection('users')
+        .doc(uid)
+        .collection('notifications')
+        .doc(notifId)
+        .set({'readAt': FieldValue.serverTimestamp()},
+            SetOptions(merge: true));
+  }
+
+  /// Batched write — flips every unread notification to read. Returns the
+  /// count actually flipped so the caller can show "Marked X as read".
+  Future<int> markAllNotificationsRead(String uid) async {
+    final unread = await _db
+        .collection('users')
+        .doc(uid)
+        .collection('notifications')
+        .where('readAt', isNull: true)
+        .get();
+    if (unread.docs.isEmpty) return 0;
+    final batch = _db.batch();
+    final now = FieldValue.serverTimestamp();
+    for (final doc in unread.docs) {
+      batch.set(doc.reference, {'readAt': now}, SetOptions(merge: true));
+    }
+    await batch.commit();
+    return unread.docs.length;
+  }
+
+  Future<void> deleteNotification({
+    required String uid,
+    required String notifId,
+  }) async {
+    await _db
+        .collection('users')
+        .doc(uid)
+        .collection('notifications')
+        .doc(notifId)
+        .delete();
   }
 }

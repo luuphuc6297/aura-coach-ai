@@ -5,6 +5,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/theme/clay_palette.dart';
 import '../../../shared/widgets/clay_dialog.dart';
 import '../../../shared/widgets/clay_pressable.dart';
 import '../../auth/providers/auth_provider.dart';
@@ -136,16 +137,16 @@ class _StoryHomeScreenState extends State<StoryHomeScreen> {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          backgroundColor: AppColors.clayWhite,
+          backgroundColor: dialogContext.clay.surface,
           shape: RoundedRectangleBorder(borderRadius: AppRadius.lgBorder),
           title: Text(
             'Leave now?',
-            style: AppTypography.h3.copyWith(color: AppColors.warmDark),
+            style: AppTypography.h3.copyWith(color: dialogContext.clay.text),
           ),
           content: Text(
             "We're still preparing your story. If you leave now this session will still count toward today's limit.",
             style: AppTypography.bodyMd.copyWith(
-              color: AppColors.warmMuted,
+              color: dialogContext.clay.textMuted,
               height: 1.4,
             ),
           ),
@@ -216,7 +217,7 @@ class _StoryHomeScreenState extends State<StoryHomeScreen> {
         if (mounted) context.pop();
       },
       child: Scaffold(
-        backgroundColor: AppColors.cream,
+        backgroundColor: context.clay.background,
         body: SafeArea(
           child: Column(
             children: [
@@ -376,13 +377,13 @@ class _TopBar extends StatelessWidget {
           ClayPressable(
             onTap: onBack,
             scaleDown: 0.90,
-            builder: (_, __) => const SizedBox(
+            builder: (ctx, __) => SizedBox(
               width: 40,
               height: 40,
               child: Icon(
                 Icons.arrow_back_ios_new_rounded,
                 size: 20,
-                color: AppColors.warmDark,
+                color: ctx.clay.text,
               ),
             ),
           ),
@@ -429,7 +430,7 @@ class _SectionHeader extends StatelessWidget {
         Text(
           subtitle,
           style: AppTypography.bodySm.copyWith(
-            color: AppColors.warmMuted,
+            color: context.clay.textMuted,
             fontSize: 12,
           ),
         ),
@@ -598,7 +599,7 @@ class _EmptyState extends StatelessWidget {
             Text(
               message,
               textAlign: TextAlign.center,
-              style: AppTypography.bodyMd.copyWith(color: AppColors.warmMuted),
+              style: AppTypography.bodyMd.copyWith(color: context.clay.textMuted),
             ),
             const SizedBox(height: 16),
             TextButton(

@@ -4,8 +4,10 @@ import '../providers/onboarding_provider.dart';
 import '../../../core/constants/onboarding_constants.dart';
 import '../../../core/constants/cloudinary_assets.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/clay_palette.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../l10n/app_loc_context.dart';
 import '../../../shared/widgets/clay_card.dart';
 import '../../../shared/widgets/cloud_image.dart';
 import '../../../shared/widgets/selection_check_circle.dart';
@@ -46,13 +48,13 @@ class StepLevel extends StatelessWidget {
       child: StaggeredEntrance(
         children: [
           Text(
-            "What's your English level?",
+            context.loc.onboardingLevelTitle,
             style: AppTypography.displayMd,
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            "We'll personalize lessons just for you",
-            style: AppTypography.bodyMd.copyWith(color: AppColors.warmMuted),
+            context.loc.onboardingLevelSubtitle,
+            style: AppTypography.bodyMd.copyWith(color: context.clay.textMuted),
           ),
           const SizedBox(height: AppSpacing.xxxl),
           ...ProficiencyLevel.values.map((level) {
@@ -90,7 +92,7 @@ class StepLevel extends StatelessWidget {
                             level.description,
                             style: AppTypography.bodySm.copyWith(
                               fontSize: 13,
-                              color: AppColors.warmMuted,
+                              color: context.clay.textMuted,
                             ),
                           ),
                         ],

@@ -1,58 +1,197 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../shared/widgets/clay_back_button.dart';
+import '../../../core/theme/clay_palette.dart';
 import '../../../shared/widgets/clay_button.dart';
-import '../../../shared/widgets/clay_card.dart';
+import '../../subscription/providers/subscription_provider.dart';
+import '../../subscription/services/revenuecat_ui.dart';
 
-/// Placeholder Subscription / Upgrade screen. Outlines the Premium value
-/// proposition with a disabled CTA until billing integration (Stripe / Play
-/// Billing / App Store) lands in Phase 2.
+/// Subscription / paywall screen at `/subscription`.
+///
+/// Two render modes:
+/// 1. **Free user** → embeds RevenueCat's hosted [PaywallView] so the
+///    monthly / three-month / yearly packages render with native
+///    pricing, trial badges, and platform-specific Buy buttons. We
+///    supply our own header on top so the user can navigate back.
+/// 2. **Pro user** → shows an active-plan summary with a CTA to open
+///    RevenueCat's hosted Customer Center for managing the
+///    subscription (cancel, refund request, billing issues, etc.).
 class SubscriptionScreen extends StatelessWidget {
   const SubscriptionScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final sub = context.watch<SubscriptionProvider>();
     return Scaffold(
-      backgroundColor: AppColors.cream,
-      appBar: AppBar(
-        backgroundColor: AppColors.cream,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        leading: const Padding(
-          padding: EdgeInsets.only(left: AppSpacing.sm),
-          child: ClayBackButton(),
-        ),
-        title: Text('Go Premium', style: AppTypography.sectionTitle),
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.xxl,
-          AppSpacing.xl,
-          AppSpacing.xxl,
-          AppSpacing.huge,
-        ),
+      backgroundColor: context.clay.background,
+      body: SafeArea(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _Hero(),
-            const SizedBox(height: AppSpacing.lg),
-            _BenefitsCard(),
-            const SizedBox(height: AppSpacing.lg),
-            _PricingCard(),
-            const SizedBox(height: AppSpacing.xl),
-            const ClayButton(
-              text: 'Billing coming in Phase 2',
-              onTap: null,
+            _Header(isPro: sub.isPro),
+            Expanded(
+              child: !sub.isPurchasingSupported
+                  ? const _UnsupportedPlatformState()
+                  : (sub.isPro ? _ProActiveState(sub: sub) : _PaywallState(sub: sub)),
             ),
-            const SizedBox(height: AppSpacing.sm),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── header ────────────────────────────────────────────────────────────
+
+class _Header extends StatelessWidget {
+  final bool isPro;
+  const _Header({required this.isPro});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.sm,
+        AppSpacing.sm,
+        AppSpacing.lg,
+        AppSpacing.sm,
+      ),
+      child: Row(
+        children: [
+          IconButton(
+            icon: Icon(Icons.arrow_back_rounded, color: context.clay.text),
+            onPressed: () => context.pop(),
+          ),
+          const SizedBox(width: AppSpacing.xs),
+          Text(
+            isPro ? 'Aura Coach Pro' : 'Go Pro',
+            style: AppTypography.title.copyWith(
+              fontSize: 18,
+              color: context.clay.text,
+            ),
+          ),
+          const Spacer(),
+          if (isPro)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppColors.gold.withValues(alpha: 0.18),
+                borderRadius: AppRadius.fullBorder,
+                border: Border.all(color: AppColors.goldDeep, width: 1.5),
+              ),
+              child: Text(
+                'PRO',
+                style: AppTypography.labelSm.copyWith(
+                  color: AppColors.goldDark,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 10,
+                  letterSpacing: 0.8,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── free user → paywall ───────────────────────────────────────────────
+
+class _PaywallState extends StatelessWidget {
+  final SubscriptionProvider sub;
+  const _PaywallState({required this.sub});
+
+  @override
+  Widget build(BuildContext context) {
+    if (!sub.initialized) {
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.goldDeep),
+      );
+    }
+    final offering = sub.currentOffering;
+    if (offering == null) {
+      return _OfferingsErrorState(error: sub.lastError, onRetry: sub.refresh);
+    }
+    // Embed RevenueCat's hosted paywall. Pricing, trial badges, and
+    // package selection are all driven by the RevenueCat dashboard, so
+    // experiments / region-specific paywalls work without app updates.
+    return EmbeddedPaywall(
+      offering: offering,
+      onPurchaseCompleted: (info) {
+        if (!context.mounted) return;
+        if (info.entitlements.active.containsKey(
+          SubscriptionProvider.proEntitlementId,
+        )) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Welcome to Aura Coach Pro!'),
+              backgroundColor: AppColors.success,
+            ),
+          );
+          context.pop();
+        }
+      },
+      onRestoreCompleted: (info) {
+        if (!context.mounted) return;
+        final restored = info.entitlements.active.containsKey(
+          SubscriptionProvider.proEntitlementId,
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(restored
+                ? 'Pro restored — welcome back!'
+                : 'No previous purchases found on this account.'),
+            backgroundColor:
+                restored ? AppColors.success : AppColors.warning,
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _OfferingsErrorState extends StatelessWidget {
+  final String? error;
+  final Future<void> Function() onRetry;
+  const _OfferingsErrorState({required this.error, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xxl),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.error_outline_rounded,
+                size: 56, color: AppColors.error),
+            const SizedBox(height: AppSpacing.md),
             Text(
-              'Subscriptions activate once payment integration is live.',
+              'Plans unavailable right now',
+              style: AppTypography.title.copyWith(fontSize: 16),
               textAlign: TextAlign.center,
-              style: AppTypography.caption.copyWith(color: AppColors.warmMuted),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              error ??
+                  'We couldn\'t reach the payment service. Check your connection and try again.',
+              textAlign: TextAlign.center,
+              style: AppTypography.caption.copyWith(
+                color: context.clay.textMuted,
+                fontSize: 12,
+              ),
+              maxLines: 4,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            ClayButton(
+              text: 'Try again',
+              variant: ClayButtonVariant.accentGold,
+              onTap: onRetry,
             ),
           ],
         ),
@@ -61,318 +200,192 @@ class SubscriptionScreen extends StatelessWidget {
   }
 }
 
-class _Hero extends StatelessWidget {
+// ── pro user → manage ─────────────────────────────────────────────────
+
+class _ProActiveState extends StatelessWidget {
+  final SubscriptionProvider sub;
+  const _ProActiveState({required this.sub});
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.xxl),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppColors.gold.withValues(alpha: 0.25),
-            AppColors.goldDeep.withValues(alpha: 0.35),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: AppRadius.lgBorder,
-        border: Border.all(color: AppColors.goldDeep.withValues(alpha: 0.4)),
+    final expires = sub.proExpiresAt;
+    final productLabel = _productLabel(sub.activeProductId);
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.md,
+        AppSpacing.lg,
+        AppSpacing.xxl,
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: AppColors.goldDeep.withValues(alpha: 0.25),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.workspace_premium_rounded,
-              size: 44,
-              color: AppColors.goldDark,
-            ),
+          _ActivePlanCard(
+            productLabel: productLabel,
+            expiresAt: expires,
+            inTrial: sub.isInFreeTrial,
           ),
-          const SizedBox(height: AppSpacing.md),
-          Text(
-            'Unlock Aura Premium',
-            style: AppTypography.h1.copyWith(color: AppColors.warmDark),
+          const SizedBox(height: AppSpacing.lg),
+          ClayButton(
+            text: 'Manage subscription',
+            variant: ClayButtonVariant.accentGold,
+            onTap: () async {
+              try {
+                await RevenueCatUiBridge.presentCustomerCenter();
+              } catch (_) {
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Could not open Customer Center.'),
+                  ),
+                );
+              }
+            },
           ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            'Practice without limits. Get richer feedback on every session.',
-            textAlign: TextAlign.center,
-            style: AppTypography.bodyMd.copyWith(color: AppColors.warmMuted),
+          const SizedBox(height: AppSpacing.sm),
+          ClayButton(
+            text: 'Restore purchases',
+            variant: ClayButtonVariant.secondary,
+            onTap: () async {
+              await sub.restorePurchases();
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    sub.isPro ? 'Pro is active.' : 'No active purchases found.',
+                  ),
+                ),
+              );
+            },
           ),
         ],
       ),
     );
   }
-}
 
-class _BenefitsCard extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    const benefits = [
-      _Benefit(
-        icon: Icons.all_inclusive_rounded,
-        accent: AppColors.teal,
-        title: 'Unlimited sessions',
-        subtitle:
-            'Scenarios, stories, and tone translations with no daily cap.',
-      ),
-      _Benefit(
-        icon: Icons.auto_awesome_rounded,
-        accent: AppColors.purple,
-        title: 'AI illustrations',
-        subtitle: 'Generate custom visuals for every saved word and moment.',
-      ),
-      _Benefit(
-        icon: Icons.insights_rounded,
-        accent: AppColors.coral,
-        title: 'Deeper insights',
-        subtitle: 'Trend lines, tone breakdowns, and weekly AI read-outs.',
-      ),
-      _Benefit(
-        icon: Icons.headset_mic_rounded,
-        accent: AppColors.goldDeep,
-        title: 'Priority support',
-        subtitle: 'Direct line to the Aura team for issues and feedback.',
-      ),
-    ];
-
-    return ClayCard(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'What\'s included',
-            style: AppTypography.sectionTitle.copyWith(
-              color: AppColors.warmDark,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          for (int i = 0; i < benefits.length; i++) ...[
-            benefits[i],
-            if (i < benefits.length - 1) const SizedBox(height: AppSpacing.md),
-          ],
-        ],
-      ),
-    );
+  String _productLabel(String? productId) {
+    switch (productId) {
+      case 'monthly':
+        return 'Monthly plan';
+      case 'three_month':
+        return 'Three-month plan';
+      case 'yearly':
+        return 'Yearly plan';
+      default:
+        return productId ?? 'Pro';
+    }
   }
 }
 
-class _Benefit extends StatelessWidget {
-  final IconData icon;
-  final Color accent;
-  final String title;
-  final String subtitle;
+class _ActivePlanCard extends StatelessWidget {
+  final String productLabel;
+  final DateTime? expiresAt;
+  final bool inTrial;
 
-  const _Benefit({
-    required this.icon,
-    required this.accent,
-    required this.title,
-    required this.subtitle,
+  const _ActivePlanCard({
+    required this.productLabel,
+    required this.expiresAt,
+    required this.inTrial,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            color: accent.withValues(alpha: 0.15),
-            borderRadius: AppRadius.smBorder,
-          ),
-          child: Icon(icon, size: 20, color: accent),
-        ),
-        const SizedBox(width: AppSpacing.md),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: AppTypography.labelMd.copyWith(
-                  color: AppColors.warmDark,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.xxs),
-              Text(
-                subtitle,
-                style: AppTypography.caption.copyWith(
-                  color: AppColors.warmMuted,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _PricingCard extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return ClayCard(
+    return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: context.clay.surface,
+        borderRadius: AppRadius.lgBorder,
+        border: Border.all(color: AppColors.goldDeep, width: 2),
+        boxShadow: const [
+          BoxShadow(color: AppColors.goldDeep, offset: Offset(3, 3)),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
+              const Icon(Icons.workspace_premium_rounded,
+                  color: AppColors.goldDark, size: 28),
+              const SizedBox(width: AppSpacing.sm),
               Text(
-                'Indicative pricing',
-                style: AppTypography.sectionTitle.copyWith(
-                  color: AppColors.warmDark,
-                ),
+                productLabel,
+                style: AppTypography.title.copyWith(fontSize: 16),
               ),
               const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.sm,
-                  vertical: 2,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.gold.withValues(alpha: 0.2),
-                  borderRadius: AppRadius.fullBorder,
-                ),
-                child: Text(
-                  'PREVIEW',
-                  style: AppTypography.micro.copyWith(
-                    color: AppColors.goldDark,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.8,
+              if (inTrial)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: AppColors.success.withValues(alpha: 0.15),
+                    borderRadius: AppRadius.fullBorder,
+                    border: Border.all(color: AppColors.success, width: 1),
+                  ),
+                  child: Text(
+                    'TRIAL',
+                    style: AppTypography.labelSm.copyWith(
+                      color: AppColors.success,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 10,
+                      letterSpacing: 0.6,
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
-          const SizedBox(height: AppSpacing.md),
-          _PlanRow(
-            title: 'Monthly',
-            subtitle: 'Billed every month',
-            price: '\$9.99',
-            cadence: '/mo',
-          ),
           const SizedBox(height: AppSpacing.sm),
-          _PlanRow(
-            title: 'Yearly',
-            subtitle: 'Save 40% — billed annually',
-            price: '\$71.88',
-            cadence: '/yr',
-            highlight: true,
+          Text(
+            expiresAt == null
+                ? 'Active'
+                : 'Renews on ${_formatDate(expiresAt!)}',
+            style: AppTypography.bodySm.copyWith(
+              color: context.clay.textMuted,
+              fontSize: 13,
+            ),
           ),
         ],
       ),
     );
   }
+
+  String _formatDate(DateTime d) {
+    final local = d.toLocal();
+    return '${local.year}-${local.month.toString().padLeft(2, '0')}-${local.day.toString().padLeft(2, '0')}';
+  }
 }
 
-class _PlanRow extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final String price;
-  final String cadence;
-  final bool highlight;
+// ── unsupported platform ──────────────────────────────────────────────
 
-  const _PlanRow({
-    required this.title,
-    required this.subtitle,
-    required this.price,
-    required this.cadence,
-    this.highlight = false,
-  });
+class _UnsupportedPlatformState extends StatelessWidget {
+  const _UnsupportedPlatformState();
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: highlight
-            ? AppColors.goldDeep.withValues(alpha: 0.1)
-            : AppColors.clayBeige,
-        borderRadius: AppRadius.mdBorder,
-        border: Border.all(
-          color: highlight
-              ? AppColors.goldDeep.withValues(alpha: 0.4)
-              : AppColors.clayBorder,
-          width: 1,
-        ),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      title,
-                      style: AppTypography.labelMd.copyWith(
-                        color: AppColors.warmDark,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    if (highlight) ...[
-                      const SizedBox(width: AppSpacing.xs),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 1,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.goldDeep,
-                          borderRadius: AppRadius.fullBorder,
-                        ),
-                        child: Text(
-                          'BEST VALUE',
-                          style: AppTypography.micro.copyWith(
-                            color: AppColors.clayWhite,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.xxs),
-                Text(
-                  subtitle,
-                  style: AppTypography.caption.copyWith(
-                    color: AppColors.warmMuted,
-                  ),
-                ),
-              ],
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xxl),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.devices_other_rounded,
+                size: 56, color: context.clay.textMuted),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              'Subscriptions are managed on iOS and Android.',
+              textAlign: TextAlign.center,
+              style: AppTypography.title.copyWith(fontSize: 15),
             ),
-          ),
-          RichText(
-            text: TextSpan(
-              style: AppTypography.h2.copyWith(
-                color: AppColors.warmDark,
-                fontWeight: FontWeight.w800,
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              'Open Aura Coach on your phone to upgrade.',
+              textAlign: TextAlign.center,
+              style: AppTypography.caption.copyWith(
+                color: context.clay.textMuted,
               ),
-              children: [
-                TextSpan(text: price),
-                TextSpan(
-                  text: cadence,
-                  style: AppTypography.caption.copyWith(
-                    color: AppColors.warmMuted,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

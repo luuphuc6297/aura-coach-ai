@@ -8,6 +8,7 @@ import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/theme/clay_palette.dart';
 import '../../../shared/widgets/app_icon.dart';
 import '../../../shared/widgets/clay_button.dart';
 import '../../../shared/widgets/clay_pressable.dart';
@@ -126,10 +127,10 @@ class _StoryCustomFormScreenState extends State<StoryCustomFormScreen> {
         ..showSnackBar(
           SnackBar(
             behavior: SnackBarBehavior.floating,
-            backgroundColor: AppColors.warmDark,
+            backgroundColor: context.clay.text,
             content: Text(
               'Custom character is a Pro feature. Upgrade to unlock.',
-              style: AppTypography.bodySm.copyWith(color: AppColors.clayWhite),
+              style: AppTypography.bodySm.copyWith(color: context.clay.surface),
             ),
             duration: const Duration(seconds: 3),
           ),
@@ -183,7 +184,7 @@ class _StoryCustomFormScreenState extends State<StoryCustomFormScreen> {
         context.watch<HomeProvider>().userProfile?.selectedTopics ?? const [];
 
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: context.clay.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -284,13 +285,13 @@ class _AppBar extends StatelessWidget {
           ClayPressable(
             onTap: onClose,
             scaleDown: 0.9,
-            builder: (_, __) => const SizedBox(
+            builder: (ctx, __) => SizedBox(
               width: 40,
               height: 40,
               child: Icon(
                 Icons.close_rounded,
                 size: 22,
-                color: AppColors.warmDark,
+                color: ctx.clay.text,
               ),
             ),
           ),
@@ -433,7 +434,7 @@ class _TopicChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return ClayPressable(
       onTap: onTap,
-      builder: (_, __) {
+      builder: (ctx, __) {
         return AnimatedContainer(
           duration: AppAnimations.durationMedium,
           padding: const EdgeInsets.symmetric(
@@ -446,10 +447,10 @@ class _TopicChip extends StatelessWidget {
                 : topic.color.withValues(alpha: 0.10),
             borderRadius: AppRadius.fullBorder,
             border: Border.all(
-              color: isSelected ? AppColors.warmDark : AppColors.clayBorder,
+              color: isSelected ? ctx.clay.text : ctx.clay.border,
               width: 2,
             ),
-            boxShadow: isSelected ? AppShadows.clayBold : const [],
+            boxShadow: isSelected ? AppShadows.clayBold(ctx) : const [],
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -460,7 +461,7 @@ class _TopicChip extends StatelessWidget {
                 topic.label,
                 style: AppTypography.labelMd.copyWith(
                   fontSize: 13,
-                  color: AppColors.warmDark,
+                  color: ctx.clay.text,
                   fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
                 ),
               ),
@@ -487,7 +488,7 @@ class _SectionLabel extends StatelessWidget {
         Text(
           text.toUpperCase(),
           style: AppTypography.caption.copyWith(
-            color: AppColors.warmMuted,
+            color: context.clay.textMuted,
             fontSize: 11,
             fontWeight: FontWeight.w800,
             letterSpacing: 1.1,
@@ -541,18 +542,18 @@ class _InlineCustomTopicState extends State<_InlineCustomTopic> {
     final borderColor = highlight
         ? AppColors.purpleDeep
         : AppColors.purple.withValues(alpha: 0.35);
-    final iconColor = highlight ? AppColors.purpleDeep : AppColors.warmMuted;
+    final iconColor = highlight ? AppColors.purpleDeep : context.clay.textMuted;
 
     return AnimatedContainer(
       duration: AppAnimations.durationFast,
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.clayWhite,
+        color: context.clay.surface,
         borderRadius: AppRadius.lgBorder,
         border: Border.all(color: borderColor, width: 2),
         boxShadow: highlight
             ? AppShadows.colored(AppColors.purple, alpha: 0.22)
-            : AppShadows.card,
+            : AppShadows.card(context),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -573,14 +574,14 @@ class _InlineCustomTopicState extends State<_InlineCustomTopic> {
               onChanged: widget.onChanged,
               style: AppTypography.bodyMd.copyWith(
                 fontSize: 14,
-                color: AppColors.warmDark,
+                color: context.clay.text,
                 fontWeight: FontWeight.w600,
               ),
               cursorColor: AppColors.purpleDeep,
               decoration: InputDecoration(
                 hintText: 'e.g. startup pitch, beach vacation',
                 hintStyle: AppTypography.bodyMd.copyWith(
-                  color: AppColors.warmLight,
+                  color: context.clay.textFaint,
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
@@ -595,7 +596,7 @@ class _InlineCustomTopicState extends State<_InlineCustomTopic> {
                 isDense: true,
                 contentPadding: const EdgeInsets.symmetric(vertical: 14),
                 counterStyle: AppTypography.caption.copyWith(
-                  color: AppColors.warmMuted,
+                  color: context.clay.textMuted,
                   fontSize: 10,
                 ),
               ),
@@ -803,7 +804,7 @@ class _CharacterCard extends StatelessWidget {
         ? (isLocked
             ? AppColors.gold.withValues(alpha: 0.55)
             : AppColors.goldDeep)
-        : (isSelected ? AppColors.purpleDeep : AppColors.clayBorder);
+        : (isSelected ? AppColors.purpleDeep : context.clay.border);
 
     final iconGradient = isProOnly
         ? [AppColors.gold, AppColors.goldDeep]
@@ -821,7 +822,7 @@ class _CharacterCard extends StatelessWidget {
           )
         : (isProOnly && !isLocked
             ? AppShadows.colored(AppColors.gold, alpha: 0.18)
-            : AppShadows.card);
+            : AppShadows.card(context));
 
     final cardBg = isSelected
         ? (isProOnly
@@ -829,7 +830,7 @@ class _CharacterCard extends StatelessWidget {
             : AppColors.purple.withValues(alpha: 0.12))
         : (isProOnly
             ? AppColors.gold.withValues(alpha: 0.06)
-            : AppColors.clayWhite);
+            : context.clay.surface);
 
     return Opacity(
       opacity: isLocked ? 0.78 : 1.0,
@@ -892,7 +893,7 @@ class _CharacterCard extends StatelessWidget {
                         ? AppColors.goldDark
                         : (isSelected
                             ? AppColors.purpleDeep
-                            : AppColors.warmDark),
+                            : context.clay.text),
                     fontSize: 14,
                     fontWeight: FontWeight.w800,
                   ),
@@ -904,7 +905,7 @@ class _CharacterCard extends StatelessWidget {
                   child: Text(
                     option.description,
                     style: AppTypography.caption.copyWith(
-                      color: AppColors.warmMuted,
+                      color: context.clay.textMuted,
                       fontSize: 11,
                       height: 1.3,
                     ),
@@ -1005,12 +1006,12 @@ class _CustomCharacterInputState extends State<_CustomCharacterInput> {
       duration: AppAnimations.durationFast,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: AppColors.clayWhite,
+        color: context.clay.surface,
         borderRadius: AppRadius.lgBorder,
         border: Border.all(color: borderColor, width: 2),
         boxShadow: _hasFocus
             ? AppShadows.colored(AppColors.purple, alpha: 0.25)
-            : AppShadows.card,
+            : AppShadows.card(context),
       ),
       child: TextField(
         controller: widget.controller,
@@ -1021,7 +1022,7 @@ class _CustomCharacterInputState extends State<_CustomCharacterInput> {
         onChanged: widget.onChanged,
         style: AppTypography.bodyMd.copyWith(
           fontSize: 15,
-          color: AppColors.warmDark,
+          color: context.clay.text,
           height: 1.35,
         ),
         cursorColor: AppColors.purpleDeep,
@@ -1030,7 +1031,7 @@ class _CustomCharacterInputState extends State<_CustomCharacterInput> {
               'e.g. My strict but supportive professor who pushes me to '
               'explain my reasoning.',
           hintStyle: AppTypography.bodyMd.copyWith(
-            color: AppColors.warmLight,
+            color: context.clay.textFaint,
             fontSize: 14,
             height: 1.35,
           ),
@@ -1043,7 +1044,7 @@ class _CustomCharacterInputState extends State<_CustomCharacterInput> {
           errorBorder: InputBorder.none,
           focusedErrorBorder: InputBorder.none,
           counterStyle: AppTypography.caption.copyWith(
-            color: AppColors.warmMuted,
+            color: context.clay.textMuted,
             fontSize: 10,
           ),
         ),
@@ -1115,12 +1116,12 @@ class _ContextStepState extends State<_ContextStep> {
             duration: AppAnimations.durationFast,
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              color: AppColors.clayWhite,
+              color: context.clay.surface,
               borderRadius: AppRadius.lgBorder,
               border: Border.all(color: borderColor, width: 2),
               boxShadow: _hasFocus
                   ? AppShadows.colored(AppColors.purple, alpha: 0.25)
-                  : AppShadows.card,
+                  : AppShadows.card(context),
             ),
             child: TextField(
               controller: widget.controller,
@@ -1130,7 +1131,7 @@ class _ContextStepState extends State<_ContextStep> {
               maxLength: 220,
               style: AppTypography.bodyMd.copyWith(
                 fontSize: 15,
-                color: AppColors.warmDark,
+                color: context.clay.text,
                 height: 1.35,
               ),
               cursorColor: AppColors.purpleDeep,
@@ -1138,7 +1139,7 @@ class _ContextStepState extends State<_ContextStep> {
                 hintText:
                     "e.g. I'm meeting my partner's parents for the first time.",
                 hintStyle: AppTypography.bodyMd.copyWith(
-                  color: AppColors.warmLight,
+                  color: context.clay.textFaint,
                   fontSize: 14,
                   height: 1.35,
                 ),
@@ -1151,7 +1152,7 @@ class _ContextStepState extends State<_ContextStep> {
                 errorBorder: InputBorder.none,
                 focusedErrorBorder: InputBorder.none,
                 counterStyle: AppTypography.caption.copyWith(
-                  color: AppColors.warmMuted,
+                  color: context.clay.textMuted,
                   fontSize: 10,
                 ),
               ),
@@ -1200,7 +1201,7 @@ class _SummaryCard extends StatelessWidget {
             child: Text(
               _composeSummary(),
               style: AppTypography.bodySm.copyWith(
-                color: AppColors.warmDark,
+                color: context.clay.text,
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
               ),
@@ -1227,7 +1228,7 @@ class _StepTitle extends StatelessWidget {
         const SizedBox(height: 2),
         Text(
           subtitle,
-          style: AppTypography.bodySm.copyWith(color: AppColors.warmMuted),
+          style: AppTypography.bodySm.copyWith(color: context.clay.textMuted),
         ),
       ],
     );

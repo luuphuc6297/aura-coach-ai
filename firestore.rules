@@ -19,6 +19,18 @@ service cloud.firestore {
       match /seenSentences/{hash} {
         allow read, write: if request.auth != null && request.auth.uid == userId;
       }
+      match /notifications/{notifId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+      match /grammarProgress/{topicId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+      match /grammarAttempts/{attemptId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+      match /grammarSessions/{sessionId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
     }
   }
 }

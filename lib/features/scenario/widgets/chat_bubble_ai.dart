@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/icon_constants.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/clay_palette.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_typography.dart';
@@ -64,8 +65,8 @@ class ChatBubbleAi extends StatelessWidget {
           height: 36,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(color: AppColors.clayBorder, width: 2),
-            boxShadow: AppShadows.card,
+            border: Border.all(color: context.clay.border, width: 2),
+            boxShadow: AppShadows.card(context),
           ),
           child: ClipOval(
             child: CloudImage(url: CloudinaryAssets.chatbot, size: 32),
@@ -88,15 +89,15 @@ class ChatBubbleAi extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
                 decoration: BoxDecoration(
-                  color: AppColors.clayWhite,
-                  border: Border.all(color: AppColors.clayBorder, width: 1.5),
+                  color: context.clay.surface,
+                  border: Border.all(color: context.clay.border, width: 1.5),
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(4),
                     topRight: Radius.circular(28),
                     bottomLeft: Radius.circular(28),
                     bottomRight: Radius.circular(28),
                   ),
-                  boxShadow: AppShadows.card,
+                  boxShadow: AppShadows.card(context),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -104,7 +105,7 @@ class ChatBubbleAi extends StatelessWidget {
                     SelectableTextWithSave(
                       text: text,
                       style: AppTypography.bodySm.copyWith(
-                        color: AppColors.warmDark,
+                        color: context.clay.text,
                         height: 1.5,
                         letterSpacing: 0.15,
                       ),
@@ -114,13 +115,13 @@ class ChatBubbleAi extends StatelessWidget {
                       const SizedBox(height: 8),
                       Container(
                         height: 1,
-                        color: AppColors.clayBorder.withValues(alpha: 0.6),
+                        color: context.clay.border.withValues(alpha: 0.6),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         translation!,
                         style: AppTypography.bodySm.copyWith(
-                          color: AppColors.warmMuted,
+                          color: context.clay.textMuted,
                           fontStyle: FontStyle.italic,
                           height: 1.45,
                           fontSize: 13,
@@ -189,7 +190,7 @@ class _ActionRow extends StatelessWidget {
                 : Icon(
                     Icons.translate_rounded,
                     size: 12,
-                    color: hasTranslation ? accentColor : AppColors.warmMuted,
+                    color: hasTranslation ? accentColor : context.clay.textMuted,
                   ),
             label: hasTranslation ? 'Translated' : 'Translate',
             onTap: isTranslating ? null : onTranslate,
@@ -218,9 +219,10 @@ class _ActionPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bg =
-        tinted ? accentColor.withValues(alpha: 0.16) : AppColors.clayBeige;
-    final fg = tinted ? accentColor : AppColors.warmMuted;
+    final bg = tinted
+        ? accentColor.withValues(alpha: 0.16)
+        : context.clay.surfaceAlt;
+    final fg = tinted ? accentColor : context.clay.textMuted;
     return ClayPressable(
       onTap: onTap,
       scaleDown: 0.9,

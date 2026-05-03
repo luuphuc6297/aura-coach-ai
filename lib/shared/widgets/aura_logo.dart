@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/theme/clay_palette.dart';
 import '../../core/constants/cloudinary_assets.dart';
 import 'cloud_image.dart';
 
@@ -38,7 +39,7 @@ class AuraLogo extends StatelessWidget {
           Text('ACH', style: style.copyWith(color: effectiveColor)),
           Text('.AI',
               style:
-                  style.copyWith(color: AppColors.warmDark, letterSpacing: 0)),
+                  style.copyWith(color: context.clay.text, letterSpacing: 0)),
         ],
       );
     }
@@ -63,7 +64,7 @@ class AuraLogo extends StatelessWidget {
               padding: const EdgeInsets.only(left: AppSpacing.xs),
               child: Text('.AI',
                   style: style.copyWith(
-                      color: AppColors.warmDark, letterSpacing: 0)),
+                      color: context.clay.text, letterSpacing: 0)),
             ),
           ],
         ),

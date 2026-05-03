@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_radius.dart';
+import '../../../core/theme/clay_palette.dart';
 import '../../../shared/widgets/cloud_image.dart';
 import '../../../shared/widgets/app_icon.dart';
 import '../models/mode_deep_dive_data.dart';
@@ -20,7 +21,7 @@ class ModeDeepDiveCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: AppColors.cream,
+      color: context.clay.background,
       child: Column(
         children: [
           Expanded(
@@ -29,12 +30,12 @@ class ModeDeepDiveCard extends StatelessWidget {
               physics: const BouncingScrollPhysics(),
               children: [
                 _buildCompactHero(),
-                _buildSeparator(),
-                if (data.steps.isNotEmpty) _buildHowItWorks(),
+                _buildSeparator(context),
+                if (data.steps.isNotEmpty) _buildHowItWorks(context),
                 if (data.tonePreviews != null)
-                  _buildTonePreviews()
+                  _buildTonePreviews(context)
                 else if (data.features.isNotEmpty)
-                  _buildFeatures(),
+                  _buildFeatures(context),
                 _buildCta(),
               ],
             ),
@@ -102,15 +103,15 @@ class ModeDeepDiveCard extends StatelessWidget {
     );
   }
 
-  Widget _buildSeparator() {
+  Widget _buildSeparator(BuildContext context) {
     return Container(
       height: 2,
       margin: const EdgeInsets.symmetric(horizontal: 24),
-      color: AppColors.clayBorder,
+      color: context.clay.border,
     );
   }
 
-  Widget _buildHowItWorks() {
+  Widget _buildHowItWorks(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
       child: Column(
@@ -162,7 +163,7 @@ class ModeDeepDiveCard extends StatelessWidget {
                             step.subtitle,
                             style: AppTypography.bodySm.copyWith(
                               fontSize: 13,
-                              color: AppColors.warmMuted,
+                              color: context.clay.textMuted,
                             ),
                           ),
                         ],
@@ -176,7 +177,7 @@ class ModeDeepDiveCard extends StatelessWidget {
     );
   }
 
-  Widget _buildFeatures() {
+  Widget _buildFeatures(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
       child: Column(
@@ -196,9 +197,9 @@ class ModeDeepDiveCard extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   decoration: BoxDecoration(
-                    color: AppColors.clayWhite,
+                    color: context.clay.surface,
                     borderRadius: AppRadius.lgBorder,
-                    border: Border.all(color: AppColors.clayBorder, width: 2),
+                    border: Border.all(color: context.clay.border, width: 2),
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -230,7 +231,7 @@ class ModeDeepDiveCard extends StatelessWidget {
                               feature.description,
                               style: AppTypography.bodySm.copyWith(
                                 fontSize: 13,
-                                color: AppColors.warmMuted,
+                                color: context.clay.textMuted,
                                 height: 1.4,
                               ),
                             ),
@@ -246,7 +247,7 @@ class ModeDeepDiveCard extends StatelessWidget {
     );
   }
 
-  Widget _buildTonePreviews() {
+  Widget _buildTonePreviews(BuildContext context) {
     final tones = data.tonePreviews!;
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
@@ -267,9 +268,9 @@ class ModeDeepDiveCard extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   decoration: BoxDecoration(
-                    color: AppColors.clayWhite,
+                    color: context.clay.surface,
                     borderRadius: AppRadius.lgBorder,
-                    border: Border.all(color: AppColors.clayBorder, width: 2),
+                    border: Border.all(color: context.clay.border, width: 2),
                   ),
                   child: Row(
                     children: [
@@ -301,7 +302,7 @@ class ModeDeepDiveCard extends StatelessWidget {
                             Text(
                               tone.example,
                               style: AppTypography.caption.copyWith(
-                                color: AppColors.warmMuted,
+                                color: context.clay.textMuted,
                               ),
                             ),
                           ],

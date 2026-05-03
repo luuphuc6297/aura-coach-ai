@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/icon_constants.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/clay_palette.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/app_icon.dart';
+import '../../../l10n/app_loc_context.dart';
 import '../../../shared/widgets/clay_back_button.dart';
 import '../../../shared/widgets/clay_pressable.dart';
 
@@ -41,7 +43,7 @@ class ScenarioAppBar extends StatelessWidget {
         AppSpacing.md,
         0,
       ),
-      color: AppColors.cream,
+      color: context.clay.background,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -68,7 +70,8 @@ class ScenarioAppBar extends StatelessWidget {
             child: Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                '$emoji $category · $level · Scenario #$scenarioIndex',
+                context.loc.scenarioAppBarMeta(
+                    emoji, category, level, scenarioIndex),
                 style: AppTypography.caption,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -81,7 +84,7 @@ class ScenarioAppBar extends StatelessWidget {
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 3,
-              backgroundColor: AppColors.clayBeige,
+              backgroundColor: context.clay.surfaceAlt,
               valueColor: AlwaysStoppedAnimation(AppColors.teal),
             ),
           ),

@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import '../../../core/constants/feature_flags.dart';
 import '../../../core/constants/icon_constants.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_shadows.dart';
+import '../../../core/theme/clay_palette.dart';
+import '../../../l10n/app_loc_context.dart';
 import '../../../shared/widgets/clay_back_button.dart';
 import '../../../shared/widgets/clay_dialog.dart';
 import '../../../shared/widgets/clay_pressable.dart';
@@ -31,12 +34,33 @@ class _ConversationHistoryScreenState extends State<ConversationHistoryScreen> {
 
   // Mirrors the HTML spec filter order: All → Scenario → Story → Translator.
   // Filter values map to the `mode` string stored on each conversation doc.
-  static const _filters = [
-    _FilterOption(label: 'All', value: 'all', color: AppColors.teal),
-    _FilterOption(label: 'Scenario', value: 'roleplay', color: AppColors.teal),
-    _FilterOption(label: 'Story', value: 'story', color: AppColors.purple),
-    _FilterOption(label: 'Translator', value: 'tone', color: AppColors.gold),
-  ];
+  // Built at runtime so labels respect the current locale.
+  List<_FilterOption> _filterOptions(BuildContext context) {
+    final loc = context.loc;
+    return [
+      _FilterOption(
+        label: loc.conversationHistoryFilterAll,
+        value: 'all',
+        color: AppColors.teal,
+      ),
+      _FilterOption(
+        label: loc.conversationHistoryFilterScenario,
+        value: 'roleplay',
+        color: AppColors.teal,
+      ),
+      _FilterOption(
+        label: loc.conversationHistoryFilterStory,
+        value: 'story',
+        color: AppColors.purple,
+      ),
+      if (FeatureFlags.toneTranslatorEnabled)
+        _FilterOption(
+          label: loc.conversationHistoryFilterTranslator,
+          value: 'tone',
+          color: AppColors.gold,
+        ),
+    ];
+  }
 
   @override
   void initState() {
@@ -84,7 +108,7 @@ class _ConversationHistoryScreenState extends State<ConversationHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: context.clay.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -92,9 +116,9 @@ class _ConversationHistoryScreenState extends State<ConversationHistoryScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 12),
               height: 48,
               decoration: BoxDecoration(
-                color: AppColors.cream,
+                color: context.clay.background,
                 border: Border(
-                  bottom: BorderSide(color: AppColors.clayBorder, width: 2),
+                  bottom: BorderSide(color: context.clay.border, width: 2),
                 ),
               ),
               child: Row(
@@ -102,7 +126,7 @@ class _ConversationHistoryScreenState extends State<ConversationHistoryScreen> {
                   const ClayBackButton(),
                   const SizedBox(width: 4),
                   Text(
-                    'Conversation History',
+                    context.loc.conversationHistoryTitle,
                     style: AppTypography.bodyMd.copyWith(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -122,25 +146,25 @@ class _ConversationHistoryScreenState extends State<ConversationHistoryScreen> {
   }
 
   Widget _buildFilterChips() {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
-      decoration: BoxDecoration(
-        color: AppColors.cream,
-        border: Border(
-          bottom: BorderSide(color: AppColors.clayBorder, width: 1.5),
-        ),
-      ),
+    // Clay pill chips matching My Library's filter row — keeps the system
+    // visual language consistent. Each chip uses the mode's accent for
+    // selected state; resting state is the cream/border base.
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
         child: Row(
-          children: _filters.map((filter) {
+          children: _filterOptions(context).map((filter) {
             final isSelected = _selectedFilter == filter.value;
-            return _UnderlineFilterTab(
-              label: filter.label,
-              accentColor: filter.color,
-              isSelected: isSelected,
-              onTap: () => setState(() => _selectedFilter = filter.value),
+            return Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: _ClayFilterChip(
+                label: filter.label,
+                accentColor: filter.color,
+                isSelected: isSelected,
+                onTap: () => setState(() => _selectedFilter = filter.value),
+              ),
             );
           }).toList(),
         ),
@@ -207,8 +231,9 @@ class _ConversationHistoryScreenState extends State<ConversationHistoryScreen> {
     final newTitle = await showClayDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.clayWhite,
-        title: Text('Rename conversation', style: AppTypography.title),
+        backgroundColor: ctx.clay.surface,
+        title: Text(context.loc.conversationHistoryRenameTitle,
+            style: AppTypography.title),
         content: TextField(
           controller: controller,
           autofocus: true,
@@ -216,10 +241,10 @@ class _ConversationHistoryScreenState extends State<ConversationHistoryScreen> {
           cursorColor: AppColors.teal,
           maxLength: 60,
           decoration: InputDecoration(
-            hintText: 'Conversation title',
+            hintText: context.loc.conversationHistoryRenameHint,
             border: OutlineInputBorder(
               borderRadius: AppRadius.mdBorder,
-              borderSide: BorderSide(color: AppColors.clayBorder, width: 2),
+              borderSide: BorderSide(color: ctx.clay.border, width: 2),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: AppRadius.mdBorder,
@@ -230,11 +255,13 @@ class _ConversationHistoryScreenState extends State<ConversationHistoryScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('Cancel', style: TextStyle(color: AppColors.warmMuted)),
+            child: Text(context.loc.commonCancel,
+                style: TextStyle(color: ctx.clay.textMuted)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, controller.text.trim()),
-            child: Text('Save', style: TextStyle(color: AppColors.teal)),
+            child: Text(context.loc.commonSave,
+                style: TextStyle(color: AppColors.teal)),
           ),
         ],
       ),
@@ -264,7 +291,8 @@ class _ConversationHistoryScreenState extends State<ConversationHistoryScreen> {
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Rename failed. Please try again.')),
+        SnackBar(
+            content: Text(context.loc.conversationHistoryRenameFailed)),
       );
     }
   }
@@ -275,20 +303,23 @@ class _ConversationHistoryScreenState extends State<ConversationHistoryScreen> {
     final confirm = await showClayDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.clayWhite,
-        title: Text('Delete conversation?', style: AppTypography.title),
+        backgroundColor: ctx.clay.surface,
+        title: Text(context.loc.conversationHistoryDeleteTitle,
+            style: AppTypography.title),
         content: Text(
-          'This conversation will be permanently removed from your history.',
-          style: AppTypography.bodySm.copyWith(color: AppColors.warmMuted),
+          context.loc.conversationHistoryDeleteBody,
+          style: AppTypography.bodySm.copyWith(color: ctx.clay.textMuted),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text('Cancel', style: TextStyle(color: AppColors.warmMuted)),
+            child: Text(context.loc.commonCancel,
+                style: TextStyle(color: ctx.clay.textMuted)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text('Delete', style: TextStyle(color: AppColors.error)),
+            child: Text(context.loc.commonDelete,
+                style: TextStyle(color: AppColors.error)),
           ),
         ],
       ),
@@ -308,7 +339,8 @@ class _ConversationHistoryScreenState extends State<ConversationHistoryScreen> {
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Delete failed. Please try again.')),
+        SnackBar(
+            content: Text(context.loc.conversationHistoryDeleteFailed)),
       );
     }
   }
@@ -317,8 +349,9 @@ class _ConversationHistoryScreenState extends State<ConversationHistoryScreen> {
       BuildContext context, Map<String, dynamic> item) {
     final mode = item['mode'] as String? ?? 'roleplay';
     final modeStyle = _ModeStyle.from(mode);
+    final loc = context.loc;
     final title = item['title'] as String? ?? '';
-    final topic = item['topic'] as String? ?? 'Unknown';
+    final topic = item['topic'] as String? ?? loc.conversationHistoryUnknownTopic;
     final difficulty = item['difficulty'] as String? ?? '';
     final status = item['status'] as String? ?? '';
     final createdAt = item['createdAt'] as String?;
@@ -329,7 +362,7 @@ class _ConversationHistoryScreenState extends State<ConversationHistoryScreen> {
     final totalTurns = (item['totalTurns'] as num?)?.toInt() ?? 0;
     final duration = (item['duration'] as num?)?.toInt() ?? 0;
 
-    String formattedDate = 'Unknown';
+    String formattedDate = loc.conversationHistoryUnknownTopic;
     if (createdAt != null) {
       try {
         final date = DateTime.parse(createdAt);
@@ -354,11 +387,11 @@ class _ConversationHistoryScreenState extends State<ConversationHistoryScreen> {
           maxHeight: MediaQuery.of(ctx).size.height * 0.7,
         ),
         decoration: BoxDecoration(
-          color: AppColors.clayWhite,
+          color: context.clay.surface,
           borderRadius: BorderRadius.vertical(
             top: Radius.circular(AppRadius.xl),
           ),
-          border: Border.all(color: AppColors.clayBorder, width: 2),
+          border: Border.all(color: context.clay.border, width: 2),
         ),
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
@@ -370,7 +403,7 @@ class _ConversationHistoryScreenState extends State<ConversationHistoryScreen> {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: AppColors.clayBorder,
+                    color: context.clay.border,
                     borderRadius: AppRadius.fullBorder,
                   ),
                 ),
@@ -394,7 +427,7 @@ class _ConversationHistoryScreenState extends State<ConversationHistoryScreen> {
                         Text(
                           topic,
                           style: AppTypography.bodySm.copyWith(
-                            color: AppColors.warmMuted,
+                            color: context.clay.textMuted,
                           ),
                         ),
                       ],
@@ -421,7 +454,9 @@ class _ConversationHistoryScreenState extends State<ConversationHistoryScreen> {
                   _detailChip(difficulty, modeStyle.color),
                   const SizedBox(width: 8),
                   _detailChip(
-                    isCompleted ? 'Completed' : 'In Progress',
+                    isCompleted
+                        ? loc.conversationHistoryStatusCompleted
+                        : loc.conversationHistoryStatusInProgress,
                     isCompleted ? AppColors.success : AppColors.gold,
                   ),
                 ],
@@ -430,54 +465,61 @@ class _ConversationHistoryScreenState extends State<ConversationHistoryScreen> {
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: AppColors.cream,
+                  color: context.clay.background,
                   borderRadius: AppRadius.mdBorder,
-                  border: Border.all(color: AppColors.clayBorder, width: 1.5),
+                  border: Border.all(color: context.clay.border, width: 1.5),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _detailStat(formattedDate, 'Date'),
+                    _detailStat(context, formattedDate,
+                        loc.conversationHistoryDateLabel),
                     Container(
                       width: 1.5,
                       height: 28,
-                      color: AppColors.clayBorder,
+                      color: context.clay.border,
                     ),
-                    _detailStat('${duration}m', 'Duration'),
+                    _detailStat(context, '${duration}m',
+                        loc.conversationHistoryDurationLabel),
                     Container(
                       width: 1.5,
                       height: 28,
-                      color: AppColors.clayBorder,
+                      color: context.clay.border,
                     ),
-                    _detailStat('$totalTurns', 'Turns'),
+                    _detailStat(context, '$totalTurns',
+                        loc.conversationHistoryTurnsLabel),
                   ],
                 ),
               ),
               const SizedBox(height: 16),
               Text(
-                'Score Breakdown',
+                loc.conversationHistoryScoreBreakdownTitle,
                 style: AppTypography.labelMd.copyWith(
                   fontWeight: FontWeight.w700,
-                  color: AppColors.warmDark,
+                  color: context.clay.text,
                 ),
               ),
               const SizedBox(height: 10),
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: AppColors.cream,
+                  color: context.clay.background,
                   borderRadius: AppRadius.mdBorder,
-                  border: Border.all(color: AppColors.clayBorder, width: 1.5),
+                  border: Border.all(color: context.clay.border, width: 1.5),
                 ),
                 child: Column(
                   children: [
-                    _scoreRow('Overall', totalScore, scoreColor),
+                    _scoreRow(context, loc.conversationHistoryScoreOverall,
+                        totalScore, scoreColor),
                     if (grammarScore != null)
-                      _scoreRow('Grammar', grammarScore, null),
+                      _scoreRow(context, loc.conversationHistoryScoreGrammar,
+                          grammarScore, null),
                     if (vocabScore != null)
-                      _scoreRow('Vocabulary', vocabScore, null),
+                      _scoreRow(context, loc.conversationHistoryScoreVocabulary,
+                          vocabScore, null),
                     if (fluencyScore != null)
-                      _scoreRow('Fluency', fluencyScore, null),
+                      _scoreRow(context, loc.conversationHistoryScoreFluency,
+                          fluencyScore, null),
                   ],
                 ),
               ),
@@ -495,7 +537,7 @@ class _ConversationHistoryScreenState extends State<ConversationHistoryScreen> {
                   ),
                 ),
                 child: Text(
-                  'Tap to replay coming soon',
+                  loc.conversationHistoryReplayComingSoon,
                   textAlign: TextAlign.center,
                   style: AppTypography.labelMd.copyWith(
                     color: modeStyle.color,
@@ -529,14 +571,14 @@ class _ConversationHistoryScreenState extends State<ConversationHistoryScreen> {
     );
   }
 
-  Widget _detailStat(String value, String label) {
+  Widget _detailStat(BuildContext context, String value, String label) {
     return Column(
       children: [
         Text(
           value,
           style: AppTypography.caption.copyWith(
             fontWeight: FontWeight.w700,
-            color: AppColors.warmDark,
+            color: context.clay.text,
             fontSize: 12,
           ),
         ),
@@ -544,7 +586,7 @@ class _ConversationHistoryScreenState extends State<ConversationHistoryScreen> {
         Text(
           label,
           style: AppTypography.caption.copyWith(
-            color: AppColors.warmMuted,
+            color: context.clay.textMuted,
             fontSize: 10,
           ),
         ),
@@ -552,7 +594,8 @@ class _ConversationHistoryScreenState extends State<ConversationHistoryScreen> {
     );
   }
 
-  Widget _scoreRow(String label, double score, Color? overrideColor) {
+  Widget _scoreRow(
+      BuildContext context, String label, double score, Color? overrideColor) {
     final color = overrideColor ??
         (score >= 8
             ? AppColors.success
@@ -567,7 +610,7 @@ class _ConversationHistoryScreenState extends State<ConversationHistoryScreen> {
             child: Text(
               label,
               style: AppTypography.bodySm.copyWith(
-                color: AppColors.warmMuted,
+                color: context.clay.textMuted,
                 fontSize: 13,
               ),
             ),
@@ -593,17 +636,17 @@ class _ConversationHistoryScreenState extends State<ConversationHistoryScreen> {
           const AppIcon(iconId: AppIcons.history, size: 48),
           const SizedBox(height: 16),
           Text(
-            'No conversation history yet',
+            context.loc.conversationHistoryEmptyTitle,
             style: AppTypography.bodyMd.copyWith(
-              color: AppColors.warmDark,
+              color: context.clay.text,
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Start a roleplay scenario to see your history here',
+            context.loc.conversationHistoryEmptyBody,
             style: AppTypography.caption.copyWith(
-              color: AppColors.warmMuted,
+              color: context.clay.textMuted,
             ),
           ),
         ],
@@ -663,17 +706,24 @@ class _HistoryCard extends StatelessWidget {
     this.onDelete,
   });
 
-  String _formatRelative(String? dateStr) {
+  String _formatRelative(BuildContext context, String? dateStr) {
     if (dateStr == null) return '—';
     try {
+      final loc = context.loc;
       final date = DateTime.parse(dateStr);
       final now = DateTime.now();
       final diff = now.difference(date);
-      if (diff.inMinutes < 1) return 'just now';
-      if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-      if (diff.inHours < 24) return '${diff.inHours}h ago';
-      if (diff.inDays == 1) return 'Yesterday';
-      if (diff.inDays < 7) return '${diff.inDays}d ago';
+      if (diff.inMinutes < 1) return loc.conversationHistoryRelativeJustNow;
+      if (diff.inMinutes < 60) {
+        return loc.conversationHistoryRelativeMinutesAgo(diff.inMinutes);
+      }
+      if (diff.inHours < 24) {
+        return loc.conversationHistoryRelativeHoursAgo(diff.inHours);
+      }
+      if (diff.inDays == 1) return loc.conversationHistoryYesterday;
+      if (diff.inDays < 7) {
+        return loc.conversationHistoryRelativeDaysAgo(diff.inDays);
+      }
       return '${date.month}/${date.day}/${date.year}';
     } catch (_) {
       return '—';
@@ -710,8 +760,11 @@ class _HistoryCard extends StatelessWidget {
     final duration = (data['duration'] as num?)?.toInt() ?? 0;
     final isCompleted = status == 'completed';
     final preview = _lastMessagePreview();
-    final displayTitle =
-        title.isNotEmpty ? title : (topic.isNotEmpty ? topic : 'Roleplay');
+    final displayTitle = title.isNotEmpty
+        ? title
+        : (topic.isNotEmpty
+            ? topic
+            : context.loc.conversationHistoryFallbackTitle);
 
     final scoreColor = totalScore >= 8
         ? AppColors.success
@@ -722,34 +775,28 @@ class _HistoryCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: AppColors.clayWhite,
-        border: Border.all(color: AppColors.clayBorder, width: 2),
+        color: context.clay.surface,
+        border: Border.all(color: context.clay.border, width: 2),
         borderRadius: AppRadius.lgBorder,
-        boxShadow: AppShadows.card,
+        boxShadow: AppShadows.card(context),
       ),
       child: ClipRRect(
         borderRadius: AppRadius.lgBorder,
-        child: Container(
-          decoration: BoxDecoration(
-            border: Border(
-              left: BorderSide(color: modeStyle.color, width: 4),
-            ),
-          ),
-          child: ClayPressable(
-            onTap: onTap,
-            scaleDown: 0.98,
-            builder: (context, isPressed) {
-              return Padding(
-                padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: 36,
-                          height: 36,
+        child: ClayPressable(
+          onTap: onTap,
+          scaleDown: 0.98,
+          builder: (context, isPressed) {
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
                             color: modeStyle.color.withValues(alpha: 0.12),
@@ -767,7 +814,7 @@ class _HistoryCard extends StatelessWidget {
                                 style: AppTypography.bodyMd.copyWith(
                                   fontWeight: FontWeight.w700,
                                   fontFamily: 'Nunito',
-                                  color: AppColors.warmDark,
+                                  color: context.clay.text,
                                   fontSize: 14,
                                   height: 1.2,
                                 ),
@@ -776,7 +823,9 @@ class _HistoryCard extends StatelessWidget {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                topic.isNotEmpty ? topic : _modeLabel(mode),
+                                topic.isNotEmpty
+                                    ? topic
+                                    : _modeLabel(context, mode),
                                 style: AppTypography.caption.copyWith(
                                   color: modeStyle.color,
                                   fontSize: 11,
@@ -827,7 +876,7 @@ class _HistoryCard extends StatelessWidget {
                       Text(
                         preview,
                         style: AppTypography.bodySm.copyWith(
-                          color: AppColors.warmMuted,
+                          color: context.clay.textMuted,
                           fontSize: 12,
                           height: 1.35,
                           fontStyle: FontStyle.italic,
@@ -838,26 +887,42 @@ class _HistoryCard extends StatelessWidget {
                     ],
                     const SizedBox(height: 10),
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        _statusPill(isCompleted),
-                        const SizedBox(width: 6),
-                        if (difficulty.isNotEmpty)
-                          _softPill(difficulty, modeStyle.color),
-                        const Spacer(),
-                        _metaIcon(
-                            Icons.schedule_rounded, _formatRelative(createdAt)),
+                        // Pills group is wrapped in Expanded(Wrap) so that
+                        // longer locale strings (e.g. "Đã hoàn thành" /
+                        // "Tình huống") can break to a second line instead
+                        // of pushing the meta icons off-screen. Meta icons
+                        // on the right keep their natural width and stay
+                        // anchored.
+                        Expanded(
+                          child: Wrap(
+                            spacing: 6,
+                            runSpacing: 4,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              _modePill(
+                                  _modeLabel(context, mode), modeStyle.color),
+                              _statusPill(context, isCompleted),
+                              if (difficulty.isNotEmpty)
+                                _softPill(difficulty, modeStyle.color),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        _metaIcon(context, Icons.schedule_rounded,
+                            _formatRelative(context, createdAt)),
                         const SizedBox(width: 10),
-                        _metaIcon(Icons.timer_outlined,
+                        _metaIcon(context, Icons.timer_outlined,
                             duration > 0 ? '${duration}m' : '—'),
                         const SizedBox(width: 10),
-                        _metaIcon(Icons.forum_outlined, '$totalTurns'),
+                        _metaIcon(context, Icons.forum_outlined, '$totalTurns'),
                       ],
                     ),
-                  ],
-                ),
-              );
-            },
-          ),
+                ],
+              ),
+            );
+          },
         ),
       ),
     );
@@ -868,12 +933,12 @@ class _HistoryCard extends StatelessWidget {
       width: 36,
       height: 36,
       child: PopupMenuButton<String>(
-        tooltip: 'More',
+        tooltip: context.loc.conversationHistoryMoreMenuTooltip,
         padding: EdgeInsets.zero,
-        icon:
-            Icon(Icons.more_vert_rounded, size: 20, color: AppColors.warmMuted),
+        icon: Icon(Icons.more_vert_rounded,
+            size: 20, color: context.clay.textMuted),
         shape: RoundedRectangleBorder(borderRadius: AppRadius.mdBorder),
-        color: AppColors.clayWhite,
+        color: context.clay.surface,
         onSelected: (value) {
           switch (value) {
             case 'rename':
@@ -884,16 +949,16 @@ class _HistoryCard extends StatelessWidget {
               break;
           }
         },
-        itemBuilder: (context) => [
+        itemBuilder: (ctx) => [
           PopupMenuItem(
             value: 'rename',
             child: Row(
               children: [
-                Icon(Icons.edit_outlined, size: 18, color: AppColors.warmDark),
+                Icon(Icons.edit_outlined, size: 18, color: ctx.clay.text),
                 const SizedBox(width: 10),
-                Text('Rename',
+                Text(ctx.loc.conversationHistoryRenameAction,
                     style: AppTypography.bodySm
-                        .copyWith(color: AppColors.warmDark)),
+                        .copyWith(color: ctx.clay.text)),
               ],
             ),
           ),
@@ -904,7 +969,7 @@ class _HistoryCard extends StatelessWidget {
                 Icon(Icons.delete_outline_rounded,
                     size: 18, color: AppColors.error),
                 const SizedBox(width: 10),
-                Text('Delete',
+                Text(ctx.loc.conversationHistoryDeleteAction,
                     style:
                         AppTypography.bodySm.copyWith(color: AppColors.error)),
               ],
@@ -915,9 +980,12 @@ class _HistoryCard extends StatelessWidget {
     );
   }
 
-  Widget _statusPill(bool isCompleted) {
+  Widget _statusPill(BuildContext context, bool isCompleted) {
     final color = isCompleted ? AppColors.success : AppColors.gold;
-    final label = isCompleted ? 'Completed' : 'In Progress';
+    final loc = context.loc;
+    final label = isCompleted
+        ? loc.conversationHistoryStatusCompleted
+        : loc.conversationHistoryStatusInProgress;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
@@ -954,16 +1022,39 @@ class _HistoryCard extends StatelessWidget {
     );
   }
 
-  Widget _metaIcon(IconData icon, String value) {
+  /// Mode label pill — fully tinted with the mode's accent. Replaces the
+  /// previous left-edge colored bar so the mode signal lives in the data
+  /// row alongside Status / Difficulty rather than in chrome decoration.
+  Widget _modePill(String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.18),
+        borderRadius: AppRadius.fullBorder,
+        border: Border.all(color: color.withValues(alpha: 0.55), width: 1.2),
+      ),
+      child: Text(
+        label.toUpperCase(),
+        style: AppTypography.caption.copyWith(
+          color: color,
+          fontWeight: FontWeight.w800,
+          fontSize: 10,
+          letterSpacing: 0.6,
+        ),
+      ),
+    );
+  }
+
+  Widget _metaIcon(BuildContext context, IconData icon, String value) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 12, color: AppColors.warmLight),
+        Icon(icon, size: 12, color: context.clay.textFaint),
         const SizedBox(width: 3),
         Text(
           value,
           style: AppTypography.caption.copyWith(
-            color: AppColors.warmMuted,
+            color: context.clay.textMuted,
             fontSize: 11,
             fontWeight: FontWeight.w600,
           ),
@@ -972,29 +1063,34 @@ class _HistoryCard extends StatelessWidget {
     );
   }
 
-  String _modeLabel(String mode) {
+  String _modeLabel(BuildContext context, String mode) {
+    final loc = context.loc;
     switch (mode) {
       case 'roleplay':
-        return 'Scenario';
+        return loc.conversationHistoryFilterScenario;
       case 'story':
-        return 'Story';
+        return loc.conversationHistoryFilterStory;
       case 'tone':
-        return 'Translator';
+        return loc.conversationHistoryFilterTranslator;
       case 'vocab':
-        return 'Vocab';
+        return loc.conversationHistoryModeVocab;
       default:
-        return 'Session';
+        return loc.conversationHistoryModeSession;
     }
   }
 }
 
-class _UnderlineFilterTab extends StatelessWidget {
+/// Clay-pill filter chip — same visual language as `_FilterChip` in
+/// `my_library_screen.dart`. When selected, fills with the accent color
+/// at 22% alpha + 2px accent border + colored drop shadow. Resting state
+/// is the standard clayWhite surface with clayBorder.
+class _ClayFilterChip extends StatelessWidget {
   final String label;
   final Color accentColor;
   final bool isSelected;
   final VoidCallback onTap;
 
-  const _UnderlineFilterTab({
+  const _ClayFilterChip({
     required this.label,
     required this.accentColor,
     required this.isSelected,
@@ -1005,24 +1101,31 @@ class _UnderlineFilterTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return ClayPressable(
       onTap: onTap,
-      scaleDown: 0.97,
+      scaleDown: 0.95,
       builder: (context, isPressed) {
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          curve: Curves.easeOut,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
           decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(
-                color: isSelected ? accentColor : Colors.transparent,
-                width: 3,
-              ),
+            color: isSelected
+                ? accentColor.withValues(alpha: 0.22)
+                : context.clay.surface,
+            borderRadius: AppRadius.fullBorder,
+            border: Border.all(
+              color: isSelected ? accentColor : context.clay.border,
+              width: 2,
             ),
+            boxShadow: isSelected
+                ? AppShadows.colored(accentColor, alpha: 0.45)
+                : AppShadows.card(context),
           ),
           child: Text(
             label,
-            style: AppTypography.labelMd.copyWith(
-              color: isSelected ? accentColor : AppColors.warmMuted,
-              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-              fontSize: 13,
+            style: AppTypography.labelSm.copyWith(
+              color: context.clay.text,
+              fontSize: 12,
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
             ),
           ),
         );

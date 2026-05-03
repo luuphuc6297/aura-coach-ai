@@ -1,24 +1,591 @@
 {
   "@@locale": "vi",
-  "authSubtitle": "Huấn luyện viên tiếng Anh AI của bạn.\nHọc tự nhiên, nói tự tin.",
+
+  "authSubtitle": "Huấn luyện viên tiếng Anh AI cá nhân của bạn.\nHọc tự nhiên, nói tự tin.",
   "continueWithGoogle": "Tiếp tục với Google",
   "continueWithApple": "Tiếp tục với Apple",
   "tryAsGuest": "Dùng thử",
-  "termsNotice": "Khi tiếp tục, bạn đồng ý với\nĐiều khoản dịch vụ và Chính sách bảo mật",
+  "termsNotice": "Bằng việc tiếp tục, bạn đồng ý với\nĐiều khoản Dịch vụ và Chính sách Bảo mật",
+
   "onboardingNameTitle": "Bạn muốn được gọi là gì?",
   "onboardingNameSubtitle": "Chọn tên và avatar của bạn",
   "onboardingNameHint": "Nhập tên của bạn",
-  "onboardingBuddyLabel": "CHỌN BẠN ĐỒNG HÀNH",
+  "onboardingBuddyLabel": "CHỌN BUDDY",
   "onboardingLevelTitle": "Trình độ tiếng Anh của bạn?",
   "onboardingLevelSubtitle": "Chúng tôi sẽ cá nhân hóa bài học cho bạn",
   "onboardingGoalsTitle": "Mục tiêu của bạn là gì?",
-  "onboardingGoalsSubtitle": "Chọn tất cả phù hợp",
-  "onboardingTopicsTitle": "Chọn sở thích của bạn",
-  "onboardingTopicsSubtitle": "Chúng tôi sẽ điều chỉnh kịch bản theo sở thích của bạn",
-  "onboardingTimeTitle": "Thời gian luyện tập mỗi ngày?",
-  "onboardingTimeSubtitle": "Chúng tôi sẽ xây dựng kế hoạch phù hợp",
-  "addYourOwnTopic": "Thêm chủ đề của bạn...",
+  "onboardingGoalsSubtitle": "Chọn tất cả mục tiêu phù hợp",
+  "onboardingTopicsTitle": "Chọn chủ đề bạn quan tâm",
+  "onboardingTopicsSubtitle": "Chúng tôi sẽ điều chỉnh tình huống theo sở thích của bạn",
+  "onboardingTimeTitle": "Bạn dành bao nhiêu thời gian mỗi ngày?",
+  "onboardingTimeSubtitle": "Chúng tôi sẽ xây dựng kế hoạch phù hợp cho bạn",
+  "addYourOwnTopic": "Thêm chủ đề của riêng bạn...",
   "selectedTopicsCount": "Đã chọn: {count} chủ đề",
-  "dailyLimitReached": "Đã đạt giới hạn hàng ngày. Nâng cấp để có thêm phiên.",
-  "failedToStart": "Không thể bắt đầu: {error}"
+  "@selectedTopicsCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "dailyLimitReached": "Đã đạt giới hạn hôm nay. Nâng cấp để có thêm phiên luyện tập.",
+  "failedToStart": "Không khởi động được: {error}",
+  "@failedToStart": {
+    "placeholders": { "error": { "type": "String" } }
+  },
+
+  "commonSave": "Lưu",
+  "commonCancel": "Huỷ",
+  "commonDelete": "Xoá",
+  "commonContinue": "Tiếp tục",
+  "commonNext": "Tiếp",
+  "commonBack": "Quay lại",
+  "commonClose": "Đóng",
+  "commonRetry": "Thử lại",
+  "commonDone": "Xong",
+
+  "profileLevelLabel": "Trình độ",
+  "profileDailyGoalLabel": "Mục tiêu hằng ngày",
+  "profilePlanLabel": "Gói",
+  "profilePlanFree": "Miễn phí",
+  "profilePlanPremium": "Premium",
+  "profileGoalsTitle": "Mục tiêu",
+  "profileTopicsTitle": "Chủ đề",
+  "profileEditRowLabel": "Chỉnh sửa hồ sơ",
+  "profileEditRowSubtitle": "Tên, avatar, trình độ, mục tiêu hằng ngày",
+  "profileSettingsRowLabel": "Cài đặt",
+  "profileSettingsRowSubtitle": "Ngôn ngữ, thông báo, quyền riêng tư",
+  "profileUpgradeRowLabel": "Nâng cấp Premium",
+  "profileUpgradeRowSubtitle": "Luyện tập không giới hạn + minh hoạ AI",
+  "profileSignOutLabel": "Đăng xuất",
+  "profileSignOutEndSession": "Kết thúc phiên",
+  "profileSignOutSignedInAs": "Đang đăng nhập với {name}",
+  "@profileSignOutSignedInAs": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "profileSignOutTitle": "Đăng xuất?",
+  "profileSignOutBody": "Bạn có thể đăng nhập lại bất cứ lúc nào.",
+  "profileNotAvailable": "Không tải được hồ sơ",
+  "profileDailyMinutes": "{minutes} phút",
+  "@profileDailyMinutes": {
+    "placeholders": { "minutes": { "type": "int" } }
+  },
+  "profileLevelBeginner": "Mới bắt đầu",
+  "profileLevelIntermediate": "Trung cấp",
+  "profileLevelAdvanced": "Nâng cao",
+
+  "settingsTitle": "Cài đặt",
+  "settingsGroupPractice": "Luyện tập",
+  "settingsGroupApp": "Ứng dụng",
+  "settingsGroupPrivacy": "Quyền riêng tư",
+  "settingsRowDailyReminders": "Nhắc nhở hằng ngày",
+  "settingsRowReminderTime": "Giờ nhắc",
+  "settingsRowAutoPlayAudio": "Tự động phát âm thanh",
+  "settingsRowDisplayLanguage": "Ngôn ngữ hiển thị",
+  "settingsRowTheme": "Giao diện (Chế độ tối)",
+  "settingsRowDataPrivacy": "Dữ liệu & quyền riêng tư",
+  "settingsRowDeleteAccount": "Xoá tài khoản",
+  "settingsThemePickerTitle": "Giao diện",
+  "settingsThemeSystem": "Theo hệ thống",
+  "settingsThemeLight": "Sáng",
+  "settingsThemeDark": "Tối",
+  "settingsLanguagePickerTitle": "Ngôn ngữ hiển thị",
+  "settingsLanguageEnglish": "English",
+  "settingsLanguageVietnamese": "Tiếng Việt",
+  "settingsReminderTimeHelp": "Giờ nhắc nhở hằng ngày",
+  "settingsDeleteTitle": "Xoá tài khoản?",
+  "settingsDeleteBody": "Thao tác này sẽ xoá vĩnh viễn hồ sơ, hội thoại, từ đã lưu, mind map và thống kê của bạn. Không thể hoàn tác.",
+  "settingsDeleteSuccess": "Đã xoá tài khoản.",
+  "settingsDeleteRequiresLogin": "Vì lý do bảo mật, hãy đăng nhập lại trước khi xoá tài khoản.",
+  "settingsDeleteFailed": "Không thể xoá tài khoản. Vui lòng thử lại sau.",
+
+  "editProfileTitle": "Chỉnh sửa hồ sơ",
+  "editProfileSectionBuddy": "BUDDY CỦA BẠN",
+  "editProfileSectionName": "TÊN CỦA BẠN",
+  "editProfileSectionLevel": "TRÌNH ĐỘ TIẾNG ANH",
+  "editProfileSectionDailyGoal": "MỤC TIÊU HẰNG NGÀY",
+  "editProfileSaveButton": "Lưu thay đổi",
+  "editProfileNameRequired": "Tên không được bỏ trống.",
+  "editProfileSaveSuccess": "Đã cập nhật hồ sơ.",
+  "editProfileSaveFailed": "Không thể lưu thay đổi. Vui lòng thử lại.",
+  "editProfileDiscardTitle": "Bỏ thay đổi?",
+  "editProfileDiscardBody": "Bạn chưa lưu chỉnh sửa. Nếu rời đi, mọi thay đổi sẽ mất.",
+  "editProfileDiscardKeepEditing": "Tiếp tục chỉnh sửa",
+  "editProfileDiscardConfirm": "Bỏ thay đổi",
+
+  "homeGreeting": "Xin chào, {name}",
+  "@homeGreeting": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "homePickMode": "Chọn chế độ luyện tập",
+  "homeStorageFull": "Đã hết dung lượng. Hãy xoá hội thoại cũ hoặc nâng cấp để bắt đầu phiên mới.",
+  "homeStorageUpgradeAction": "Nâng cấp",
+  "homePaywallSnack": "Tính năng nâng cấp sắp ra mắt.",
+  "homeDailyLimitReachedSessions": "Đã đạt giới hạn hôm nay. Nâng cấp để có thêm phiên luyện tập.",
+  "homeDailyLimitReachedStories": "Đã đạt giới hạn hôm nay. Nâng cấp để có thêm câu chuyện.",
+
+  "modeScenarioTitle": "Scenario Coach",
+  "modeScenarioDescription": "Luyện tình huống thực tế qua roleplay AI. Nhận góp ý tức thì về ngữ pháp, từ vựng và sắc thái.",
+  "modeScenarioBadge": "PHỔ BIẾN NHẤT",
+  "modeScenarioCta": "Bắt đầu luyện tập",
+  "modeScenarioQuota": "5 phiên miễn phí / ngày",
+  "modeStoryTitle": "Story Mode",
+  "modeStoryBadge": "TƯƠNG TÁC",
+  "modeStoryCta": "Bắt đầu câu chuyện",
+  "modeStoryQuota": "3 câu chuyện miễn phí / ngày",
+  "modeToneTitle": "Tone Translator",
+  "modeToneDescription": "Làm chủ sắc thái. Xem cùng một câu sẽ trang trọng, thân thiện, suồng sã hay trung lập như thế nào.",
+  "modeToneBadge": "ĐỘC ĐÁO",
+  "modeToneCta": "Dịch ngay",
+  "modeToneQuota": "10 lần dịch miễn phí / ngày",
+  "modeGrammarTitle": "Grammar Coach",
+  "modeGrammarDescription": "Nắm chắc ngữ pháp tiếng Anh theo từng cấp độ. Chọn cấu trúc, luyện sâu, theo dõi mức nắm vững.",
+  "modeGrammarBadge": "CÓ HỆ THỐNG",
+  "modeGrammarCta": "Bắt đầu luyện",
+  "modeGrammarQuota": "Luyện không giới hạn",
+  "modeVocabTitle": "Vocab Hub",
+  "modeVocabDescription": "Khám phá sâu mọi từ vựng. Phân tích, mind map, ví dụ và thẻ ôn theo lịch lặp lại.",
+  "modeVocabBadge": "RÈN KỸ NĂNG",
+  "modeVocabCta": "Khám phá từ",
+  "modeVocabQuota": "Không giới hạn",
+
+  "navHome": "Trang chủ",
+  "navInsight": "Thống kê",
+  "navAiAgent": "AI Agent",
+  "navAlerts": "Thông báo",
+  "navProfile": "Hồ sơ",
+  "navUnreadCount": "{count, plural, other{{count} chưa đọc}}",
+  "@navUnreadCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "libraryTitle": "Thư viện học tập",
+  "librarySearchHint": "Tìm trong các mục đã lưu",
+  "libraryFilterAll": "Tất cả",
+  "libraryFilterVocabulary": "Từ vựng",
+  "libraryFilterGrammar": "Ngữ pháp",
+  "libraryFilterAllPos": "Tất cả từ loại",
+  "libraryFilterAllCategories": "Tất cả chủ đề",
+  "libraryItemsCount": "{count, plural, other{{count} mục}}",
+  "@libraryItemsCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "libraryDueCount": "{count, plural, other{{count} đến hạn}}",
+  "@libraryDueCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "libraryCategoriesCount": "{count, plural, other{{count} chủ đề}}",
+  "@libraryCategoriesCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "libraryEmptyTitle": "Chưa có mục nào được lưu",
+  "libraryEmptyBody": "Chạm vào bất kỳ từ nào trong hội thoại, câu chuyện hay bản dịch để lưu vào đây.",
+  "libraryShowMore": "Xem thêm",
+  "libraryShowLess": "Thu gọn",
+  "libraryLoadingExplanation": "Đang tải giải thích...",
+  "libraryGenerate": "Tạo",
+  "libraryGeneratePro": "Tạo (Pro)",
+  "libraryProUpsell": "Minh hoạ AI thuộc gói Pro. Hãy nâng cấp để mở khoá.",
+  "libraryReviewDueIn": "{days} ngày",
+  "@libraryReviewDueIn": {
+    "placeholders": { "days": { "type": "int" } }
+  },
+  "libraryReviewDueNow": "Đến hạn",
+  "libraryBadgeVocab": "TỪ VỰNG",
+  "libraryBadgeGrammar": "NGỮ PHÁP",
+
+  "aiAgentTitle": "AI Agent",
+  "aiAgentSubtitle": "Trung tâm trợ giúp + Hỏi AI",
+  "aiAgentCategoryGettingStarted": "Bắt đầu",
+  "aiAgentCategoryFeatures": "Tính năng",
+  "aiAgentCategoryAccount": "Tài khoản",
+  "aiAgentCategorySubscription": "Gói & Thanh toán",
+  "aiAgentCategoryTroubleshooting": "Khắc phục sự cố",
+  "aiAgentCategoryContact": "Liên hệ hỗ trợ",
+  "aiAgentAskAiCardTitle": "Hỏi AI",
+  "aiAgentAskAiCardSubtitle": "Nhận câu trả lời tức thì về cách dùng Aura",
+  "aiAgentAskAiCardCta": "Hỏi ngay",
+
+  "vocabHubTitle": "Vocab Hub",
+  "vocabHubSectionFreeTools": "Công cụ miễn phí",
+  "vocabHubSectionProTools": "Công cụ Pro",
+  "vocabHubCardWordAnalysis": "Phân tích từ",
+  "vocabHubCardDescribeWord": "Mô tả từ",
+  "vocabHubCardFlashcards": "Flashcards",
+  "vocabHubCardCompareWords": "So sánh từ",
+  "vocabHubCardLearningLibrary": "Thư viện học tập",
+  "vocabHubCardProgressDashboard": "Tiến độ",
+  "vocabHubCardMindMaps": "Mind Map",
+  "vocabWordAnalysisHint": "Nhập từ cần phân tích",
+  "vocabWordAnalyzeCta": "Phân tích",
+  "vocabWordSavedSnack": "Đã lưu \"{word}\" vào thư viện",
+  "@vocabWordSavedSnack": {
+    "placeholders": { "word": { "type": "String" } }
+  },
+  "vocabMindMapTitle": "Mind Map",
+  "vocabMindMapHint": "Nhập chủ đề, ví dụ: Du lịch",
+  "vocabMindMapGenerate": "Tạo",
+  "vocabMindMapMyMaps": "Mind map của tôi",
+  "vocabMindMapUndo": "Hoàn tác",
+  "vocabMindMapProTitle": "Mind Map là tính năng Pro",
+  "vocabMindMapMyMapsTitle": "Mind map của tôi",
+  "vocabMindMapDeleteSnack": "Đã xoá \"{topic}\"",
+  "@vocabMindMapDeleteSnack": {
+    "placeholders": { "topic": { "type": "String" } }
+  },
+  "vocabMindMapNodesCount": "{count, plural, other{{count} node}}",
+  "@vocabMindMapNodesCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "vocabMindMapDepth": "độ sâu {value}",
+  "@vocabMindMapDepth": {
+    "placeholders": { "value": { "type": "int" } }
+  },
+  "vocabMindMapFromLibrary": "từ thư viện",
+  "vocabMindMapNodeRemovedSnack": "Đã gỡ \"{label}\" khỏi thư viện",
+  "@vocabMindMapNodeRemovedSnack": {
+    "placeholders": { "label": { "type": "String" } }
+  },
+  "vocabMindMapNodeAddedSnack": "Đã thêm \"{word}\" vào node này",
+  "@vocabMindMapNodeAddedSnack": {
+    "placeholders": { "word": { "type": "String" } }
+  },
+  "vocabMindMapNodeDeletedSnack": "Đã xoá \"{label}\"",
+  "@vocabMindMapNodeDeletedSnack": {
+    "placeholders": { "label": { "type": "String" } }
+  },
+  "vocabMindMapExpandViaAi": "Mở rộng bằng AI",
+  "vocabMindMapAddWord": "+ Thêm từ",
+  "vocabMindMapSaveToLibrary": "Lưu vào thư viện",
+  "vocabMindMapAddWordHint": "ví dụ: thẻ lên máy bay",
+  "vocabMindMapMindMapCta": "Mind Map 🧠",
+
+  "vocabFlashcardsTitle": "Flashcards",
+  "vocabFlashcardsPracticeCta": "Luyện 10 thẻ",
+  "vocabFlashcardsStudyMoreCta": "Học thêm 10 thẻ",
+  "vocabFlashcardsAddedSnack": "Đã thêm {count} thẻ {topic} vào thư viện",
+  "@vocabFlashcardsAddedSnack": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "topic": { "type": "String" }
+    }
+  },
+  "vocabFlashcardsAlreadyHaveSnack": "Tất cả thẻ {topic} đã có trong thư viện",
+  "@vocabFlashcardsAlreadyHaveSnack": {
+    "placeholders": { "topic": { "type": "String" } }
+  },
+  "vocabFlashcardsRatingHard": "Khó",
+  "vocabFlashcardsRatingGood": "Bình thường",
+  "vocabFlashcardsRatingEasy": "Dễ",
+
+  "vocabCompareTitle": "So sánh từ",
+  "vocabCompareTryAPair": "Thử một cặp",
+  "vocabCompareWordA": "TỪ A",
+  "vocabCompareWordB": "TỪ B",
+  "vocabCompareKeyDifference": "Khác biệt chính",
+  "vocabCompareWhenToUse": "Dùng \"{word}\" khi",
+  "@vocabCompareWhenToUse": {
+    "placeholders": { "word": { "type": "String" } }
+  },
+  "vocabCompareSectionDefinition": "Định nghĩa",
+  "vocabCompareSectionExample": "Ví dụ",
+  "vocabCompareSectionCollocations": "Cụm thường đi kèm",
+
+  "vocabDescribeTitle": "Mô tả từ",
+  "vocabDescribeHint": "VD: cảm giác buồn nhẹ khi nhớ chuyện cũ",
+
+  "vocabAnalysisExamples": "Ví dụ",
+  "vocabAnalysisExamplePositive": "Tích cực",
+  "vocabAnalysisExampleNeutral": "Trung tính",
+  "vocabAnalysisExampleNegative": "Tiêu cực",
+  "vocabAnalysisCollocations": "Cụm thường đi kèm",
+  "vocabAnalysisWordFamily": "Họ từ",
+  "vocabAnalysisSynonyms": "Từ đồng nghĩa",
+  "vocabAnalysisAntonyms": "Từ trái nghĩa",
+
+  "vocabProgressTitle": "Tiến độ",
+  "vocabProgressSaved": "Đã lưu",
+  "vocabProgressDueToday": "Hôm nay đến hạn",
+  "vocabProgressMastered": "Thành thạo",
+  "vocabProgressByPos": "Theo từ loại",
+  "vocabProgressKeepGoing": "Tiếp tục cố gắng",
+  "vocabProgressLegendMastered": "Thành thạo · {count}",
+  "@vocabProgressLegendMastered": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "vocabProgressLegendLearning": "Đang học · {count}",
+  "@vocabProgressLegendLearning": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "vocabProgressLegendNew": "Mới · {count}",
+  "@vocabProgressLegendNew": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "vocabProgressEmptyTitle": "Chưa có từ nào được lưu",
+  "vocabProgressEmptyAnalyze": "Phân tích một từ",
+
+  "vocabLearningLibraryTitle": "Thư viện học tập",
+  "vocabHubCardWordAnalysisDesc": "Phát âm, 3 ví dụ, từ đồng nghĩa & trái nghĩa",
+  "vocabHubCardDescribeWordDesc": "Mô tả bằng tiếng Việt → nhận từ tiếng Anh",
+  "vocabHubCardFlashcardsDesc": "Lịch lặp lại SM-2 — ôn đúng thời điểm vàng",
+  "vocabHubCardCompareWordsDesc": "So sánh sắc thái cạnh nhau: \"affect\" vs \"effect\"",
+  "vocabHubCardLearningLibraryDesc": "Mọi từ đã lưu từ mọi chế độ tại một nơi",
+  "vocabHubCardProgressDashboardDesc": "Theo dõi tổng số, từ đến hạn & thành thạo trong nháy mắt",
+  "vocabHubCardMindMapsDesc": "Bản đồ trực quan — đồng nghĩa, trái nghĩa & liên quan",
+
+  "notificationsTitle": "Thông báo",
+  "notificationsSectionNew": "Mới",
+  "notificationsSectionEarlier": "Trước đó",
+  "notificationsRemovedSnack": "Đã xoá \"{title}\"",
+  "@notificationsRemovedSnack": {
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "notificationsEmptyTitle": "Bạn đã xem hết",
+  "notificationsEmptyBody": "Lời nhắc, gợi ý chuỗi và nhắc ôn tập sẽ xuất hiện ở đây.",
+  "notificationsMarkAllRead": "Đánh dấu đã đọc tất cả",
+
+  "helpTitle": "Trợ giúp & hỗ trợ",
+  "helpSectionQuickGuides": "Hướng dẫn nhanh",
+  "helpSectionFaq": "Câu hỏi thường gặp",
+  "helpSectionContact": "Liên hệ",
+  "helpAskAuraTitle": "Hỏi Aura",
+  "helpAskAuraSubtitle": "Hỏi bất kỳ điều gì về cách dùng app — Aura sẽ trả lời ngay bằng tiếng Việt.",
+  "helpAskAuraStartChat": "Bắt đầu chat",
+  "helpContactEmailLabel": "Email",
+  "helpContactHotlineLabel": "Hotline",
+  "helpContactCopyEmailToast": "Đã sao chép email",
+  "helpContactCopyHotlineToast": "Đã sao chép hotline",
+  "helpFeedbackButton": "Gửi phản hồi",
+  "helpFeedbackTitle": "Gửi phản hồi cho chúng tôi",
+  "helpFeedbackBody": "Lỗi, ý tưởng, hay chỉ là suy nghĩ — viết bên dưới. Chúng tôi đọc tất cả.",
+  "helpFeedbackHint": "Bạn đang nghĩ gì?",
+  "helpFeedbackSendButton": "Gửi",
+  "helpFeedbackThanksToast": "Cảm ơn bạn! Chúng tôi sẽ xem phản hồi sớm nhất có thể.",
+
+  "insightsTitle": "Thống kê",
+  "insightsTabLibrary": "Thư viện",
+  "insightsTabStats": "Số liệu",
+
+  "conversationHistoryTitle": "Lịch sử hội thoại",
+  "conversationHistoryFilterAll": "Tất cả",
+  "conversationHistoryFilterScenario": "Tình huống",
+  "conversationHistoryFilterStory": "Truyện",
+  "conversationHistoryFilterTranslator": "Dịch",
+  "conversationHistoryRenameTitle": "Đổi tên hội thoại",
+  "conversationHistoryRenameHint": "Tên hội thoại",
+  "conversationHistoryRenameFailed": "Đổi tên thất bại. Vui lòng thử lại.",
+  "conversationHistoryDeleteTitle": "Xoá hội thoại?",
+  "conversationHistoryDeleteBody": "Hội thoại này sẽ bị xoá vĩnh viễn khỏi lịch sử của bạn.",
+  "conversationHistoryDeleteFailed": "Xoá thất bại. Vui lòng thử lại.",
+  "conversationHistoryEmptyTitle": "Chưa có lịch sử hội thoại",
+  "conversationHistoryEmptyBody": "Bắt đầu một tình huống nhập vai để xem lịch sử ở đây",
+  "conversationHistoryStatusCompleted": "Đã hoàn thành",
+  "conversationHistoryStatusInProgress": "Đang thực hiện",
+  "conversationHistoryDateLabel": "Ngày",
+  "conversationHistoryDurationLabel": "Thời lượng",
+  "conversationHistoryTurnsLabel": "Lượt",
+  "conversationHistoryScoreBreakdownTitle": "Chi tiết điểm",
+  "conversationHistoryScoreOverall": "Tổng",
+  "conversationHistoryScoreGrammar": "Ngữ pháp",
+  "conversationHistoryScoreVocabulary": "Từ vựng",
+  "conversationHistoryScoreFluency": "Lưu loát",
+  "conversationHistoryReplayComingSoon": "Phát lại sẽ ra mắt sớm",
+  "conversationHistoryYesterday": "Hôm qua",
+  "conversationHistoryUnknownTopic": "Không rõ",
+  "conversationHistoryFallbackTitle": "Nhập vai",
+  "conversationHistoryMoreMenuTooltip": "Thêm",
+  "conversationHistoryRenameAction": "Đổi tên",
+  "conversationHistoryDeleteAction": "Xoá",
+  "conversationHistoryModeVocab": "Từ vựng",
+  "conversationHistoryModeSession": "Phiên",
+  "conversationHistoryRelativeJustNow": "vừa xong",
+  "conversationHistoryRelativeMinutesAgo": "{minutes} phút trước",
+  "@conversationHistoryRelativeMinutesAgo": {
+    "placeholders": { "minutes": { "type": "int" } }
+  },
+  "conversationHistoryRelativeHoursAgo": "{hours} giờ trước",
+  "@conversationHistoryRelativeHoursAgo": {
+    "placeholders": { "hours": { "type": "int" } }
+  },
+  "conversationHistoryRelativeDaysAgo": "{days} ngày trước",
+  "@conversationHistoryRelativeDaysAgo": {
+    "placeholders": { "days": { "type": "int" } }
+  },
+
+  "storageQuotaCapTitle": "Bộ nhớ đầy — xoá bớt hoặc nâng cấp để bắt đầu mới",
+  "storageQuotaWarningTitle": "Bộ nhớ gần đầy",
+  "storageQuotaUsage": "Đã dùng {used}/{cap} hội thoại.",
+  "@storageQuotaUsage": {
+    "placeholders": {
+      "used": { "type": "int" },
+      "cap": { "type": "int" }
+    }
+  },
+  "storageQuotaManage": "Quản lý",
+  "storageQuotaUpgrade": "Nâng cấp",
+  "storageQuotaModeScenario": "Tình huống",
+  "storageQuotaModeStory": "Truyện",
+
+  "scenarioAppBarMeta": "{emoji} {category} · {level} · Tình huống #{index}",
+  "@scenarioAppBarMeta": {
+    "placeholders": {
+      "emoji": { "type": "String" },
+      "category": { "type": "String" },
+      "level": { "type": "String" },
+      "index": { "type": "int" }
+    }
+  },
+  "scenarioLoadingPreparing": "Đang chuẩn bị tình huống...",
+  "scenarioErrorNoScenarioLoaded": "Chưa có tình huống nào được tải",
+  "scenarioErrorBackToHome": "Về Trang chủ",
+  "scenarioEndSessionTitle": "Kết thúc phiên này?",
+  "scenarioEndSessionBody": "Chúng tôi sẽ chấm điểm hội thoại và lưu vào lịch sử của bạn.",
+  "scenarioEndSessionConfirm": "Kết thúc",
+  "scenarioEndSessionKeepGoing": "Tiếp tục",
+
+  "endSessionDefaultTitle": "Kết thúc phiên này?",
+  "endSessionContinueLabel": "Tiếp tục",
+  "endSessionEndReviewLabel": "Kết thúc & xem lại",
+  "endSessionStatTurns": "Lượt",
+  "endSessionStatAvgScore": "Điểm TB",
+  "endSessionStatDuration": "Thời lượng",
+  "endSessionBestLine": "Câu hay nhất: \"{preview}\"",
+  "@endSessionBestLine": {
+    "placeholders": { "preview": { "type": "String" } }
+  },
+  "endSessionScenarioQuotaRemaining": "Còn {remaining}/{limit} phiên hôm nay",
+  "@endSessionScenarioQuotaRemaining": {
+    "placeholders": {
+      "remaining": { "type": "int" },
+      "limit": { "type": "int" }
+    }
+  },
+  "endSessionStoryQuotaRemaining": "Còn {remaining}/{limit} truyện hôm nay",
+  "@endSessionStoryQuotaRemaining": {
+    "placeholders": {
+      "remaining": { "type": "int" },
+      "limit": { "type": "int" }
+    }
+  },
+
+  "storyEndSessionTitle": "Kết thúc truyện này?",
+  "chatSavedSnack": "Đã lưu: {item}",
+  "@chatSavedSnack": {
+    "placeholders": { "item": { "type": "String" } }
+  },
+
+  "grammarHubTitle": "Grammar Coach",
+  "grammarHubMasteredCounter": "Đã thuộc {mastered}/{total}",
+  "@grammarHubMasteredCounter": {
+    "placeholders": {
+      "mastered": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "grammarHubHeroTitle": "Làm chủ ngữ pháp theo trình độ",
+  "grammarHubHeroTagline": "Chọn cấu trúc · luyện tập · theo dõi tiến độ",
+  "grammarHubSearchHint": "Tìm chủ đề",
+  "grammarHubFilterAll": "Tất cả",
+  "grammarHubCategoryAll": "Tất cả",
+  "grammarHubCategoryTense": "Thì",
+  "grammarHubCategoryModal": "Modal",
+  "grammarHubCategoryConditional": "Câu điều kiện",
+  "grammarHubCategoryPassive": "Bị động",
+  "grammarHubCategoryReported": "Tường thuật",
+  "grammarHubCategoryClause": "Mệnh đề",
+  "grammarHubCategoryComparison": "So sánh",
+  "grammarHubCategoryLinkingInversion": "Liên từ & Đảo ngữ",
+  "grammarHubCategoryArticleQuantifier": "Mạo từ & Lượng từ",
+  "grammarHubCategoryOther": "Khác",
+  "grammarHubMasteryNotStarted": "Chưa bắt đầu",
+  "grammarHubMasteryLearning": "Đang học",
+  "grammarHubMasteryMastered": "Đã thuộc",
+  "grammarHubTopicMetaNew": "Chạm để xem công thức",
+  "grammarHubTopicMetaProgress": "{attempts} lượt · độ chính xác {accuracy}%",
+  "@grammarHubTopicMetaProgress": {
+    "placeholders": {
+      "attempts": { "type": "int" },
+      "accuracy": { "type": "int" }
+    }
+  },
+  "grammarHubEmptyTitle": "Không có chủ đề nào khớp bộ lọc",
+  "grammarHubEmptyBody": "Thử bỏ bộ lọc trình độ hoặc danh mục.",
+
+  "grammarTopicNotFoundTitle": "Không tìm thấy chủ đề",
+  "grammarTopicNotFoundBody": "Chủ đề ngữ pháp bạn tìm không còn trong danh sách.",
+  "grammarTopicSummaryTitle": "Tóm tắt",
+  "grammarTopicWhenToUseTitle": "Khi nào dùng",
+  "grammarTopicExamplesTitle": "Ví dụ",
+  "grammarTopicMistakesTitle": "Lỗi thường gặp",
+  "grammarTopicRelatedTitle": "Chủ đề liên quan",
+  "grammarTopicListenA11y": "Phát âm thanh ví dụ",
+  "grammarTopicNoContentBody": "Nội dung chi tiết sẽ sớm có mặt.",
+  "grammarStartPracticeCta": "Bắt đầu luyện tập",
+
+  "grammarPracticePickerTitle": "Chọn cách luyện tập",
+  "grammarPracticePickerSubtitle": "Mỗi cách tập trung một kỹ năng khác nhau. Có thể đổi giữa các phiên.",
+  "grammarPracticeModeTranslate": "Dịch câu",
+  "grammarPracticeModeTranslateSub": "Dịch câu EN ↔ VI dùng cấu trúc này.",
+  "grammarPracticeModeFillBlank": "Điền vào chỗ trống",
+  "grammarPracticeModeFillBlankSub": "Chọn hoặc nhập dạng đúng để hoàn thành câu.",
+  "grammarPracticeModeTransform": "Chuyển đổi câu",
+  "grammarPracticeModeTransformSub": "Viết lại câu tiếng Anh đúng thì dựa trên gợi ý tiếng Việt.",
+
+  "grammarPracticeAttemptsLabel": "Lượt",
+  "grammarPracticeAccuracyLabel": "Chính xác",
+  "grammarPracticeStreakLabel": "Chuỗi",
+  "grammarPracticeModeTagTranslateEnVi": "DỊCH · EN → VI",
+  "grammarPracticeModeTagTranslateViEn": "DỊCH · VI → EN",
+  "grammarPracticeModeTagFillBlank": "ĐIỀN VÀO CHỖ TRỐNG",
+  "grammarPracticeModeTagTransform": "CHUYỂN ĐỔI CÂU",
+  "grammarPracticeHintLabel": "Gợi ý",
+  "grammarPracticeInputHintTranslate": "Nhập bản dịch của bạn…",
+  "grammarPracticeInputHintFillBlank": "Nhập từ còn thiếu…",
+  "grammarPracticeInputHintTransform": "Viết lại câu dùng cấu trúc mục tiêu…",
+  "grammarPracticeCheck": "Kiểm tra",
+  "grammarPracticeNext": "Tiếp theo →",
+  "grammarPracticeEndSession": "Kết thúc phiên",
+  "grammarPracticeEndConfirmTitle": "Kết thúc phiên này?",
+  "grammarPracticeEndConfirmBody": "Các lượt làm bài sẽ được lưu và bạn sẽ thấy bản tổng kết.",
+  "grammarPracticeEndKeepGoing": "Tiếp tục",
+  "grammarPracticeEndConfirm": "Kết thúc",
+  "grammarPracticeResultCorrect": "Chính xác!",
+  "grammarPracticeResultIncorrect": "Chưa đúng",
+  "grammarPracticeResultYourAnswer": "Câu của bạn",
+  "grammarPracticeResultAccepted": "Đáp án được chấp nhận",
+  "grammarPracticeResultCorrectAnswer": "Đáp án đúng",
+  "grammarPracticeSaveToLibrary": "⭐ Lưu vào Thư viện",
+  "grammarPracticeSavedSnack": "Đã lưu vào Thư viện",
+  "grammarPracticeGenerating": "Đang tạo bài tập tiếp theo…",
+  "grammarPracticeError": "Không tạo được bài tập",
+  "grammarPracticeRetry": "Thử bài khác",
+  "grammarSummaryTitle": "Tổng kết phiên",
+  "grammarSummaryHeadlineMastered": "Tuyệt vời! Bạn đã nắm chắc vòng này.",
+  "grammarSummaryHeadlineProgress": "Tiến bộ tốt — luyện tiếp nào.",
+  "grammarSummaryHeadlineRough": "Vòng này khá khó. Xem lại và thử lại nhé.",
+  "grammarSummaryHeadlineEmpty": "Phiên kết thúc mà chưa có bài nào.",
+  "grammarSummaryStatAttempts": "Số bài",
+  "grammarSummaryStatAccuracy": "Độ chính xác",
+  "grammarSummaryStatDuration": "Thời gian",
+  "grammarSummaryStatMastery": "Mức nắm vững",
+  "grammarSummaryMasteryDelta": "{sign}{value}%",
+  "@grammarSummaryMasteryDelta": {
+    "placeholders": { "sign": {"type": "String"}, "value": {"type": "String"} }
+  },
+  "grammarSummaryDurationMinutes": "{minutes} phút {seconds} giây",
+  "@grammarSummaryDurationMinutes": {
+    "placeholders": { "minutes": {"type": "int"}, "seconds": {"type": "int"} }
+  },
+  "grammarSummaryDurationSeconds": "{seconds} giây",
+  "@grammarSummaryDurationSeconds": {
+    "placeholders": { "seconds": {"type": "int"} }
+  },
+  "grammarSummaryMistakesTitle": "Cần xem lại",
+  "grammarSummaryMistakesEmpty": "Không có lỗi nào trong vòng này — quá đỉnh.",
+  "grammarSummaryMistakeYou": "Bạn",
+  "grammarSummaryMistakeCorrect": "Đúng",
+  "grammarSummarySaveAllMistakes": "Lưu lỗi vào Thư viện",
+  "grammarSummarySaveAllSnack": "Đã lưu {count} lỗi vào Thư viện",
+  "@grammarSummarySaveAllSnack": {
+    "placeholders": { "count": {"type": "int"} }
+  },
+  "grammarSummaryPracticeAgain": "Luyện tiếp",
+  "grammarSummaryBackToTopic": "Về chủ đề",
+  "grammarSummaryBackToHub": "Tất cả chủ đề"
 }

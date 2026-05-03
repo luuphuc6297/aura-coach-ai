@@ -165,4 +165,37 @@ class AuthProvider extends ChangeNotifier {
     _hasCompletedOnboarding = false;
     notifyListeners();
   }
+
+  /// Permanently deletes the Firebase Auth account. Returns null on success
+  /// or a short error code the UI can branch on:
+  ///
+  /// - `'requires-recent-login'` — the user signed in too long ago for a
+  ///   destructive action; UI should sign them out and prompt re-login.
+  /// - `'unknown'` — generic failure (caller may show the message verbatim).
+  ///
+  /// Caller is responsible for wiping Firestore content first (we do not
+  /// touch user-scoped collections here — that's the data layer's job).
+  Future<String?> deleteAccount() async {
+    final user = _auth.currentUser;
+    if (user == null) return null;
+    try {
+      await user.delete();
+      try {
+        await _googleSignIn.signOut();
+      } catch (_) {}
+      await _localDatasource.clearAll();
+      _hasCompletedOnboarding = false;
+      notifyListeners();
+      return null;
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'requires-recent-login') return 'requires-recent-login';
+      _errorMessage = e.message;
+      notifyListeners();
+      return 'unknown';
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      return 'unknown';
+    }
+  }
 }

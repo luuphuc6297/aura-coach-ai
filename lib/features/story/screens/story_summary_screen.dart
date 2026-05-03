@@ -5,6 +5,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/theme/clay_palette.dart';
 import '../../../shared/widgets/celebration_overlay.dart';
 import '../../../shared/widgets/clay_pressable.dart';
 import '../../scenario/models/assessment.dart';
@@ -58,7 +59,7 @@ class _StorySummaryScreenState extends State<StorySummaryScreen> {
     final session = context.watch<StoryProvider>().activeSession;
 
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: context.clay.background,
       body: Stack(
         children: [
           SafeArea(
@@ -183,10 +184,10 @@ class _ScoreHeader extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.clayWhite,
+        color: context.clay.surface,
         borderRadius: AppRadius.lgBorder,
-        border: Border.all(color: AppColors.clayBorder, width: 2),
-        boxShadow: AppShadows.lifted,
+        border: Border.all(color: context.clay.border, width: 2),
+        boxShadow: AppShadows.lifted(context),
       ),
       child: Column(
         children: [
@@ -197,7 +198,7 @@ class _ScoreHeader extends StatelessWidget {
           Text(
             title.isEmpty ? topic.toUpperCase() : title,
             textAlign: TextAlign.center,
-            style: AppTypography.caption.copyWith(color: AppColors.warmMuted),
+            style: AppTypography.caption.copyWith(color: context.clay.textMuted),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
@@ -251,10 +252,10 @@ class _StatCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
-          color: AppColors.clayWhite,
+          color: context.clay.surface,
           borderRadius: AppRadius.mdBorder,
-          border: Border.all(color: AppColors.clayBorder, width: 1.5),
-          boxShadow: AppShadows.soft,
+          border: Border.all(color: context.clay.border, width: 1.5),
+          boxShadow: AppShadows.soft(context),
         ),
         child: Column(
           children: [
@@ -264,7 +265,7 @@ class _StatCard extends StatelessWidget {
             Text(
               label,
               style: AppTypography.caption.copyWith(
-                color: AppColors.warmMuted,
+                color: context.clay.textMuted,
                 fontSize: 11,
               ),
               maxLines: 1,
@@ -287,10 +288,10 @@ class _RadarCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.clayWhite,
+        color: context.clay.surface,
         borderRadius: AppRadius.lgBorder,
-        border: Border.all(color: AppColors.clayBorder, width: 2),
-        boxShadow: AppShadows.soft,
+        border: Border.all(color: context.clay.border, width: 2),
+        boxShadow: AppShadows.soft(context),
       ),
       child: Column(
         children: [
@@ -333,10 +334,10 @@ class _TopMomentsCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.clayWhite,
+        color: context.clay.surface,
         borderRadius: AppRadius.lgBorder,
-        border: Border.all(color: AppColors.clayBorder, width: 2),
-        boxShadow: AppShadows.soft,
+        border: Border.all(color: context.clay.border, width: 2),
+        boxShadow: AppShadows.soft(context),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -375,9 +376,9 @@ class _MomentRow extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: AppColors.cream,
+          color: context.clay.background,
           borderRadius: AppRadius.mdBorder,
-          border: Border.all(color: AppColors.clayBorder, width: 1.2),
+          border: Border.all(color: context.clay.border, width: 1.2),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -438,19 +439,19 @@ class _Actions extends StatelessWidget {
         Expanded(
           child: ClayPressable(
             onTap: () => context.go('/home'),
-            builder: (_, __) {
+            builder: (ctx, __) {
               return Container(
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 decoration: BoxDecoration(
-                  color: AppColors.clayWhite,
+                  color: ctx.clay.surface,
                   borderRadius: AppRadius.mdBorder,
-                  border: Border.all(color: AppColors.clayBorder, width: 2),
+                  border: Border.all(color: ctx.clay.border, width: 2),
                 ),
                 child: Text(
                   'Back to Home',
                   textAlign: TextAlign.center,
                   style: AppTypography.labelMd.copyWith(
-                    color: AppColors.warmDark,
+                    color: ctx.clay.text,
                     fontWeight: FontWeight.w700,
                   ),
                 ),

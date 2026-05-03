@@ -15,10 +15,16 @@ class GeminiConfig {
   }
 
   /// Build a Flash model with the given temperature + responseSchema.
+  ///
+  /// Defaults to a JSON response for structured endpoints. Pass
+  /// [responseMimeType] = `'text/plain'` (and omit [responseSchema]) for
+  /// free-form chat surfaces like the AI Agent help bot.
   static GenerativeModel flash({
     required double temperature,
     Schema? responseSchema,
     int maxOutputTokens = ApiConstants.maxTokensFlash,
+    String responseMimeType = 'application/json',
+    String? systemInstruction,
   }) {
     return GenerativeModel(
       model: ApiConstants.modelFlash,
@@ -28,9 +34,12 @@ class GeminiConfig {
         topP: ApiConstants.topP,
         topK: ApiConstants.topK,
         maxOutputTokens: maxOutputTokens,
-        responseMimeType: 'application/json',
+        responseMimeType: responseMimeType,
         responseSchema: responseSchema,
       ),
+      systemInstruction: systemInstruction == null
+          ? null
+          : Content.system(systemInstruction),
     );
   }
 

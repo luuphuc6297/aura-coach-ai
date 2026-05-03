@@ -3,6 +3,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/theme/clay_palette.dart';
 import '../../../shared/widgets/clay_card.dart';
 
 /// Four horizontal progress bars — one per skill axis. Input values are 0..100.
@@ -82,7 +83,7 @@ class _SkillRow extends StatelessWidget {
             Text(
               label,
               style: AppTypography.labelLg.copyWith(
-                color: AppColors.warmDark,
+                color: context.clay.text,
                 fontWeight: FontWeight.w700,
                 fontSize: 14,
               ),
@@ -106,7 +107,7 @@ class _SkillRow extends StatelessWidget {
                 Container(
                   height: 8,
                   decoration: BoxDecoration(
-                    color: AppColors.clayBeige,
+                    color: context.clay.surfaceAlt,
                     borderRadius: AppRadius.fullBorder,
                   ),
                 ),

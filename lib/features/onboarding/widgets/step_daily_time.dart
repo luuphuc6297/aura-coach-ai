@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/onboarding_provider.dart';
 import '../../../core/constants/onboarding_constants.dart';
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/clay_palette.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../l10n/app_loc_context.dart';
 import '../../../shared/widgets/clay_card.dart';
 import '../../../shared/widgets/app_icon.dart';
 import '../../../shared/widgets/selection_check_circle.dart';
@@ -35,7 +36,7 @@ class StepDailyTime extends StatelessWidget {
           const SizedBox(height: AppSpacing.xl),
           Center(
             child: Text(
-              'How much time daily?',
+              context.loc.onboardingTimeTitle,
               style: AppTypography.displayMd,
               textAlign: TextAlign.center,
             ),
@@ -43,8 +44,8 @@ class StepDailyTime extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           Center(
             child: Text(
-              "We'll build the right plan for you",
-              style: AppTypography.bodyMd.copyWith(color: AppColors.warmMuted),
+              context.loc.onboardingTimeSubtitle,
+              style: AppTypography.bodyMd.copyWith(color: context.clay.textMuted),
               textAlign: TextAlign.center,
             ),
           ),
@@ -88,7 +89,7 @@ class StepDailyTime extends StatelessWidget {
                           Text(
                             option.description,
                             style: AppTypography.bodySm
-                                .copyWith(color: AppColors.warmMuted),
+                                .copyWith(color: context.clay.textMuted),
                           ),
                         ],
                       ),
