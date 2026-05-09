@@ -2,7 +2,34 @@
 // ignore_for_file: type=lint
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
-    show defaultTargetPlatform, kIsWeb, TargetPlatform;
+    show defaultTargetPlatform, kDebugMode, kIsWeb, TargetPlatform, debugPrint;
+
+// ⚠️  P0 PRODUCTION ISSUE — iOS / macOS Firebase project mismatch ⚠️
+// =====================================================================
+// web + android  →  project "aura-coach-ai"          (canonical)
+// ios + macos    →  project "emerald-green-1754237937" (legacy, MUST migrate)
+//
+// Effect: iOS users sign in to a different Firebase backend. Their
+// conversations, library, and sessions DO NOT sync with Android/web
+// users on the same email. Auth tokens issued on iOS will fail when
+// the backend is later unified.
+//
+// Fix: docs/setup/api-key-restrictions.md §2 "iOS / macOS Firebase
+// project unification". Requires Firebase Console access:
+//
+//   1. Add iOS app to `aura-coach-ai` project in Firebase Console.
+//   2. Download new GoogleService-Info.plist → replace
+//      ios/Runner/GoogleService-Info.plist.
+//   3. Run `flutterfire configure --project=aura-coach-ai` to regen
+//      this file with the correct iOS section.
+//   4. Update CFBundleURLSchemes in ios/Runner/Info.plist with the new
+//      REVERSED_CLIENT_ID.
+//
+// Until that happens, the runtime check below logs a loud warning on
+// debug builds so we don't accidentally ship the mismatch.
+// =====================================================================
+
+const String _canonicalFirebaseProjectId = 'aura-coach-ai';
 
 /// Default [FirebaseOptions] for use with your Firebase apps.
 ///
@@ -16,6 +43,23 @@ import 'package:flutter/foundation.dart'
 /// ```
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
+    final options = _resolve();
+    // Loud warning during development if a platform's Firebase project
+    // diverges from the canonical one. Release builds skip this check
+    // for performance.
+    if (kDebugMode && options.projectId != _canonicalFirebaseProjectId) {
+      debugPrint(
+        '⚠️  [FIREBASE PROJECT MISMATCH] '
+        'Platform ${defaultTargetPlatform.name} is using project '
+        '"${options.projectId}" but the canonical project is '
+        '"$_canonicalFirebaseProjectId". '
+        'See docs/setup/api-key-restrictions.md §2.',
+      );
+    }
+    return options;
+  }
+
+  static FirebaseOptions _resolve() {
     if (kIsWeb) {
       return web;
     }

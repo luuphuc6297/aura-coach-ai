@@ -1316,6 +1316,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get grammarPracticeResultCorrectAnswer => 'Correct answer';
 
   @override
+  String get grammarPracticeResultFullSentence => 'Full sentence';
+
+  @override
+  String get grammarPracticeResultExtraExample => 'Same pattern';
+
+  @override
   String get grammarPracticeSaveToLibrary => '⭐ Save to Library';
 
   @override

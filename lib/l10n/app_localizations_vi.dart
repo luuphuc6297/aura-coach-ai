@@ -1330,6 +1330,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get grammarPracticeResultCorrectAnswer => 'Đáp án đúng';
 
   @override
+  String get grammarPracticeResultFullSentence => 'Câu hoàn chỉnh';
+
+  @override
+  String get grammarPracticeResultExtraExample => 'Ví dụ cùng mẫu';
+
+  @override
   String get grammarPracticeSaveToLibrary => '⭐ Lưu vào Thư viện';
 
   @override

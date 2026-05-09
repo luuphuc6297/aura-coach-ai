@@ -77,5 +77,22 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<!-- ─── Privacy / permission usage descriptions ──────────────────────
+	     App Store reviewers reject builds that touch any of these APIs
+	     without a clear, user-facing reason. Keep copy short and explain
+	     the user benefit; vague text ("for app functionality") is also
+	     a common rejection cause. -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Aura Coach uses the microphone so you can practice speaking exercises and hear your own pronunciation played back.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Aura Coach transcribes your spoken answers to give pronunciation feedback during practice sessions.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Aura Coach uses the camera only when you pick a profile photo from your device.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Aura Coach reads images from your library only when you choose a profile photo.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Aura Coach saves AI-generated illustrations and progress reports to your photo library when you tap Save.</string>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>This lets us measure subscription performance to keep Aura Coach affordable. We never share your learning data with advertisers.</string>
 </dict>
 </plist>

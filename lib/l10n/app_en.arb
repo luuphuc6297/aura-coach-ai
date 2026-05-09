@@ -550,6 +550,8 @@
   "grammarPracticeResultYourAnswer": "Your answer",
   "grammarPracticeResultAccepted": "Accepted",
   "grammarPracticeResultCorrectAnswer": "Correct answer",
+  "grammarPracticeResultFullSentence": "Full sentence",
+  "grammarPracticeResultExtraExample": "Same pattern",
   "grammarPracticeSaveToLibrary": "⭐ Save to Library",
   "grammarPracticeSavedSnack": "Saved to Library",
   "grammarPracticeGenerating": "Building your next exercise…",

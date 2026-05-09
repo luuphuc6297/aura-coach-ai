@@ -148,30 +148,10 @@ class _GrammarHubScreenState extends State<GrammarHubScreen> {
             Expanded(child: _EmptyState())
           else
             Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.lg,
-                  AppSpacing.sm,
-                  AppSpacing.lg,
-                  AppSpacing.xxl,
-                ),
-                itemCount: topics.length + 1,
-                separatorBuilder: (_, __) =>
-                    const SizedBox(height: AppSpacing.smd),
-                itemBuilder: (context, index) {
-                  if (index == 0) {
-                    return const Padding(
-                      padding: EdgeInsets.only(bottom: AppSpacing.smd),
-                      child: _GrammarHeroBanner(),
-                    );
-                  }
-                  final topic = topics[index - 1];
-                  return _GrammarTopicCard(
-                    topic: topic,
-                    progress: grammar.progressFor(topic.id),
-                    onTap: () => context.push('/grammar/${topic.id}'),
-                  );
-                },
+              child: _TopicsList(
+                topics: topics,
+                grammar: grammar,
+                groupByLevel: grammar.filterLevel == null,
               ),
             ),
         ],
@@ -179,6 +159,237 @@ class _GrammarHubScreenState extends State<GrammarHubScreen> {
     );
   }
 
+}
+
+// ── topics list (flat or level-grouped) ─────────────────────────────────
+
+/// Renders the topic list with two layout modes:
+///
+/// 1. **Grouped** ([groupByLevel] = true): inserts a [_LevelSectionHeader]
+///    above each contiguous run of topics that share a level. Used when the
+///    user has the "All" level filter active so they can scan A1 → C2
+///    structure at a glance instead of staring at a 55-item flat list.
+/// 2. **Flat** ([groupByLevel] = false): no headers — used when the user
+///    has filtered to a specific level so headers would be redundant.
+class _TopicsList extends StatelessWidget {
+  final List<GrammarTopic> topics;
+  final GrammarProvider grammar;
+  final bool groupByLevel;
+
+  const _TopicsList({
+    required this.topics,
+    required this.grammar,
+    required this.groupByLevel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final rows = _buildRows(context);
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.sm,
+        AppSpacing.lg,
+        AppSpacing.xxl,
+      ),
+      itemCount: rows.length,
+      itemBuilder: (context, index) => rows[index],
+    );
+  }
+
+  List<Widget> _buildRows(BuildContext context) {
+    final rows = <Widget>[
+      const Padding(
+        padding: EdgeInsets.only(bottom: AppSpacing.smd),
+        child: _GrammarHeroBanner(),
+      ),
+    ];
+
+    if (!groupByLevel) {
+      // Flat layout: one card per topic, uniform spacing.
+      for (var i = 0; i < topics.length; i++) {
+        if (i > 0) rows.add(const SizedBox(height: AppSpacing.smd));
+        rows.add(_topicCard(context, topics[i]));
+      }
+      return rows;
+    }
+
+    // Grouped layout: split into per-level buckets, render each bucket
+    // with a sticky-style header. Iterate CefrLevel.values order so
+    // sections always appear A1 → C2 even if the catalog is shuffled.
+    for (final level in CefrLevel.values) {
+      final inLevel = topics.where((t) => t.level == level).toList();
+      if (inLevel.isEmpty) continue;
+
+      final mastered = inLevel
+          .where(
+            (t) =>
+                grammar.progressFor(t.id).masteryLabel ==
+                GrammarMasteryLabel.mastered,
+          )
+          .length;
+
+      // Top margin between sections (skipped before the first).
+      if (rows.length > 1) {
+        rows.add(const SizedBox(height: AppSpacing.lg));
+      }
+      rows.add(_LevelSectionHeader(
+        level: level,
+        topicCount: inLevel.length,
+        masteredCount: mastered,
+      ));
+      rows.add(const SizedBox(height: AppSpacing.smd));
+
+      for (var i = 0; i < inLevel.length; i++) {
+        if (i > 0) rows.add(const SizedBox(height: AppSpacing.smd));
+        rows.add(_topicCard(context, inLevel[i]));
+      }
+    }
+
+    return rows;
+  }
+
+  Widget _topicCard(BuildContext context, GrammarTopic topic) =>
+      _GrammarTopicCard(
+        topic: topic,
+        progress: grammar.progressFor(topic.id),
+        onTap: () => context.push('/grammar/${topic.id}'),
+      );
+}
+
+class _LevelSectionHeader extends StatelessWidget {
+  final CefrLevel level;
+  final int topicCount;
+  final int masteredCount;
+
+  const _LevelSectionHeader({
+    required this.level,
+    required this.topicCount,
+    required this.masteredCount,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.smd,
+        AppSpacing.smd,
+        AppSpacing.smd,
+        AppSpacing.smd,
+      ),
+      decoration: BoxDecoration(
+        color: context.clay.surfaceAlt,
+        borderRadius: AppRadius.mdBorder,
+        border: Border(
+          left: BorderSide(color: AppColors.goldDeep, width: 4),
+        ),
+      ),
+      child: Row(
+        children: [
+          // Level chip
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppColors.gold.withValues(alpha: 0.22),
+              borderRadius: AppRadius.fullBorder,
+              border: Border.all(color: AppColors.goldDeep, width: 1.5),
+            ),
+            child: Text(
+              level.label,
+              style: AppTypography.labelSm.copyWith(
+                color: AppColors.goldDark,
+                fontWeight: FontWeight.w800,
+                fontSize: 12,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  _levelTitle(level),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.title.copyWith(
+                    color: context.clay.text,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  _levelSubtitle(level),
+                  style: AppTypography.caption.copyWith(
+                    color: context.clay.textMuted,
+                    fontSize: 11,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          // Per-level mastered counter, right-aligned.
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: context.clay.surface,
+              borderRadius: AppRadius.fullBorder,
+              border: Border.all(color: context.clay.border, width: 1),
+            ),
+            child: Text(
+              '$masteredCount/$topicCount',
+              style: AppTypography.caption.copyWith(
+                color: masteredCount == topicCount && topicCount > 0
+                    ? AppColors.success
+                    : context.clay.textMuted,
+                fontWeight: FontWeight.w800,
+                fontSize: 11,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _levelTitle(CefrLevel level) {
+    switch (level) {
+      case CefrLevel.a1:
+        return 'A1 — Beginner';
+      case CefrLevel.a2:
+        return 'A2 — Elementary';
+      case CefrLevel.b1:
+        return 'B1 — Intermediate';
+      case CefrLevel.b2:
+        return 'B2 — Upper Intermediate';
+      case CefrLevel.c1:
+        return 'C1 — Advanced';
+      case CefrLevel.c2:
+        return 'C2 — Proficient';
+    }
+  }
+
+  String _levelSubtitle(CefrLevel level) {
+    switch (level) {
+      case CefrLevel.a1:
+        return 'Basic structures · present, articles, pronouns';
+      case CefrLevel.a2:
+        return 'Everyday situations · past, future, modals';
+      case CefrLevel.b1:
+        return 'Complex sentences · perfect tenses, conditionals';
+      case CefrLevel.b2:
+        return 'Nuanced expression · passive, reported speech';
+      case CefrLevel.c1:
+        return 'Fluent academic + professional · inversion, cleft';
+      case CefrLevel.c2:
+        return 'Near-native · subjunctive, advanced discourse';
+    }
+  }
 }
 
 // ── hero banner ─────────────────────────────────────────────────────────

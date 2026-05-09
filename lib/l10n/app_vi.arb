@@ -550,6 +550,8 @@
   "grammarPracticeResultYourAnswer": "Câu của bạn",
   "grammarPracticeResultAccepted": "Đáp án được chấp nhận",
   "grammarPracticeResultCorrectAnswer": "Đáp án đúng",
+  "grammarPracticeResultFullSentence": "Câu hoàn chỉnh",
+  "grammarPracticeResultExtraExample": "Ví dụ cùng mẫu",
   "grammarPracticeSaveToLibrary": "⭐ Lưu vào Thư viện",
   "grammarPracticeSavedSnack": "Đã lưu vào Thư viện",
   "grammarPracticeGenerating": "Đang tạo bài tập tiếp theo…",

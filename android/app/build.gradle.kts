@@ -22,6 +22,10 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        // flutter_local_notifications v17+ uses java.time APIs that
+        // aren't available on Android < 26. Desugaring back-ports them
+        // so the app runs on minSdk 24 phones without crashes.
+        isCoreLibraryDesugaringEnabled = true
     }
 
     kotlinOptions {
@@ -30,7 +34,9 @@ android {
 
     defaultConfig {
         applicationId = "com.auracoach.aura_coach_ai"
-        minSdk = flutter.minSdkVersion
+        // RevenueCat (purchases_flutter v10) requires minSdk 24+.
+        // Flutter's default is 21, so we floor at 24.
+        minSdk = maxOf(flutter.minSdkVersion, 24)
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -54,12 +60,26 @@ android {
             } else {
                 signingConfigs.getByName("debug")
             }
-            isMinifyEnabled = false
-            isShrinkResources = false
+            // Code shrinking + obfuscation for release builds. R8 reduces
+            // APK size ~30-40% and strips reflection-only code paths.
+            // Resource shrinking removes unused drawables / strings.
+            // Both are off in debug to keep iteration fast.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 }
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // Required by isCoreLibraryDesugaringEnabled = true above.
+    // Pin to a version compatible with AGP 8.x — bump when AGP upgrades.
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }

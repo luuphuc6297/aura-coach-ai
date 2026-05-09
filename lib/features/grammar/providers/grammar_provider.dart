@@ -419,41 +419,43 @@ class GrammarProvider extends ChangeNotifier {
 
   // ── helpers ────────────────────────────────────────────────────────
 
-  /// Multiple-choice + exact-match cases short-circuit AI evaluation.
-  /// Free-text falls through to [GrammarGeminiService.evaluateAnswer].
+  /// Always defers to the AI evaluator so the result card can show
+  /// consistent feedback + full sentence + same-pattern example for
+  /// every answer — including correct ones. The previous client-side
+  /// fast-paths (exact match / multiple-choice) saved a Gemini call
+  /// but produced bare result cards with no learning content, which
+  /// felt empty to learners. Cost trade-off accepted: ~1 extra call
+  /// per exercise in exchange for richer post-answer explanation.
+  ///
+  /// On AI failure we still fall back to a deterministic stub so the
+  /// session doesn't get stuck — the result card just shows the
+  /// canonical answer without extras.
   Future<GrammarEvaluation> _resolveEvaluation(
     GrammarExercise exercise,
     String userAnswer,
     GrammarTopic topic,
   ) async {
-    if (exercise.isMultipleChoice) {
-      final picked = userAnswer;
-      if (_normalize(picked) == _normalize(exercise.correctAnswer)) {
+    try {
+      return await _gemini.evaluateAnswer(
+        exercise: exercise,
+        userAnswer: userAnswer,
+        topic: topic,
+      );
+    } catch (e) {
+      // AI evaluation failed — synthesize a minimal evaluation so the
+      // session keeps moving. The user still sees correct/incorrect
+      // and the canonical answer; just no extras.
+      final norm = _normalize(userAnswer);
+      final isExact = _normalize(exercise.correctAnswer) == norm ||
+          exercise.alternateCorrectAnswers
+              .any((alt) => _normalize(alt) == norm);
+      if (isExact) {
         return GrammarEvaluation.exact(matchedAnswer: exercise.correctAnswer);
       }
       return GrammarEvaluation.wrongMultipleChoice(
         correctAnswer: exercise.correctAnswer,
       );
     }
-
-    // Exact-match short-circuit on canonical or alternate answers.
-    final norm = _normalize(userAnswer);
-    if (_normalize(exercise.correctAnswer) == norm) {
-      return GrammarEvaluation.exact(matchedAnswer: exercise.correctAnswer);
-    }
-    for (final alt in exercise.alternateCorrectAnswers) {
-      if (_normalize(alt) == norm) {
-        return GrammarEvaluation.exact(matchedAnswer: alt);
-      }
-    }
-
-    // Fall through to AI for nuanced grading (translate, transform,
-    // longer fill-blank).
-    return _gemini.evaluateAnswer(
-      exercise: exercise,
-      userAnswer: userAnswer,
-      topic: topic,
-    );
   }
 
   /// EWMA-style mastery update + counter bumps. Phase G will replace

@@ -2451,6 +2451,18 @@ abstract class AppLocalizations {
   /// **'Correct answer'**
   String get grammarPracticeResultCorrectAnswer;
 
+  /// No description provided for @grammarPracticeResultFullSentence.
+  ///
+  /// In en, this message translates to:
+  /// **'Full sentence'**
+  String get grammarPracticeResultFullSentence;
+
+  /// No description provided for @grammarPracticeResultExtraExample.
+  ///
+  /// In en, this message translates to:
+  /// **'Same pattern'**
+  String get grammarPracticeResultExtraExample;
+
   /// No description provided for @grammarPracticeSaveToLibrary.
   ///
   /// In en, this message translates to:

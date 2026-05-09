@@ -121,6 +121,10 @@ class GrammarGeminiServiceImpl implements GrammarGeminiService {
       matchedAnswer: (json['matchedAnswer'] as String?)?.trim(),
       feedback: (json['feedback'] as String? ?? '').trim(),
       correctedAnswer: (json['correctedAnswer'] as String?)?.trim(),
+      correctedSentence: (json['correctedSentence'] as String?)?.trim(),
+      correctedSentenceVi: (json['correctedSentenceVi'] as String?)?.trim(),
+      extraExampleEn: (json['extraExampleEn'] as String?)?.trim(),
+      extraExampleVi: (json['extraExampleVi'] as String?)?.trim(),
       errorType: GrammarErrorTypeId.fromId(json['errorType'] as String?),
     );
   }
@@ -252,6 +256,22 @@ Set "isCorrect" = true ONLY when score ≥ 0.85.
 "feedback" — one-to-two SHORT Vietnamese sentences explaining what's right or wrong. No mention of scores. Avoid praise inflation.
 "correctedAnswer" — show the polished form when the learner is wrong; null when correct.
 "matchedAnswer" — when correct, copy the canonical or alternate string they matched; null otherwise.
+"correctedSentence" — the FULL correct English sentence the learner should have produced. Crucially:
+   • Fill-blank: the prompt with the blank replaced by the canonical answer (NO "_____" remaining).
+   • Translate VI→EN: the target English sentence.
+   • Translate EN→VI: the original English prompt unchanged.
+   • Transform: the rewritten English sentence.
+   Always non-null. No ellipses or trailing commentary.
+
+"correctedSentenceVi" — the Vietnamese MEANING of the prompt sentence. This is a natural Vietnamese rendering of what the FULL English sentence (i.e. correctedSentence) actually says. NOT a grammar explanation, NOT a hint, NOT feedback — just the plain meaning translation. One sentence. Idiomatic Vietnamese, not a word-for-word transliteration.
+   • Translate EN→VI: same as the user's expected answer (the canonical Vietnamese rendering).
+   • Translate VI→EN: copy the original Vietnamese prompt here.
+   • Fill-blank / Transform: translate the full English sentence above.
+   Always non-null.
+
+"extraExampleEn" — ONE additional original English sentence using the SAME grammar pattern as the exercise (≤ 14 words). Different vocabulary and context so the learner can generalise. Always non-null.
+
+"extraExampleVi" — natural Vietnamese MEANING of "extraExampleEn" (one sentence, idiomatic). Always non-null.
 
 Output JSON only.
 ''';
@@ -312,6 +332,22 @@ Output JSON only.
         nullable: true,
         description: 'Polished form when learner was wrong.',
       ),
+      'correctedSentence': Schema.string(
+        description:
+            'Full English sentence the learner should produce; substitute '
+            'the blank for fill-blank, full target for translate/transform.',
+      ),
+      'correctedSentenceVi': Schema.string(
+        description: 'Vietnamese translation of correctedSentence.',
+      ),
+      'extraExampleEn': Schema.string(
+        description:
+            'One extra English sentence using the same grammar pattern, '
+            'different vocabulary, ≤ 14 words.',
+      ),
+      'extraExampleVi': Schema.string(
+        description: 'Vietnamese translation of extraExampleEn.',
+      ),
       'errorType': Schema.enumString(enumValues: const [
         'tense',
         'spelling',
@@ -326,6 +362,10 @@ Output JSON only.
       'score',
       'feedback',
       'errorType',
+      'correctedSentence',
+      'correctedSentenceVi',
+      'extraExampleEn',
+      'extraExampleVi',
     ],
   );
 

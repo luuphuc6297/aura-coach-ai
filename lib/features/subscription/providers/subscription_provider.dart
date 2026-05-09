@@ -180,13 +180,19 @@ class SubscriptionProvider extends ChangeNotifier {
   /// the Pro entitlement, false otherwise. User-cancellation is treated
   /// as a non-error and returns false silently (UI just dismisses the
   /// purchase sheet).
+  ///
+  /// Note: `purchasePackage` returns a [PurchaseResult] wrapper since
+  /// `purchases_flutter` v10 — the actual [CustomerInfo] hangs off
+  /// `result.customerInfo`. Older versions returned CustomerInfo
+  /// directly; do not regress to the old shape.
   Future<bool> purchasePackage(Package package) async {
     try {
       _lastError = null;
-      final info = await Purchases.purchasePackage(package);
-      _customerInfo = info;
+      final result = await Purchases.purchasePackage(package);
+      _customerInfo = result.customerInfo;
       notifyListeners();
-      return info.entitlements.active.containsKey(proEntitlementId);
+      return result.customerInfo.entitlements.active
+          .containsKey(proEntitlementId);
     } on PlatformException catch (e) {
       final code = PurchasesErrorHelper.getErrorCode(e);
       if (code == PurchasesErrorCode.purchaseCancelledError) {

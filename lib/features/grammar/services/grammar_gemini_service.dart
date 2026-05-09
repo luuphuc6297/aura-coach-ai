@@ -29,6 +29,23 @@ class GrammarEvaluation {
 
   final GrammarErrorType errorType;
 
+  /// Full corrected English sentence. For fill-blank this is the prompt
+  /// with the blank replaced by the canonical answer; for translate /
+  /// transform it's the full target sentence the user should have
+  /// produced. Always present when the AI evaluates; may be null on
+  /// client-side exact-match shortcuts.
+  final String? correctedSentence;
+
+  /// Vietnamese translation of [correctedSentence]. Helps Vietnamese
+  /// learners confirm meaning, not just form.
+  final String? correctedSentenceVi;
+
+  /// One additional example sentence using the same grammar pattern,
+  /// to help the user generalize beyond the single drill exercise.
+  /// Bilingual pair so the result card can show EN + VI side by side.
+  final String? extraExampleEn;
+  final String? extraExampleVi;
+
   const GrammarEvaluation({
     required this.isCorrect,
     required this.score,
@@ -36,6 +53,10 @@ class GrammarEvaluation {
     required this.errorType,
     this.matchedAnswer,
     this.correctedAnswer,
+    this.correctedSentence,
+    this.correctedSentenceVi,
+    this.extraExampleEn,
+    this.extraExampleVi,
   });
 
   /// Helpful constructor for client-side exact-match evaluations.

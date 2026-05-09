@@ -46,6 +46,10 @@ app.*.map.json
 
 # Environment variables
 .env
+.env.local
+.env.*.local
+# Keep .env.example tracked so new contributors know which keys to set.
+!.env.example
 
 # Signing and secrets (CI/CD)
 android/key.properties
@@ -56,3 +60,18 @@ android/app/upload-keystore.jks
 *.mobileprovision
 ios/ExportOptions.plist
 ios/AuthKey_*.p8
+
+# Firebase project secrets — DO commit these per Flutter convention
+# (Apple/Google APIs treat them as public client identifiers, but enforce
+# bundle/SHA-1 + App Check restrictions on the Cloud Console). They are
+# included intentionally; restrictions are documented in
+# docs/setup/api-key-restrictions.md.
+# - ios/Runner/GoogleService-Info.plist
+# - android/app/google-services.json
+# - lib/firebase_options.dart
+
+# RevenueCat
+# - lib/features/subscription/providers/subscription_provider.dart contains
+#   the public SDK key; RevenueCat treats these as public. Do NOT hardcode
+#   the secret API key (server-only) here — it lives in Firebase Functions
+#   secret manager.

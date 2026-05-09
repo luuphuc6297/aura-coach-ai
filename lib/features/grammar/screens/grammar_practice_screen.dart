@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
+import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/clay_palette.dart';
@@ -289,6 +290,8 @@ class _PracticeHeader extends StatelessWidget {
                     const SizedBox(height: 1),
                     Text(
                       _modeSubtitle(context, session),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: AppTypography.caption.copyWith(
                         color: context.clay.textMuted,
                         fontSize: 11,
@@ -408,6 +411,8 @@ class _StatTile extends StatelessWidget {
           children: [
             Text(
               value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: AppTypography.title.copyWith(
                 color: valueColor ?? context.clay.text,
                 fontSize: 16,
@@ -417,6 +422,9 @@ class _StatTile extends StatelessWidget {
             const SizedBox(height: 3),
             Text(
               label.toUpperCase(),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
               style: AppTypography.caption.copyWith(
                 color: context.clay.textMuted,
                 fontWeight: FontWeight.w800,
@@ -802,13 +810,17 @@ class _ResultCard extends StatelessWidget {
     final isCorrect = evaluation.isCorrect;
     final accent = isCorrect ? AppColors.success : AppColors.error;
 
+    // Subtle styling: neutral surface background, thin colored border,
+    // colored icon + title only. Loud full-tinted backgrounds were
+    // visually overwhelming once the card grew to include feedback +
+    // full sentence + extra example sections.
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: accent.withValues(alpha: 0.12),
+        color: context.clay.surface,
         borderRadius: AppRadius.lgBorder,
-        border: Border.all(color: accent, width: 2),
-        boxShadow: [BoxShadow(color: accent, offset: const Offset(2, 2))],
+        border: Border.all(color: accent, width: 1.5),
+        boxShadow: AppShadows.card(context),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -883,27 +895,121 @@ class _ResultCard extends StatelessWidget {
               ),
             ),
           ],
+          // ── Full corrected sentence (EN + VI) ─────────────────────────
+          if (evaluation.correctedSentence != null &&
+              evaluation.correctedSentence!.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.smd),
+            _BilingualBlock(
+              label: context.loc.grammarPracticeResultFullSentence,
+              en: evaluation.correctedSentence!,
+              vi: evaluation.correctedSentenceVi,
+              accent: AppColors.success,
+            ),
+          ],
+          // ── Same-pattern example (EN + VI) ────────────────────────────
+          if (evaluation.extraExampleEn != null &&
+              evaluation.extraExampleEn!.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.sm),
+            _BilingualBlock(
+              label: context.loc.grammarPracticeResultExtraExample,
+              en: evaluation.extraExampleEn!,
+              vi: evaluation.extraExampleVi,
+              accent: AppColors.goldDeep,
+            ),
+          ],
           const SizedBox(height: AppSpacing.smd),
-          Row(
-            children: [
-              if (!isCorrect)
-                Expanded(
-                  child: ClayButton(
-                    text: loc.grammarPracticeSaveToLibrary,
-                    variant: ClayButtonVariant.secondary,
-                    onTap: onSave,
-                  ),
-                ),
-              if (!isCorrect) const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: ClayButton(
-                  text: loc.grammarPracticeNext,
-                  variant: ClayButtonVariant.accentGold,
-                  onTap: onNext,
-                ),
-              ),
-            ],
+          // Stacked buttons (vertical) instead of Row to:
+          //  (a) eliminate the 9.7px Row overflow we hit when both
+          //      Save + Next were Expanded with long Vietnamese labels;
+          //  (b) give bigger tap targets — the result card is now busy.
+          if (!isCorrect) ...[
+            ClayButton(
+              text: loc.grammarPracticeSaveToLibrary,
+              variant: ClayButtonVariant.secondary,
+              onTap: onSave,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+          ],
+          ClayButton(
+            text: loc.grammarPracticeNext,
+            variant: ClayButtonVariant.accentGold,
+            onTap: onNext,
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Reusable bilingual EN + VI block used in the result card for the
+/// full corrected sentence and the extra-example sections. The accent
+/// drives the left border so each section is visually distinguishable
+/// (success-green for the corrected sentence, gold for the example).
+class _BilingualBlock extends StatelessWidget {
+  final String label;
+  final String en;
+  final String? vi;
+  final Color accent;
+
+  const _BilingualBlock({
+    required this.label,
+    required this.en,
+    required this.vi,
+    required this.accent,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.smd,
+        vertical: AppSpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: context.clay.surface,
+        borderRadius: const BorderRadius.only(
+          topRight: Radius.circular(8),
+          bottomRight: Radius.circular(8),
+        ),
+        border: Border(
+          left: BorderSide(color: accent, width: 3),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label.toUpperCase(),
+            style: AppTypography.caption.copyWith(
+              color: accent,
+              fontWeight: FontWeight.w800,
+              fontSize: 9,
+              letterSpacing: 0.6,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            en,
+            style: AppTypography.bodySm.copyWith(
+              color: context.clay.text,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              height: 1.4,
+            ),
+          ),
+          if (vi != null && vi!.isNotEmpty) ...[
+            const SizedBox(height: 3),
+            Text(
+              vi!,
+              style: AppTypography.caption.copyWith(
+                color: context.clay.textMuted,
+                fontSize: 12,
+                fontStyle: FontStyle.italic,
+                height: 1.4,
+              ),
+            ),
+          ],
         ],
       ),
     );
