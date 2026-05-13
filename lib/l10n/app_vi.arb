@@ -589,5 +589,78 @@
   },
   "grammarSummaryPracticeAgain": "Luyện tiếp",
   "grammarSummaryBackToTopic": "Về chủ đề",
-  "grammarSummaryBackToHub": "Tất cả chủ đề"
+  "grammarSummaryBackToHub": "Tất cả chủ đề",
+  "assessmentGrammarBreakdownHeader": "PHÂN TÍCH NGỮ PHÁP",
+  "assessmentGrammarBreakdownYourSentence": "CÂU CỦA BẠN",
+  "assessmentGrammarBreakdownYourSentenceCorrect": "CÂU CỦA BẠN — Đúng",
+  "assessmentGrammarBreakdownCorrectSentence": "CÂU CHUẨN",
+  "assessmentGrammarBreakdownComponents": "THÀNH PHẦN CÂU",
+  "assessmentGrammarBreakdownAuxiliaries": "TRỢ TỪ",
+  "assessmentGrammarBreakdownPatternPrefix": "Cấu trúc",
+  "sessionPanelTitle": "PHIÊN LUYỆN",
+  "sessionPanelCount": "{count} tình huống",
+  "@sessionPanelCount": {
+    "placeholders": { "count": {"type": "int"} }
+  },
+  "sessionPanelAvg": "TB ⭐ {avg}",
+  "@sessionPanelAvg": {
+    "placeholders": { "avg": {"type": "String"} }
+  },
+  "sessionPanelFilterAll": "Tất cả",
+  "sessionPanelFilterExcellent": "⭐ 9+",
+  "sessionPanelFilterGood": "⭐ 7-8",
+  "sessionPanelFilterNeedsWork": "⭐ <7",
+  "sessionPanelEmptyTitle": "Chưa có tình huống nào",
+  "sessionPanelEmptyBody": "Hoàn thành một tình huống để hiện ở đây.",
+  "sessionPanelFilterEmpty": "Không có tình huống nào khớp bộ lọc.",
+  "sessionPanelActiveLabel": "Đang làm",
+  "sessionPanelTimeNow": "vừa xong",
+  "sessionPanelTimeMinutes": "{minutes} phút trước",
+  "@sessionPanelTimeMinutes": {
+    "placeholders": { "minutes": {"type": "int"} }
+  },
+  "sessionPanelTimeHours": "{hours} giờ trước",
+  "@sessionPanelTimeHours": {
+    "placeholders": { "hours": {"type": "int"} }
+  },
+  "sessionPanelTimeYesterday": "hôm qua",
+  "sessionPanelTimeOlder": "{days} ngày trước",
+  "@sessionPanelTimeOlder": {
+    "placeholders": { "days": {"type": "int"} }
+  },
+  "sessionPanelEndSessionCta": "Kết thúc phiên",
+  "sessionPanelEndConfirmTitle": "Kết thúc phiên luyện?",
+  "sessionPanelEndConfirmBody": "Bạn sẽ quay về màn chính. Có thể bắt đầu phiên mới bất cứ lúc nào.",
+  "sessionPanelEndConfirmAction": "Kết thúc",
+  "sessionPanelEndConfirmCancel": "Tiếp tục luyện",
+  "replayTitle": "Xem lại #{order}",
+  "@replayTitle": {
+    "placeholders": { "order": {"type": "int"} }
+  },
+  "replayBannerText": "Chế độ xem lại — chỉ đọc",
+  "replayLoading": "Đang tải bản xem lại…",
+  "replayLoadErrorTitle": "Không thể tải tình huống",
+  "replayLoadErrorBody": "Cuộc trò chuyện có thể đã bị xóa hoặc mất kết nối. Thử lại từ bảng phiên luyện.",
+  "replayLoadErrorBack": "Quay về phiên",
+  "replayBranchSectionTitle": "TIẾP TỤC TỪ TÌNH HUỐNG NÀY",
+  "replayBranchSectionSubtitle": "Chọn độ khó để bắt đầu tình huống mới trong phiên hiện tại. Tình huống đang xem lại không bị thay đổi.",
+  "replayBranchEasier": "Dễ hơn",
+  "replayBranchSame": "Cùng độ khó",
+  "replayBranchHarder": "Khó hơn",
+  "scenarioEmptyNoSessionTitle": "Bắt đầu phiên luyện",
+  "scenarioEmptyNoSessionBody": "Dịch tình huống, nhận phản hồi từ AI, và xem lại mọi câu trả lời. Phiên luyện gom các tình huống lại để bạn có thể tiếp tục từ bất kỳ tình huống nào.",
+  "scenarioEmptyNoSessionCta": "Bắt đầu phiên",
+  "scenarioEmptyHasSessionTitle": "Đang trong phiên luyện",
+  "scenarioEmptyHasSessionBody": "Bạn đã hoàn thành {count} tình huống trong phiên này. Tiếp tục với tình huống mới hoặc kết thúc phiên.",
+  "@scenarioEmptyHasSessionBody": {
+    "placeholders": { "count": {"type": "int"} }
+  },
+  "scenarioEmptyHasSessionContinueCta": "Tiếp tục luyện",
+  "scenarioEmptyHasSessionEndCta": "Kết thúc phiên",
+  "scenarioEmptyBackToHomeCta": "Về trang chính",
+  "assessmentDifficultyTitle": "ĐỘ KHÓ TÌNH HUỐNG TIẾP",
+  "assessmentDifficultyEasier": "Dễ hơn",
+  "assessmentDifficultySame": "Cùng độ khó",
+  "assessmentDifficultyHarder": "Khó hơn",
+  "assessmentDifficultyLoading": "Đang tạo…"
 }

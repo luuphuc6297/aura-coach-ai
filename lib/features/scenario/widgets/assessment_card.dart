@@ -6,6 +6,7 @@ import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/clay_palette.dart';
 import '../../../core/constants/cloudinary_assets.dart';
+import '../../../l10n/app_loc_context.dart';
 import '../../../shared/widgets/cloud_image.dart';
 import '../../../shared/widgets/app_icon.dart';
 import '../models/assessment.dart';
@@ -16,9 +17,14 @@ import 'radar_score.dart';
 
 class AssessmentCard extends StatefulWidget {
   final AssessmentResult assessment;
-  final VoidCallback? onEasier;
-  final VoidCallback? onSameDifficulty;
-  final VoidCallback? onHarder;
+
+  /// Difficulty-shift callbacks. Returning a [Future] lets the card show a
+  /// per-button loading spinner + lock the other two while the new scenario
+  /// is being generated. Null hides the button row entirely (used by replay
+  /// mode where the Branch panel below the chat handles the action instead).
+  final Future<void> Function()? onEasier;
+  final Future<void> Function()? onSameDifficulty;
+  final Future<void> Function()? onHarder;
   final ValueChanged<String>? onListen;
   final void Function(Improvement improvement)? onSaveImprovement;
   final void Function(KeyVocabulary vocab)? onSaveVocabulary;
@@ -40,9 +46,15 @@ class AssessmentCard extends StatefulWidget {
   State<AssessmentCard> createState() => _AssessmentCardState();
 }
 
+/// Identifies which difficulty-shift button is currently in-flight.
+/// `null` = no button active; any value disables the other two buttons
+/// and replaces the active one's content with a spinner.
+enum _DifficultyAction { easier, same, harder }
+
 class _AssessmentCardState extends State<AssessmentCard> {
   bool _showCorrectionExpanded = false;
   bool _showBetterWayExpanded = false;
+  _DifficultyAction? _processingAction;
 
   Color _getScoreColor(int score) {
     if (score < 5) return AppColors.error;
@@ -337,6 +349,10 @@ class _AssessmentCardState extends State<AssessmentCard> {
           const SizedBox(height: 18),
           _buildAnalysisBlock(context, AppIcons.grammar, 'Grammar',
               widget.assessment.grammarAnalysis),
+          if (widget.assessment.grammarBreakdown != null) ...[
+            const SizedBox(height: 10),
+            _buildGrammarBreakdownBlock(context),
+          ],
           const SizedBox(height: 10),
           _buildAnalysisBlock(context, AppIcons.vocabulary, 'Vocabulary',
               widget.assessment.vocabularyAnalysis),
@@ -425,6 +441,370 @@ class _AssessmentCardState extends State<AssessmentCard> {
           RichText(
             text: TextSpan(
               children: _parseEmphasis(content, contentStyle),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ---------- Grammar Breakdown ----------
+
+  /// Maps a component role label (English, AI output) to a palette color so
+  /// each role keeps a consistent visual identity across both variant cards.
+  /// Subject = teal, Main Verb = coral, Auxiliary = gold, Object = purple,
+  /// Adverbial = purple-deep, everything else = muted.
+  Color _roleColor(BuildContext context, String role) {
+    final r = role.toLowerCase();
+    if (r.contains('subject') && !r.contains('complement')) {
+      return AppColors.tealDeep;
+    }
+    if (r.contains('main verb') || r == 'verb' || r.contains('predicate')) {
+      return AppColors.coral;
+    }
+    if (r.contains('auxiliary') || r.contains('modal')) {
+      return AppColors.goldDeep;
+    }
+    if (r.contains('object')) return AppColors.purpleDeep;
+    if (r.contains('complement')) return AppColors.goldDeep;
+    if (r.contains('adverbial') || r.contains('adverb')) {
+      return AppColors.purple;
+    }
+    if (r.contains('preposition')) return AppColors.purple;
+    if (r.contains('conjunction')) return AppColors.coral;
+    return context.clay.textMuted;
+  }
+
+  Widget _buildGrammarBreakdownBlock(BuildContext context) {
+    final breakdown = widget.assessment.grammarBreakdown;
+    if (breakdown == null) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.teal.withValues(alpha: 0.08),
+        borderRadius: AppRadius.mdBorder,
+        border: Border.all(
+            color: AppColors.teal.withValues(alpha: 0.35), width: 1.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const AppIcon(
+                  iconId: AppIcons.grammar,
+                  size: 18,
+                  color: AppColors.tealDeep),
+              const SizedBox(width: 8),
+              Text(
+                context.loc.assessmentGrammarBreakdownHeader,
+                style: AppTypography.sentenceLabel.copyWith(
+                  color: AppColors.tealDeep,
+                  fontSize: 11,
+                  letterSpacing: 1.0,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _buildBreakdownVariantCard(
+            context,
+            breakdown.userVersion,
+            isUserVersion: true,
+            isUserCorrect: breakdown.correctVersion == null,
+          ),
+          if (breakdown.correctVersion != null) ...[
+            const SizedBox(height: 10),
+            _buildBreakdownVariantCard(
+              context,
+              breakdown.correctVersion!,
+              isUserVersion: false,
+              isUserCorrect: false,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBreakdownVariantCard(
+    BuildContext context,
+    GrammarBreakdownVariant variant, {
+    required bool isUserVersion,
+    required bool isUserCorrect,
+  }) {
+    // When the user input is already correct, the user-version card itself
+    // is the "correct" card — use the success accent so the learner gets a
+    // positive signal without showing a redundant second variant.
+    final useSuccessAccent = isUserVersion ? isUserCorrect : true;
+    final accent = isUserVersion && !useSuccessAccent
+        ? AppColors.coral
+        : AppColors.success;
+    final loc = context.loc;
+    final label = isUserVersion
+        ? (isUserCorrect
+            ? loc.assessmentGrammarBreakdownYourSentenceCorrect
+            : loc.assessmentGrammarBreakdownYourSentence)
+        : loc.assessmentGrammarBreakdownCorrectSentence;
+    final icon = useSuccessAccent ? AppIcons.check : AppIcons.bookmark;
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: context.clay.surface,
+        borderRadius: AppRadius.smBorder,
+        border: Border.all(
+            color: accent.withValues(alpha: 0.45), width: 1.2),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              AppIcon(iconId: icon, size: 14, color: accent),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: AppTypography.sentenceLabel.copyWith(
+                  color: accent,
+                  fontSize: 10,
+                  letterSpacing: 0.8,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '"${variant.sentence}"',
+            style: AppTypography.bodyMd.copyWith(
+              fontSize: 14,
+              fontStyle: FontStyle.italic,
+              fontWeight: FontWeight.w500,
+              color: context.clay.text,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 10),
+          _buildTensePill(context, variant.tense, variant.tenseVi),
+          if (variant.tenseExplanation.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              variant.tenseExplanation,
+              style: AppTypography.bodySm.copyWith(
+                fontSize: 12,
+                color: context.clay.textMuted,
+                height: 1.45,
+              ),
+            ),
+          ],
+          if (variant.components.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            _buildSubLabel(
+                context, loc.assessmentGrammarBreakdownComponents),
+            const SizedBox(height: 6),
+            ...variant.components.map(
+              (c) => Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: _buildComponentRow(context, c),
+              ),
+            ),
+          ],
+          if (variant.auxiliaries.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            _buildSubLabel(
+                context, loc.assessmentGrammarBreakdownAuxiliaries),
+            const SizedBox(height: 6),
+            ...variant.auxiliaries.map(
+              (a) => Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: _buildAuxiliaryRow(context, a),
+              ),
+            ),
+          ],
+          if (variant.structureNote != null) ...[
+            const SizedBox(height: 8),
+            _buildStructureNote(context, variant.structureNote!),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTensePill(BuildContext context, String tense, String tenseVi) {
+    final hasVi = tenseVi.isNotEmpty && tenseVi != tense;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.gold.withValues(alpha: 0.18),
+        borderRadius: AppRadius.smBorder,
+        border: Border.all(
+            color: AppColors.goldDeep.withValues(alpha: 0.5), width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const AppIcon(
+              iconId: AppIcons.clock, size: 13, color: AppColors.goldDark),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              hasVi ? '$tense · $tenseVi' : tense,
+              style: AppTypography.bodySm.copyWith(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: AppColors.goldDark,
+                height: 1.2,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSubLabel(BuildContext context, String text) {
+    return Text(
+      text,
+      style: AppTypography.sentenceLabel.copyWith(
+        fontSize: 10,
+        letterSpacing: 0.9,
+        color: context.clay.textMuted,
+        fontWeight: FontWeight.w700,
+      ),
+    );
+  }
+
+  Widget _buildComponentRow(BuildContext context, GrammarComponent c) {
+    final color = _roleColor(context, c.role);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.14),
+            borderRadius: AppRadius.smBorder,
+            border: Border.all(color: color.withValues(alpha: 0.4), width: 1),
+          ),
+          constraints: const BoxConstraints(maxWidth: 140),
+          child: Text(
+            c.text,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTypography.bodySm.copyWith(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                c.roleVi.isNotEmpty ? c.roleVi : c.role,
+                style: AppTypography.bodySm.copyWith(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: context.clay.text,
+                ),
+              ),
+              if (c.explanation != null && c.explanation!.isNotEmpty)
+                Text(
+                  c.explanation!,
+                  style: AppTypography.bodySm.copyWith(
+                    fontSize: 11,
+                    color: context.clay.textMuted,
+                    height: 1.4,
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAuxiliaryRow(BuildContext context, GrammarAuxiliary a) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: AppColors.goldDeep.withValues(alpha: 0.14),
+            borderRadius: AppRadius.smBorder,
+            border: Border.all(
+                color: AppColors.goldDeep.withValues(alpha: 0.4), width: 1),
+          ),
+          constraints: const BoxConstraints(maxWidth: 140),
+          child: Text(
+            a.text,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTypography.bodySm.copyWith(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: AppColors.goldDark,
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                a.type,
+                style: AppTypography.bodySm.copyWith(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: context.clay.text,
+                ),
+              ),
+              if (a.function.isNotEmpty)
+                Text(
+                  a.function,
+                  style: AppTypography.bodySm.copyWith(
+                    fontSize: 11,
+                    color: context.clay.textMuted,
+                    height: 1.4,
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStructureNote(BuildContext context, String note) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: context.clay.surfaceAlt.withValues(alpha: 0.8),
+        borderRadius: AppRadius.smBorder,
+        border: Border.all(color: context.clay.border, width: 1),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AppIcon(
+              iconId: AppIcons.sparkle, size: 13, color: context.clay.textMuted),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              '${context.loc.assessmentGrammarBreakdownPatternPrefix}: $note',
+              style: AppTypography.bodySm.copyWith(
+                fontSize: 12,
+                fontFamily: 'monospace',
+                fontWeight: FontWeight.w500,
+                color: context.clay.text,
+                height: 1.45,
+              ),
             ),
           ),
         ],
@@ -784,13 +1164,15 @@ class _AssessmentCardState extends State<AssessmentCard> {
       return const SizedBox.shrink();
     }
 
+    final loc = context.loc;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'ROLEPLAY DIFFICULTY',
+            loc.assessmentDifficultyTitle,
             style: AppTypography.sentenceLabel.copyWith(
               color: context.clay.textMuted,
               fontSize: 11,
@@ -802,28 +1184,34 @@ class _AssessmentCardState extends State<AssessmentCard> {
             children: [
               Expanded(
                 child: _difficultyButton(
-                  context,
-                  'Easier',
-                  widget.onEasier,
-                  AppColors.error,
+                  context: context,
+                  action: _DifficultyAction.easier,
+                  label: loc.assessmentDifficultyEasier,
+                  icon: Icons.trending_down_rounded,
+                  callback: widget.onEasier,
+                  color: AppColors.error,
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: _difficultyButton(
-                  context,
-                  'Same',
-                  widget.onSameDifficulty,
-                  AppColors.gold,
+                  context: context,
+                  action: _DifficultyAction.same,
+                  label: loc.assessmentDifficultySame,
+                  icon: Icons.refresh_rounded,
+                  callback: widget.onSameDifficulty,
+                  color: AppColors.gold,
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: _difficultyButton(
-                  context,
-                  'Harder',
-                  widget.onHarder,
-                  AppColors.success,
+                  context: context,
+                  action: _DifficultyAction.harder,
+                  label: loc.assessmentDifficultyHarder,
+                  icon: Icons.trending_up_rounded,
+                  callback: widget.onHarder,
+                  color: AppColors.success,
                 ),
               ),
             ],
@@ -833,27 +1221,109 @@ class _AssessmentCardState extends State<AssessmentCard> {
     );
   }
 
-  Widget _difficultyButton(BuildContext context, String label,
-      VoidCallback? onTap, Color color) {
+  /// Difficulty-shift button with three visual states:
+  /// - **idle**: tinted background + colored border + icon + label
+  /// - **pressed**: scale-down 0.92 + bumped color saturation
+  /// - **loading**: spinner replaces icon + label morphs to "Generating…"
+  ///   while the parent's [callback] is in-flight; other two buttons in the
+  ///   row are dimmed and disabled so the user can't double-tap.
+  Widget _difficultyButton({
+    required BuildContext context,
+    required _DifficultyAction action,
+    required String label,
+    required IconData icon,
+    required Future<void> Function()? callback,
+    required Color color,
+  }) {
+    final isProcessing = _processingAction == action;
+    final isOtherProcessing =
+        _processingAction != null && _processingAction != action;
+    final isDisabled = callback == null || isOtherProcessing;
+    final loc = context.loc;
+
+    Future<void> handleTap() async {
+      if (callback == null || _processingAction != null) return;
+      setState(() => _processingAction = action);
+      try {
+        await callback();
+      } finally {
+        if (mounted) setState(() => _processingAction = null);
+      }
+    }
+
     return ClayPressable(
-      onTap: onTap,
-      scaleDown: 0.95,
+      onTap: isDisabled ? null : handleTap,
+      scaleDown: 0.92,
       builder: (context, isPressed) {
-        return Container(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.15),
-            borderRadius: AppRadius.mdBorder,
-            border: Border.all(color: color.withValues(alpha: 0.5), width: 1.5),
-          ),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: AppTypography.labelSm.copyWith(
-              fontWeight: FontWeight.w700,
-              color: context.clay.text,
-              fontSize: 12,
+        final fillAlpha = isProcessing
+            ? 0.30
+            : (isPressed ? 0.28 : 0.15);
+        final borderAlpha = isProcessing ? 0.85 : (isPressed ? 0.75 : 0.5);
+        final dim = isOtherProcessing ? 0.35 : 1.0;
+
+        return Opacity(
+          opacity: dim,
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 8),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: fillAlpha),
+              borderRadius: AppRadius.mdBorder,
+              border: Border.all(
+                color: color.withValues(alpha: borderAlpha),
+                width: isProcessing ? 2 : 1.5,
+              ),
             ),
+            child: isProcessing
+                ? Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation(color),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          loc.assessmentDifficultyLoading,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.labelSm.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: color,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        icon,
+                        size: 16,
+                        color: context.clay.text,
+                      ),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: AppTypography.labelSm.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: context.clay.text,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
           ),
         );
       },

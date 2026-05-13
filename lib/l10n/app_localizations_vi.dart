@@ -1424,4 +1424,180 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get grammarSummaryBackToHub => 'Tất cả chủ đề';
+
+  @override
+  String get assessmentGrammarBreakdownHeader => 'PHÂN TÍCH NGỮ PHÁP';
+
+  @override
+  String get assessmentGrammarBreakdownYourSentence => 'CÂU CỦA BẠN';
+
+  @override
+  String get assessmentGrammarBreakdownYourSentenceCorrect =>
+      'CÂU CỦA BẠN — Đúng';
+
+  @override
+  String get assessmentGrammarBreakdownCorrectSentence => 'CÂU CHUẨN';
+
+  @override
+  String get assessmentGrammarBreakdownComponents => 'THÀNH PHẦN CÂU';
+
+  @override
+  String get assessmentGrammarBreakdownAuxiliaries => 'TRỢ TỪ';
+
+  @override
+  String get assessmentGrammarBreakdownPatternPrefix => 'Cấu trúc';
+
+  @override
+  String get sessionPanelTitle => 'PHIÊN LUYỆN';
+
+  @override
+  String sessionPanelCount(int count) {
+    return '$count tình huống';
+  }
+
+  @override
+  String sessionPanelAvg(String avg) {
+    return 'TB ⭐ $avg';
+  }
+
+  @override
+  String get sessionPanelFilterAll => 'Tất cả';
+
+  @override
+  String get sessionPanelFilterExcellent => '⭐ 9+';
+
+  @override
+  String get sessionPanelFilterGood => '⭐ 7-8';
+
+  @override
+  String get sessionPanelFilterNeedsWork => '⭐ <7';
+
+  @override
+  String get sessionPanelEmptyTitle => 'Chưa có tình huống nào';
+
+  @override
+  String get sessionPanelEmptyBody =>
+      'Hoàn thành một tình huống để hiện ở đây.';
+
+  @override
+  String get sessionPanelFilterEmpty => 'Không có tình huống nào khớp bộ lọc.';
+
+  @override
+  String get sessionPanelActiveLabel => 'Đang làm';
+
+  @override
+  String get sessionPanelTimeNow => 'vừa xong';
+
+  @override
+  String sessionPanelTimeMinutes(int minutes) {
+    return '$minutes phút trước';
+  }
+
+  @override
+  String sessionPanelTimeHours(int hours) {
+    return '$hours giờ trước';
+  }
+
+  @override
+  String get sessionPanelTimeYesterday => 'hôm qua';
+
+  @override
+  String sessionPanelTimeOlder(int days) {
+    return '$days ngày trước';
+  }
+
+  @override
+  String get sessionPanelEndSessionCta => 'Kết thúc phiên';
+
+  @override
+  String get sessionPanelEndConfirmTitle => 'Kết thúc phiên luyện?';
+
+  @override
+  String get sessionPanelEndConfirmBody =>
+      'Bạn sẽ quay về màn chính. Có thể bắt đầu phiên mới bất cứ lúc nào.';
+
+  @override
+  String get sessionPanelEndConfirmAction => 'Kết thúc';
+
+  @override
+  String get sessionPanelEndConfirmCancel => 'Tiếp tục luyện';
+
+  @override
+  String replayTitle(int order) {
+    return 'Xem lại #$order';
+  }
+
+  @override
+  String get replayBannerText => 'Chế độ xem lại — chỉ đọc';
+
+  @override
+  String get replayLoading => 'Đang tải bản xem lại…';
+
+  @override
+  String get replayLoadErrorTitle => 'Không thể tải tình huống';
+
+  @override
+  String get replayLoadErrorBody =>
+      'Cuộc trò chuyện có thể đã bị xóa hoặc mất kết nối. Thử lại từ bảng phiên luyện.';
+
+  @override
+  String get replayLoadErrorBack => 'Quay về phiên';
+
+  @override
+  String get replayBranchSectionTitle => 'TIẾP TỤC TỪ TÌNH HUỐNG NÀY';
+
+  @override
+  String get replayBranchSectionSubtitle =>
+      'Chọn độ khó để bắt đầu tình huống mới trong phiên hiện tại. Tình huống đang xem lại không bị thay đổi.';
+
+  @override
+  String get replayBranchEasier => 'Dễ hơn';
+
+  @override
+  String get replayBranchSame => 'Cùng độ khó';
+
+  @override
+  String get replayBranchHarder => 'Khó hơn';
+
+  @override
+  String get scenarioEmptyNoSessionTitle => 'Bắt đầu phiên luyện';
+
+  @override
+  String get scenarioEmptyNoSessionBody =>
+      'Dịch tình huống, nhận phản hồi từ AI, và xem lại mọi câu trả lời. Phiên luyện gom các tình huống lại để bạn có thể tiếp tục từ bất kỳ tình huống nào.';
+
+  @override
+  String get scenarioEmptyNoSessionCta => 'Bắt đầu phiên';
+
+  @override
+  String get scenarioEmptyHasSessionTitle => 'Đang trong phiên luyện';
+
+  @override
+  String scenarioEmptyHasSessionBody(int count) {
+    return 'Bạn đã hoàn thành $count tình huống trong phiên này. Tiếp tục với tình huống mới hoặc kết thúc phiên.';
+  }
+
+  @override
+  String get scenarioEmptyHasSessionContinueCta => 'Tiếp tục luyện';
+
+  @override
+  String get scenarioEmptyHasSessionEndCta => 'Kết thúc phiên';
+
+  @override
+  String get scenarioEmptyBackToHomeCta => 'Về trang chính';
+
+  @override
+  String get assessmentDifficultyTitle => 'ĐỘ KHÓ TÌNH HUỐNG TIẾP';
+
+  @override
+  String get assessmentDifficultyEasier => 'Dễ hơn';
+
+  @override
+  String get assessmentDifficultySame => 'Cùng độ khó';
+
+  @override
+  String get assessmentDifficultyHarder => 'Khó hơn';
+
+  @override
+  String get assessmentDifficultyLoading => 'Đang tạo…';
 }

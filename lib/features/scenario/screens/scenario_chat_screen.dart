@@ -19,6 +19,8 @@ import '../widgets/chat_bubble_ai.dart';
 import '../widgets/assessment_card.dart';
 import '../widgets/chat_input_bar.dart';
 import '../widgets/context_panel.dart';
+import '../widgets/session_chip.dart';
+import '../widgets/session_panel_sheet.dart';
 import '../../../l10n/app_loc_context.dart';
 import '../../../shared/widgets/message_entrance.dart';
 import '../../../shared/widgets/end_session_dialog.dart';
@@ -82,6 +84,58 @@ class ScenarioChatScreen extends StatelessWidget {
             hintsRevealed: p.hintsRevealed,
             onRevealHint: () => p.revealNextHint(),
           ),
+        ),
+      ),
+    );
+  }
+
+  /// Empty-state CTAs. Live on the chat screen when [provider.currentScenario]
+  /// is null (e.g. immediately after endPracticeSession, or after a force-kill
+  /// + cold launch into /scenario). The handlers stay on this screen rather
+  /// than going through Home so the user keeps their place.
+
+  Future<void> _startSessionFromEmpty(
+      BuildContext context, ScenarioProvider provider) async {
+    await provider.startPracticeSession();
+    // No navigation needed — Consumer rebuilds with the new scenario.
+  }
+
+  Future<void> _continueSessionFromEmpty(
+      BuildContext context, ScenarioProvider provider) async {
+    await provider.startSession();
+  }
+
+  Future<void> _endSessionFromEmpty(
+      BuildContext context, ScenarioProvider provider) async {
+    await provider.endPracticeSession();
+    if (context.mounted) context.go('/home');
+  }
+
+  /// Open the Session Panel bottom sheet. Tap a completed row → push the
+  /// replay route (provider enters replay mode on screen mount, restores
+  /// active state on dispose). End-session footer → confirm dialog inside
+  /// the sheet, then call provider.endPracticeSession and pop back to home.
+  void _showSessionPanel(
+      BuildContext context, ScenarioProvider provider) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetCtx) => ChangeNotifierProvider.value(
+        value: provider,
+        child: SessionPanelSheet(
+          onTapRow: (meta) {
+            // Pop the sheet first so context.push has a clean nav stack;
+            // the replay screen then mounts on top of the chat screen.
+            Navigator.of(sheetCtx).pop();
+            context.push('/scenario/replay/${meta.conversationId}');
+          },
+          onEndSession: () async {
+            await provider.endPracticeSession();
+            if (context.mounted) {
+              context.go('/home');
+            }
+          },
         ),
       ),
     );
@@ -201,25 +255,15 @@ class ScenarioChatScreen extends StatelessWidget {
                           ],
                         ),
                       )
-                    : Center(
-                        key: const ValueKey('error'),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              provider.error ??
-                                  context.loc.scenarioErrorNoScenarioLoaded,
-                              textAlign: TextAlign.center,
-                              style: AppTypography.bodyMd
-                                  .copyWith(color: context.clay.textMuted),
-                            ),
-                            const SizedBox(height: 16),
-                            TextButton(
-                              onPressed: () => context.go('/home'),
-                              child: Text(context.loc.scenarioErrorBackToHome),
-                            ),
-                          ],
-                        ),
+                    : _ScenarioEmptyState(
+                        key: const ValueKey('empty'),
+                        provider: provider,
+                        onStartSession: () => _startSessionFromEmpty(
+                            context, provider),
+                        onContinue: () => _continueSessionFromEmpty(
+                            context, provider),
+                        onEndSession: () => _endSessionFromEmpty(
+                            context, provider),
                       ),
               );
             }
@@ -240,6 +284,13 @@ class ScenarioChatScreen extends StatelessWidget {
                   onBack: () => _onBackPressed(context, provider),
                   onHistory: () => context.push('/history'),
                   onMyLearning: () => context.push('/my-library'),
+                  trailing: provider.hasActiveSession
+                      ? SessionChip(
+                          scenarioCount: provider.sessionScenarioCount,
+                          avgScore: provider.sessionAvgScore,
+                          onTap: () => _showSessionPanel(context, provider),
+                        )
+                      : null,
                 ),
                 LessonCard(
                   vietnameseSentence: provider.isVnToEn
@@ -440,3 +491,113 @@ class ScenarioChatScreen extends StatelessWidget {
     }
   }
 }
+
+/// Empty state shown when the chat screen has no scenario loaded — e.g.
+/// right after [ScenarioProvider.endPracticeSession] or a cold launch into
+/// `/scenario` with no live state. Branches on whether the user already
+/// holds an active PracticeSession, so the destructive "End session"
+/// option only surfaces when there is something to end.
+///
+/// All copy goes through [AppLocalizations]; do not pass hard-coded strings
+/// from callers — let the widget pick the labels from [context.loc].
+class _ScenarioEmptyState extends StatelessWidget {
+  final ScenarioProvider provider;
+  final Future<void> Function() onStartSession;
+  final Future<void> Function() onContinue;
+  final Future<void> Function() onEndSession;
+
+  const _ScenarioEmptyState({
+    super.key,
+    required this.provider,
+    required this.onStartSession,
+    required this.onContinue,
+    required this.onEndSession,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final loc = context.loc;
+    final hasSession = provider.hasActiveSession;
+    final errorText = provider.error;
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Icon(
+              hasSession
+                  ? Icons.play_circle_outline_rounded
+                  : Icons.auto_awesome_outlined,
+              size: 44,
+              color: AppColors.tealDeep,
+            ),
+            const SizedBox(height: 14),
+            Text(
+              hasSession
+                  ? loc.scenarioEmptyHasSessionTitle
+                  : loc.scenarioEmptyNoSessionTitle,
+              textAlign: TextAlign.center,
+              style: AppTypography.sectionTitle.copyWith(fontSize: 18),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              hasSession
+                  ? loc.scenarioEmptyHasSessionBody(
+                      provider.sessionScenarioCount)
+                  : loc.scenarioEmptyNoSessionBody,
+              textAlign: TextAlign.center,
+              style: AppTypography.bodyMd.copyWith(
+                color: context.clay.textMuted,
+                height: 1.5,
+              ),
+            ),
+            if (errorText != null && errorText.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Text(
+                errorText,
+                textAlign: TextAlign.center,
+                style: AppTypography.bodySm.copyWith(color: AppColors.coral),
+              ),
+            ],
+            const SizedBox(height: 22),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.teal,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+              onPressed: hasSession ? onContinue : onStartSession,
+              child: Text(
+                hasSession
+                    ? loc.scenarioEmptyHasSessionContinueCta
+                    : loc.scenarioEmptyNoSessionCta,
+                style: AppTypography.sectionTitle.copyWith(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            if (hasSession)
+              TextButton(
+                onPressed: onEndSession,
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.coral,
+                ),
+                child: Text(loc.scenarioEmptyHasSessionEndCta),
+              )
+            else
+              TextButton(
+                onPressed: () => context.go('/home'),
+                child: Text(loc.scenarioEmptyBackToHomeCta),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+

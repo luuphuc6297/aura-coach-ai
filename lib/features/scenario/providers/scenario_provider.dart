@@ -16,9 +16,16 @@ import '../../../data/prompts/prompt_constants.dart';
 import '../models/assessment.dart';
 import '../models/chat_message.dart';
 import '../models/scenario.dart';
+import '../models/session.dart';
 
-const Duration _kGeminiScenarioTimeout = Duration(seconds: 30);
-const Duration _kGeminiEvaluateTimeout = Duration(seconds: 30);
+// Bumped from 30s → 60s. Preview Gemini models (gemini-3-flash-preview)
+// can spike to 40-50s under load even though /generateContent benchmarks
+// in <2s. Evaluation in particular generates a heavy structured-JSON
+// assessment + grammarBreakdown + alternativeTones in one shot, so the
+// long-tail latency is real. 60s matches the headroom mobile users will
+// tolerate before they assume the app crashed.
+const Duration _kGeminiScenarioTimeout = Duration(seconds: 60);
+const Duration _kGeminiEvaluateTimeout = Duration(seconds: 60);
 const Duration _kSeenLoadTimeout = Duration(seconds: 5);
 
 /// Max retries when the LLM keeps returning a Vietnamese sentence the user
@@ -82,6 +89,23 @@ class ScenarioProvider extends ChangeNotifier {
   Map<String, int> _dailyUsage = {};
   bool _quotaExceeded = false;
 
+  // -- Practice session state --
+  //
+  // A "session" here is the user-facing PracticeSession (group of scenarios
+  // played in a row), NOT the single-scenario lifecycle that the legacy
+  // [startSession] method controls. Lives at `users/{uid}/sessions/{id}` in
+  // Firestore — see plan doc `2026-05-11-scenario-session-replay.md`.
+  String? _activeSessionId;
+  DateTime? _activeSessionStartedAt;
+  final List<SessionScenarioMeta> _sessionMetas = [];
+  bool _didCheckActiveSession = false;
+
+  // Replay state. When [_isReplayMode] is true, the chat screen renders a
+  // past scenario read-only. We stash the active-scenario in-memory state in
+  // [_replaySnapshot] so exiting replay restores it without re-fetching.
+  bool _isReplayMode = false;
+  _ReplaySnapshot? _replaySnapshot;
+
   /// Monotonically increasing id for the current in-flight [sendUserMessage]
   /// call. Bumped on every new send AND on [cancelCurrentMessage] — any
   /// in-flight await checks the captured seq against this field and silently
@@ -111,6 +135,21 @@ class ScenarioProvider extends ChangeNotifier {
 
   int get roleplayLimitToday =>
       QuotaConstants.getLimit(_userTier ?? 'free', 'roleplay');
+
+  // Practice session getters
+  String? get activeSessionId => _activeSessionId;
+  DateTime? get activeSessionStartedAt => _activeSessionStartedAt;
+  bool get hasActiveSession => _activeSessionId != null;
+  List<SessionScenarioMeta> get sessionMetas =>
+      List.unmodifiable(_sessionMetas);
+  int get sessionScenarioCount => _sessionMetas.length;
+  double get sessionAvgScore {
+    if (_sessionMetas.isEmpty) return 0;
+    final total = _sessionMetas.fold<int>(0, (a, m) => a + m.totalScore);
+    return total / _sessionMetas.length;
+  }
+
+  bool get isReplayMode => _isReplayMode;
 
   int get sessionDurationMinutes {
     if (_sessionStartTime == null) return 0;
@@ -237,6 +276,11 @@ class ScenarioProvider extends ChangeNotifier {
             'AI is unavailable and no previous lesson is cached. Please try again when you are online.';
         return;
       }
+
+      // Finalize the previous scenario in the active session BEFORE we
+      // overwrite the in-memory state. No-op when there is no active
+      // session or the previous scenario was never answered.
+      await _finalizeCurrentScenarioInSession();
 
       _currentScenario = scenario;
       _currentScenarioSource = source;
@@ -402,7 +446,244 @@ class ScenarioProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> _saveConversationToFirestore() async {
+  // ---------- Practice session lifecycle ----------
+
+  /// Start a brand-new practice session: creates the Firestore session doc
+  /// and loads the first scenario. Clears any in-memory metadata from a
+  /// previous session so the chip starts at 0.
+  ///
+  /// If an active session already exists, callers should resolve the
+  /// resume-vs-new prompt via [hasActiveSession] + [resumeActiveSession]
+  /// FIRST. Calling this method always replaces the active session.
+  Future<void> startPracticeSession({String? topic, String? difficulty}) async {
+    if (_uid == null) return;
+    // End the previous session quietly so we don't leak a dangling
+    // endedAt-null doc when the user starts fresh without explicit "End".
+    if (_activeSessionId != null) {
+      await _finalizeCurrentScenarioInSession();
+      try {
+        await _firebase.endSession(
+            uid: _uid!, sessionId: _activeSessionId!);
+      } catch (e) {
+        debugPrint('[ScenarioProvider] auto-endSession failed: $e');
+      }
+    }
+    final newSessionId = _uuid.v4();
+    try {
+      await _firebase.createSession(
+        uid: _uid!,
+        sessionId: newSessionId,
+        mode: 'roleplay',
+      );
+    } catch (e) {
+      debugPrint('[ScenarioProvider] createSession failed: $e');
+      // Continue anyway — the conversation save path will retry session
+      // doc creation implicitly via merge when aggregates write later.
+    }
+    _activeSessionId = newSessionId;
+    _activeSessionStartedAt = DateTime.now();
+    _sessionMetas.clear();
+    _didCheckActiveSession = true;
+    notifyListeners();
+
+    await startSession(topic: topic, difficulty: difficulty);
+  }
+
+  /// End the active session. Saves the current scenario (if any) as
+  /// completed, stamps `endedAt`, and clears in-memory state. Caller is
+  /// responsible for navigating away from the chat screen.
+  Future<void> endPracticeSession() async {
+    if (_activeSessionId == null || _uid == null) return;
+    final sessionId = _activeSessionId!;
+    await _finalizeCurrentScenarioInSession();
+    try {
+      await _firebase.endSession(uid: _uid!, sessionId: sessionId);
+    } catch (e) {
+      debugPrint('[ScenarioProvider] endSession failed: $e');
+    }
+    _activeSessionId = null;
+    _activeSessionStartedAt = null;
+    _sessionMetas.clear();
+    _currentScenario = null;
+    _conversationId = null;
+    _messages.clear();
+    _isReplayMode = false;
+    _replaySnapshot = null;
+    notifyListeners();
+  }
+
+  /// Look up the user's currently-active session (if any) and hydrate the
+  /// in-memory state from Firestore. Idempotent within a provider lifetime
+  /// — guarded by [_didCheckActiveSession] so repeated calls during widget
+  /// rebuilds don't burn reads.
+  ///
+  /// Returns the resolved session so the UI can decide whether to prompt
+  /// the user to resume vs. start fresh.
+  Future<PracticeSession?> resumeActiveSession() async {
+    if (_uid == null) return null;
+    if (_didCheckActiveSession) {
+      if (_activeSessionId == null) return null;
+      // Already hydrated — return a synthetic PracticeSession built from
+      // current in-memory state rather than re-reading Firestore.
+      return PracticeSession(
+        id: _activeSessionId!,
+        mode: 'roleplay',
+        startedAt: _activeSessionStartedAt ?? DateTime.now(),
+        scenarioCount: _sessionMetas.length,
+        avgScore: sessionAvgScore,
+      );
+    }
+    _didCheckActiveSession = true;
+    try {
+      final session = await _firebase
+          .loadActiveSession(uid: _uid!, mode: 'roleplay')
+          .timeout(const Duration(seconds: 5));
+      if (session == null) return null;
+      _activeSessionId = session.id;
+      _activeSessionStartedAt = session.startedAt;
+      final metas = await _firebase
+          .listSessionScenarios(uid: _uid!, sessionId: session.id)
+          .timeout(const Duration(seconds: 8));
+      _sessionMetas
+        ..clear()
+        ..addAll(metas);
+      notifyListeners();
+      return session;
+    } catch (e) {
+      debugPrint('[ScenarioProvider] resumeActiveSession failed: $e');
+      return null;
+    }
+  }
+
+  // ---------- Replay mode ----------
+
+  /// Enter readonly replay of a past scenario. Stashes the active in-memory
+  /// state and hydrates [_currentScenario] + [_messages] from the saved
+  /// conversation doc so the chat screen renders it like a regular session.
+  /// [exitReplayMode] (or [branchFromReplay]) MUST be called to restore.
+  Future<void> enterReplayMode(String conversationId) async {
+    if (_uid == null) return;
+    if (_isReplayMode) {
+      debugPrint(
+          '[ScenarioProvider] enterReplayMode called while already replaying');
+      return;
+    }
+
+    Map<String, dynamic>? doc;
+    try {
+      doc = await _firebase
+          .getConversation(_uid!, conversationId)
+          .timeout(const Duration(seconds: 10));
+    } catch (e) {
+      debugPrint('[ScenarioProvider] enterReplayMode load failed: $e');
+      return;
+    }
+    if (doc == null) return;
+
+    _replaySnapshot = _ReplaySnapshot(
+      scenario: _currentScenario,
+      source: _currentScenarioSource,
+      conversationId: _conversationId,
+      messages: List.of(_messages),
+      hintsRevealed: _hintsRevealed,
+      direction: _direction,
+    );
+
+    _currentScenario = Scenario(
+      id: (doc['id'] as String?) ?? conversationId,
+      topic: (doc['topic'] as String?) ?? '',
+      title: (doc['title'] as String?) ?? '',
+      situation: (doc['situation'] as String?) ?? '',
+      vietnamesePhrase: (doc['vietnamesePhrase'] as String?) ?? '',
+      englishPhrase: (doc['englishPhrase'] as String?) ?? '',
+      difficulty: (doc['difficulty'] as String?) ?? _userLevel,
+      sentenceType: (doc['sentenceType'] as String?) ?? '',
+      hints: const ScenarioHints(level1: '', level2: '', level3: ''),
+    );
+    _conversationId = conversationId;
+    _direction = (doc['direction'] as String?) ?? 'vn-to-en';
+    _hintsRevealed = 0;
+    _messages
+      ..clear()
+      ..addAll(_messagesFromConversationDoc(doc));
+    _isReplayMode = true;
+    notifyListeners();
+  }
+
+  /// Restore the active-scenario state captured at [enterReplayMode]. If no
+  /// snapshot exists (defensive), clears replay flag only.
+  void exitReplayMode() {
+    if (!_isReplayMode) return;
+    final snap = _replaySnapshot;
+    if (snap != null) {
+      _currentScenario = snap.scenario;
+      _currentScenarioSource = snap.source;
+      _conversationId = snap.conversationId;
+      _messages
+        ..clear()
+        ..addAll(snap.messages);
+      _hintsRevealed = snap.hintsRevealed;
+      _direction = snap.direction;
+    }
+    _replaySnapshot = null;
+    _isReplayMode = false;
+    notifyListeners();
+  }
+
+  /// User tapped "Branch — Same / Easier / Harder" from a replay. We exit
+  /// replay first (so the active state is restored) and then immediately
+  /// start a new scenario in the current session, using the requested
+  /// difficulty adjustment. The replayed scenario itself stays unchanged.
+  Future<void> branchFromReplay({String? difficulty}) async {
+    if (!_isReplayMode) return;
+    exitReplayMode();
+    await startNewScenario(difficulty: difficulty);
+  }
+
+  /// Walk the persisted `turns` array and rebuild [ChatMessage] instances.
+  /// Used by [enterReplayMode] to hydrate the chat view from Firestore.
+  List<ChatMessage> _messagesFromConversationDoc(Map<String, dynamic> doc) {
+    final rawTurns = doc['turns'];
+    if (rawTurns is! List) return const [];
+    final result = <ChatMessage>[];
+    for (final raw in rawTurns) {
+      if (raw is! Map) continue;
+      final map = Map<String, dynamic>.from(raw);
+      final typeStr = (map['type'] as String?) ?? 'user';
+      MessageType type;
+      switch (typeStr) {
+        case 'ai':
+          type = MessageType.ai;
+          break;
+        case 'system':
+          type = MessageType.system;
+          break;
+        case 'assessment':
+          type = MessageType.assessment;
+          break;
+        default:
+          type = MessageType.user;
+      }
+      final tsRaw = map['timestamp'] as String?;
+      final ts = tsRaw != null ? DateTime.tryParse(tsRaw) : null;
+      AssessmentResult? assessment;
+      final assessmentRaw = map['assessment'];
+      if (assessmentRaw is Map) {
+        assessment = AssessmentResult.fromJson(
+            Map<String, dynamic>.from(assessmentRaw));
+      }
+      result.add(ChatMessage(
+        id: (map['id'] as String?) ?? _uuid.v4(),
+        type: type,
+        text: (map['text'] as String?) ?? '',
+        timestamp: ts ?? DateTime.now(),
+        assessment: assessment,
+      ));
+    }
+    return result;
+  }
+
+  Future<void> _saveConversationToFirestore({String? statusOverride}) async {
     if (_uid == null || _conversationId == null || _currentScenario == null) {
       return;
     }
@@ -412,6 +693,7 @@ class ScenarioProvider extends ChangeNotifier {
         conversationId: _conversationId!,
         data: {
           'mode': 'roleplay',
+          if (_activeSessionId != null) 'sessionId': _activeSessionId,
           'topic': _currentScenario!.topic,
           'difficulty': _currentScenario!.difficulty,
           'direction': _direction,
@@ -420,7 +702,7 @@ class ScenarioProvider extends ChangeNotifier {
           'vietnamesePhrase': _currentScenario!.vietnamesePhrase,
           'englishPhrase': _currentScenario!.englishPhrase,
           'sentenceType': _currentScenario!.sentenceType,
-          'status': 'in-progress',
+          'status': statusOverride ?? 'in-progress',
           'turns': _messages
               .map((m) => {
                     'id': m.id,
@@ -445,6 +727,68 @@ class ScenarioProvider extends ChangeNotifier {
     } catch (_) {
       // Silently fail — next successful write will heal
     }
+  }
+
+  /// Mark the current scenario as completed, append its metadata to the
+  /// in-memory session list, and bump session aggregates. Idempotent — safe
+  /// to call multiple times if state allows it; subsequent runs skip when
+  /// the scenario id already exists in [_sessionMetas].
+  Future<void> _finalizeCurrentScenarioInSession() async {
+    if (_activeSessionId == null ||
+        _uid == null ||
+        _conversationId == null ||
+        _currentScenario == null) {
+      return;
+    }
+    // Don't finalize a scenario the learner never answered.
+    final hasUserTurn = _messages.any((m) => m.type == MessageType.user);
+    if (!hasUserTurn) return;
+
+    final convId = _conversationId!;
+    if (_sessionMetas.any((m) => m.conversationId == convId)) return;
+
+    // Persist with `completed` status so listSessionScenarios + history
+    // surfaces it correctly.
+    await _saveConversationToFirestore(statusOverride: 'completed');
+
+    final score = averageScore.round().clamp(0, 10);
+    final tense = _tenseFromLastAssessment();
+    _sessionMetas.add(SessionScenarioMeta(
+      conversationId: convId,
+      orderInSession: _sessionMetas.length + 1,
+      sourcePhrase: _direction == 'en-to-vn'
+          ? _currentScenario!.englishPhrase
+          : _currentScenario!.vietnamesePhrase,
+      situation: _currentScenario!.situation,
+      totalScore: score,
+      tenseDetected: tense,
+      doneAt: DateTime.now(),
+      status: 'completed',
+    ));
+
+    try {
+      await _firebase.updateSessionAggregates(
+        uid: _uid!,
+        sessionId: _activeSessionId!,
+        newScore: score,
+      );
+    } catch (e) {
+      debugPrint('[ScenarioProvider] updateSessionAggregates failed: $e');
+    }
+  }
+
+  /// Walk messages in reverse for the latest assessment that carries a
+  /// `grammarBreakdown.userVersion.tense`. Mirrors the same logic used by
+  /// [SessionScenarioMeta.fromConversationDoc] so panel rows stay consistent
+  /// whether populated locally or rehydrated from Firestore.
+  String? _tenseFromLastAssessment() {
+    for (final msg in _messages.reversed) {
+      final assessment = msg.assessment;
+      if (assessment == null) continue;
+      final tense = assessment.grammarBreakdown?.userVersion.tense.trim();
+      if (tense != null && tense.isNotEmpty) return tense;
+    }
+    return null;
   }
 
   /// Fetch roleplay conversations belonging to the current user so the
@@ -771,4 +1115,26 @@ class ScenarioProvider extends ChangeNotifier {
         )
         .catchError((_) {}));
   }
+}
+
+/// Captures the active scenario's in-memory state at [enterReplayMode] so
+/// [exitReplayMode] can restore it without re-fetching from Firestore.
+/// Snapshot is shallow — chat message list is copied so subsequent edits
+/// during replay don't mutate it.
+class _ReplaySnapshot {
+  final Scenario? scenario;
+  final ScenarioSource source;
+  final String? conversationId;
+  final List<ChatMessage> messages;
+  final int hintsRevealed;
+  final String direction;
+
+  const _ReplaySnapshot({
+    this.scenario,
+    required this.source,
+    this.conversationId,
+    required this.messages,
+    required this.hintsRevealed,
+    required this.direction,
+  });
 }

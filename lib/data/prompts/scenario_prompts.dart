@@ -143,13 +143,24 @@ Instructions:
    - Informal
    - Conversational
 7. **Key Vocabulary**: Extract up to 5 noteworthy content words or short phrases from the user's input OR the better alternative that a Vietnamese learner should save for review. Skip trivial function words (articles, pronouns, simple verbs like "be", "have", "do" unless idiomatic). For each item return {word, partOfSpeech, meaning (Vietnamese), example (one short English sentence)}.
-8. Provide scores and detailed feedback.
+8. **Grammar Breakdown** (CRITICAL — Vietnamese learner deliverable):
+   Provide the `grammarBreakdown` object with TWO variants when applicable:
+   - `userVersion` — break down the EXACT sentence the user submitted, as-is (including grammatical errors). Identify the tense the user attempted to use, list major components (Subject / Main Verb / Object / Adverbial / Modifier), and list every auxiliary / modal / particle / key preposition.
+   - `correctVersion` — break down the canonical correct version (the corrected sentence, or a clean native phrasing if the user's was already correct but unnatural). If the user version is ALREADY grammatically correct AND natural, set `correctVersion` to null.
+   For EACH variant include:
+   - `tense` (English label) + `tenseVi` (Vietnamese name) + `tenseExplanation` (1-2 sentences in Vietnamese explaining why this tense fits the context, written for a Vietnamese learner).
+   - `components[]` — ordered breakdown. For each: `text`, `role` (English: Subject, Main Verb, Auxiliary, Direct Object, Indirect Object, Subject Complement, Object Complement, Adverbial, Modifier, Conjunction, Preposition Phrase, Determiner), `roleVi` (Vietnamese: Chủ ngữ, Động từ chính, Trợ động từ, Tân ngữ trực tiếp, Tân ngữ gián tiếp, Bổ ngữ chủ ngữ, Bổ ngữ tân ngữ, Trạng ngữ, Bổ nghĩa, Liên từ, Cụm giới từ, Mạo từ). Optional `explanation` in Vietnamese for non-trivial roles.
+   - `auxiliaries[]` — every function word that changes meaning: auxiliary verbs (be / have / do), modals (can / could / should / must / will / would / may / might), phrasal particles, key prepositions, conjunctions, infinitive markers (to). For each: `text`, `type` ("auxiliary verb" / "modal verb" / "phrasal particle" / "preposition" / "conjunction" / "infinitive marker"), `function` in Vietnamese explaining what it does in THIS sentence. Flag common Vietnamese learner pitfalls (e.g., "for vs since", "have vs has", "missed -s after he/she/it").
+   - `structureNote` (optional) — formula pattern, e.g. "S + have/has + been + V-ing + O + (for + duration)". Omit when trivial.
+   If the user input is a fragment (single word, exclamation, non-sentence utterance), set `grammarBreakdown` to null. Otherwise it MUST be present.
+9. Provide scores and detailed feedback.
 
 Respond with a JSON object matching the response schema. Key fields:
 - improvements[] — each item: {original, correction, type: 'grammar' | 'vocabulary', explanation}
 - alternativeTones — flat map {formal, friendly, informal, conversational}; each value is the translated sentence as a plain string.
 - userTone — one of 'Neutral', 'Formal', 'Friendly', 'Informal', 'Conversational', 'Rude', 'Too Formal'.
 - keyVocabulary — array of {word, partOfSpeech, meaning, example}. May be empty if the input has no meaningful content words.
+- grammarBreakdown — object with userVersion (always) + correctVersion (null if user was correct AND natural). See instruction 8 above.
 Do not invent extra fields. Do not emit markdown fences.
 ''';
 }

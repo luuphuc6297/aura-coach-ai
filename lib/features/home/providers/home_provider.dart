@@ -19,9 +19,22 @@ class HomeProvider extends ChangeNotifier {
   Future<void> loadProfile(String uid) async {
     _isLoading = true;
     notifyListeners();
-    _userProfile = await _firebaseDatasource.getUserProfile(uid);
-    _isLoading = false;
-    notifyListeners();
+    try {
+      // Cap the Firestore read so a stalled connection (e.g. P0 Security #1
+      // Firebase project mismatch — iOS pointed at the legacy project)
+      // doesn't pin the home screen at its skeleton state forever. Falling
+      // through with a null profile is safer than hanging: the home UI
+      // handles missing profile gracefully via default topics/level.
+      _userProfile = await _firebaseDatasource
+          .getUserProfile(uid)
+          .timeout(const Duration(seconds: 5));
+    } catch (e) {
+      debugPrint('[HomeProvider] loadProfile failed/timed out: $e');
+      _userProfile = null;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   /// Persists profile edits made from the Edit Profile screen. Optimistically

@@ -97,6 +97,7 @@ class GeminiSchemas {
           requiredProperties: ['word', 'partOfSpeech', 'meaning', 'example'],
         ),
       ),
+      'grammarBreakdown': _grammarBreakdown(),
     },
     requiredProperties: [
       'score',
@@ -113,6 +114,103 @@ class GeminiSchemas {
       'keyVocabulary',
     ],
   );
+
+  /// Detailed grammar breakdown for the learner. Compares the user's sentence
+  /// with the canonical correct version (when different) so the learner can
+  /// see WHY the correction is the right pattern. Nullable: AI may omit when
+  /// the input is a fragment, single word, or non-sentence utterance.
+  static Schema _grammarBreakdown() => Schema.object(
+        description:
+            'Grammar breakdown comparing user version with the corrected version. '
+            'Always populated when the user submitted at least one full clause. '
+            'Vietnamese explanations target a Vietnamese learner audience.',
+        nullable: true,
+        properties: {
+          'userVersion': _grammarBreakdownVariant(
+            description:
+                'Breakdown of the sentence the USER actually submitted, as-is.',
+          ),
+          'correctVersion': _grammarBreakdownVariant(
+            description:
+                'Breakdown of the canonical correct sentence. Null when the '
+                'user version is already grammatically correct and natural.',
+            nullable: true,
+          ),
+        },
+        requiredProperties: ['userVersion'],
+      );
+
+  static Schema _grammarBreakdownVariant({
+    required String description,
+    bool nullable = false,
+  }) =>
+      Schema.object(
+        description: description,
+        nullable: nullable,
+        properties: {
+          'sentence': Schema.string(
+              description: 'The exact sentence being analyzed.'),
+          'tense': Schema.string(
+              description:
+                  'English name of the tense / mood, e.g. "Present Perfect Continuous", "Imperative", "Conditional Type 2".'),
+          'tenseVi': Schema.string(
+              description:
+                  'Vietnamese name of the tense, e.g. "Hiện tại hoàn thành tiếp diễn", "Câu mệnh lệnh".'),
+          'tenseExplanation': Schema.string(
+              description:
+                  'Vietnamese explanation of WHY this tense fits this context (1-2 short sentences).'),
+          'components': Schema.array(
+            description:
+                'Ordered breakdown of the major sentence components. Cover Subject, Main Verb, Object/Complement, and any Adverbials. Skip articles unless they are linguistically notable.',
+            items: Schema.object(
+              properties: {
+                'text': Schema.string(
+                    description: 'The word or phrase from the sentence.'),
+                'role': Schema.string(
+                    description:
+                        'English grammatical role: one of Subject, Main Verb, Auxiliary, Direct Object, Indirect Object, Subject Complement, Object Complement, Adverbial, Modifier, Conjunction, Preposition Phrase, Determiner.'),
+                'roleVi': Schema.string(
+                    description:
+                        'Vietnamese label for the role, e.g. "Chủ ngữ", "Động từ chính", "Tân ngữ", "Trạng ngữ".'),
+                'explanation': Schema.string(
+                    description:
+                        'Optional 1-line Vietnamese note about this component in context. Omit if obvious.',
+                    nullable: true),
+              },
+              requiredProperties: ['text', 'role', 'roleVi'],
+            ),
+          ),
+          'auxiliaries': Schema.array(
+            description:
+                'Function words (trợ từ) that change meaning: auxiliary verbs (be / have / do), modals (can / should / must), particles, key prepositions, conjunctions. Empty array if none. Skip plain articles (a/an/the) unless idiomatic.',
+            items: Schema.object(
+              properties: {
+                'text': Schema.string(
+                    description: 'The auxiliary word or phrase, e.g. "have been", "should", "for".'),
+                'type': Schema.string(
+                    description:
+                        'English category: "auxiliary verb", "modal verb", "phrasal particle", "preposition", "conjunction", "infinitive marker".'),
+                'function': Schema.string(
+                    description:
+                        'Vietnamese explanation of what this word does in this sentence (1 short sentence). Highlight Vietnamese learner pitfalls when relevant.'),
+              },
+              requiredProperties: ['text', 'type', 'function'],
+            ),
+          ),
+          'structureNote': Schema.string(
+              description:
+                  'Optional formula-style pattern for this sentence, e.g. "S + have/has + been + V-ing + O + (for + duration)". Omit when the structure is trivial.',
+              nullable: true),
+        },
+        requiredProperties: [
+          'sentence',
+          'tense',
+          'tenseVi',
+          'tenseExplanation',
+          'components',
+          'auxiliaries',
+        ],
+      );
 
   // ---------- Lesson (Scenario Coach) ----------
   static final lesson = Schema.object(

@@ -2618,6 +2618,318 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Back to all topics'**
   String get grammarSummaryBackToHub;
+
+  /// No description provided for @assessmentGrammarBreakdownHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'GRAMMAR BREAKDOWN'**
+  String get assessmentGrammarBreakdownHeader;
+
+  /// No description provided for @assessmentGrammarBreakdownYourSentence.
+  ///
+  /// In en, this message translates to:
+  /// **'YOUR SENTENCE'**
+  String get assessmentGrammarBreakdownYourSentence;
+
+  /// No description provided for @assessmentGrammarBreakdownYourSentenceCorrect.
+  ///
+  /// In en, this message translates to:
+  /// **'YOUR SENTENCE — Correct'**
+  String get assessmentGrammarBreakdownYourSentenceCorrect;
+
+  /// No description provided for @assessmentGrammarBreakdownCorrectSentence.
+  ///
+  /// In en, this message translates to:
+  /// **'STANDARD SENTENCE'**
+  String get assessmentGrammarBreakdownCorrectSentence;
+
+  /// No description provided for @assessmentGrammarBreakdownComponents.
+  ///
+  /// In en, this message translates to:
+  /// **'SENTENCE COMPONENTS'**
+  String get assessmentGrammarBreakdownComponents;
+
+  /// No description provided for @assessmentGrammarBreakdownAuxiliaries.
+  ///
+  /// In en, this message translates to:
+  /// **'AUXILIARIES'**
+  String get assessmentGrammarBreakdownAuxiliaries;
+
+  /// No description provided for @assessmentGrammarBreakdownPatternPrefix.
+  ///
+  /// In en, this message translates to:
+  /// **'Pattern'**
+  String get assessmentGrammarBreakdownPatternPrefix;
+
+  /// No description provided for @sessionPanelTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'SESSION'**
+  String get sessionPanelTitle;
+
+  /// No description provided for @sessionPanelCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} {count, plural, =1{scenario} other{scenarios}}'**
+  String sessionPanelCount(int count);
+
+  /// No description provided for @sessionPanelAvg.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg ⭐ {avg}'**
+  String sessionPanelAvg(String avg);
+
+  /// No description provided for @sessionPanelFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get sessionPanelFilterAll;
+
+  /// No description provided for @sessionPanelFilterExcellent.
+  ///
+  /// In en, this message translates to:
+  /// **'⭐ 9+'**
+  String get sessionPanelFilterExcellent;
+
+  /// No description provided for @sessionPanelFilterGood.
+  ///
+  /// In en, this message translates to:
+  /// **'⭐ 7-8'**
+  String get sessionPanelFilterGood;
+
+  /// No description provided for @sessionPanelFilterNeedsWork.
+  ///
+  /// In en, this message translates to:
+  /// **'⭐ <7'**
+  String get sessionPanelFilterNeedsWork;
+
+  /// No description provided for @sessionPanelEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No scenarios yet'**
+  String get sessionPanelEmptyTitle;
+
+  /// No description provided for @sessionPanelEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete a scenario to see it here.'**
+  String get sessionPanelEmptyBody;
+
+  /// No description provided for @sessionPanelFilterEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No scenarios match this filter.'**
+  String get sessionPanelFilterEmpty;
+
+  /// No description provided for @sessionPanelActiveLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get sessionPanelActiveLabel;
+
+  /// No description provided for @sessionPanelTimeNow.
+  ///
+  /// In en, this message translates to:
+  /// **'now'**
+  String get sessionPanelTimeNow;
+
+  /// No description provided for @sessionPanelTimeMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes}m ago'**
+  String sessionPanelTimeMinutes(int minutes);
+
+  /// No description provided for @sessionPanelTimeHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours}h ago'**
+  String sessionPanelTimeHours(int hours);
+
+  /// No description provided for @sessionPanelTimeYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'yesterday'**
+  String get sessionPanelTimeYesterday;
+
+  /// No description provided for @sessionPanelTimeOlder.
+  ///
+  /// In en, this message translates to:
+  /// **'{days}d ago'**
+  String sessionPanelTimeOlder(int days);
+
+  /// No description provided for @sessionPanelEndSessionCta.
+  ///
+  /// In en, this message translates to:
+  /// **'End session'**
+  String get sessionPanelEndSessionCta;
+
+  /// No description provided for @sessionPanelEndConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'End this session?'**
+  String get sessionPanelEndConfirmTitle;
+
+  /// No description provided for @sessionPanelEndConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll go back to the home screen. You can start a new session anytime.'**
+  String get sessionPanelEndConfirmBody;
+
+  /// No description provided for @sessionPanelEndConfirmAction.
+  ///
+  /// In en, this message translates to:
+  /// **'End session'**
+  String get sessionPanelEndConfirmAction;
+
+  /// No description provided for @sessionPanelEndConfirmCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep practicing'**
+  String get sessionPanelEndConfirmCancel;
+
+  /// No description provided for @replayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Replay #{order}'**
+  String replayTitle(int order);
+
+  /// No description provided for @replayBannerText.
+  ///
+  /// In en, this message translates to:
+  /// **'Replay mode — read only'**
+  String get replayBannerText;
+
+  /// No description provided for @replayLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading replay…'**
+  String get replayLoading;
+
+  /// No description provided for @replayLoadErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load this scenario'**
+  String get replayLoadErrorTitle;
+
+  /// No description provided for @replayLoadErrorBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The conversation may have been deleted or your connection dropped. Try again from the session panel.'**
+  String get replayLoadErrorBody;
+
+  /// No description provided for @replayLoadErrorBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to session'**
+  String get replayLoadErrorBack;
+
+  /// No description provided for @replayBranchSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'BRANCH FROM THIS SCENARIO'**
+  String get replayBranchSectionTitle;
+
+  /// No description provided for @replayBranchSectionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a difficulty to start a new scenario in this session. The replayed one stays unchanged.'**
+  String get replayBranchSectionSubtitle;
+
+  /// No description provided for @replayBranchEasier.
+  ///
+  /// In en, this message translates to:
+  /// **'Easier'**
+  String get replayBranchEasier;
+
+  /// No description provided for @replayBranchSame.
+  ///
+  /// In en, this message translates to:
+  /// **'Same'**
+  String get replayBranchSame;
+
+  /// No description provided for @replayBranchHarder.
+  ///
+  /// In en, this message translates to:
+  /// **'Harder'**
+  String get replayBranchHarder;
+
+  /// No description provided for @scenarioEmptyNoSessionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a practice session'**
+  String get scenarioEmptyNoSessionTitle;
+
+  /// No description provided for @scenarioEmptyNoSessionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Translate scenarios, get AI feedback, and review every past attempt. A session keeps your scenarios grouped so you can branch from any one.'**
+  String get scenarioEmptyNoSessionBody;
+
+  /// No description provided for @scenarioEmptyNoSessionCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Start session'**
+  String get scenarioEmptyNoSessionCta;
+
+  /// No description provided for @scenarioEmptyHasSessionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Session in progress'**
+  String get scenarioEmptyHasSessionTitle;
+
+  /// No description provided for @scenarioEmptyHasSessionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{You\'ve completed 1 scenario in this session.} other{You\'ve completed {count} scenarios in this session.}} Continue with a fresh scenario or end the session.'**
+  String scenarioEmptyHasSessionBody(int count);
+
+  /// No description provided for @scenarioEmptyHasSessionContinueCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue practice'**
+  String get scenarioEmptyHasSessionContinueCta;
+
+  /// No description provided for @scenarioEmptyHasSessionEndCta.
+  ///
+  /// In en, this message translates to:
+  /// **'End session'**
+  String get scenarioEmptyHasSessionEndCta;
+
+  /// No description provided for @scenarioEmptyBackToHomeCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to home'**
+  String get scenarioEmptyBackToHomeCta;
+
+  /// No description provided for @assessmentDifficultyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'NEXT SCENARIO DIFFICULTY'**
+  String get assessmentDifficultyTitle;
+
+  /// No description provided for @assessmentDifficultyEasier.
+  ///
+  /// In en, this message translates to:
+  /// **'Easier'**
+  String get assessmentDifficultyEasier;
+
+  /// No description provided for @assessmentDifficultySame.
+  ///
+  /// In en, this message translates to:
+  /// **'Same'**
+  String get assessmentDifficultySame;
+
+  /// No description provided for @assessmentDifficultyHarder.
+  ///
+  /// In en, this message translates to:
+  /// **'Harder'**
+  String get assessmentDifficultyHarder;
+
+  /// No description provided for @assessmentDifficultyLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Generating…'**
+  String get assessmentDifficultyLoading;
 }
 
 class _AppLocalizationsDelegate

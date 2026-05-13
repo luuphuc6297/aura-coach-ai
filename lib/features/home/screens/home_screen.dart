@@ -138,6 +138,17 @@ class _HomeScreenState extends State<HomeScreen> {
         topics: profile?.selectedTopics ?? ['travel', 'business', 'food'],
         level: profile?.proficiencyLevel ?? 'intermediate',
       );
+      // Hydrate any in-flight PracticeSession so the chat screen can show
+      // the chip + panel immediately after we push. No-op when the user
+      // has no active session. Fail-soft so a Firestore stall (e.g. missing
+      // composite index right after deploy) never blocks Start Practice.
+      try {
+        await scenarioProvider
+            .resumeActiveSession()
+            .timeout(const Duration(seconds: 4));
+      } catch (e) {
+        debugPrint('[home] resumeActiveSession timed out / failed: $e');
+      }
 
       if (!scenarioProvider.canStartSession()) {
         if (mounted) {
@@ -192,7 +203,16 @@ class _HomeScreenState extends State<HomeScreen> {
       // New session path — storage gate fires here (resume already returned).
       if (!_guardStorageForNewSession()) return;
 
-      await scenarioProvider.startSession();
+      // Branch on whether the user already has an active PracticeSession:
+      // - Active → load a fresh scenario in that session (keeps the chip's
+      //   running count + avg) via plain startSession.
+      // - No active session → startPracticeSession creates the session doc
+      //   first and then loads the first scenario.
+      if (scenarioProvider.hasActiveSession) {
+        await scenarioProvider.startSession();
+      } else {
+        await scenarioProvider.startPracticeSession();
+      }
       if (!mounted) return;
       if (scenarioProvider.error != null ||
           scenarioProvider.currentScenario == null) {

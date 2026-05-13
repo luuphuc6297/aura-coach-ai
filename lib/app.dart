@@ -40,6 +40,7 @@ import 'features/profile/screens/subscription_screen.dart';
 import 'features/scenario/providers/scenario_provider.dart';
 import 'features/shared/providers/storage_quota_provider.dart';
 import 'features/scenario/screens/scenario_chat_screen.dart';
+import 'features/scenario/screens/scenario_replay_screen.dart';
 import 'features/scenario/screens/session_summary_screen.dart';
 import 'features/scenario/screens/conversation_history_screen.dart';
 import 'features/story/providers/story_provider.dart';
@@ -254,6 +255,15 @@ class _AuraCoachAppState extends State<AuraCoachApp> {
           pageBuilder: (_, state) => slideFadeTransitionPage(
             key: state.pageKey,
             child: const SessionSummaryScreen(),
+          ),
+        ),
+        GoRoute(
+          path: '/scenario/replay/:conversationId',
+          pageBuilder: (_, state) => slideFadeTransitionPage(
+            key: state.pageKey,
+            child: ScenarioReplayScreen(
+              conversationId: state.pathParameters['conversationId'] ?? '',
+            ),
           ),
         ),
         GoRoute(

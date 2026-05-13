@@ -589,5 +589,78 @@
   },
   "grammarSummaryPracticeAgain": "Practice again",
   "grammarSummaryBackToTopic": "Back to topic",
-  "grammarSummaryBackToHub": "Back to all topics"
+  "grammarSummaryBackToHub": "Back to all topics",
+  "assessmentGrammarBreakdownHeader": "GRAMMAR BREAKDOWN",
+  "assessmentGrammarBreakdownYourSentence": "YOUR SENTENCE",
+  "assessmentGrammarBreakdownYourSentenceCorrect": "YOUR SENTENCE — Correct",
+  "assessmentGrammarBreakdownCorrectSentence": "STANDARD SENTENCE",
+  "assessmentGrammarBreakdownComponents": "SENTENCE COMPONENTS",
+  "assessmentGrammarBreakdownAuxiliaries": "AUXILIARIES",
+  "assessmentGrammarBreakdownPatternPrefix": "Pattern",
+  "sessionPanelTitle": "SESSION",
+  "sessionPanelCount": "{count} {count, plural, =1{scenario} other{scenarios}}",
+  "@sessionPanelCount": {
+    "placeholders": { "count": {"type": "int"} }
+  },
+  "sessionPanelAvg": "Avg ⭐ {avg}",
+  "@sessionPanelAvg": {
+    "placeholders": { "avg": {"type": "String"} }
+  },
+  "sessionPanelFilterAll": "All",
+  "sessionPanelFilterExcellent": "⭐ 9+",
+  "sessionPanelFilterGood": "⭐ 7-8",
+  "sessionPanelFilterNeedsWork": "⭐ <7",
+  "sessionPanelEmptyTitle": "No scenarios yet",
+  "sessionPanelEmptyBody": "Complete a scenario to see it here.",
+  "sessionPanelFilterEmpty": "No scenarios match this filter.",
+  "sessionPanelActiveLabel": "Active",
+  "sessionPanelTimeNow": "now",
+  "sessionPanelTimeMinutes": "{minutes}m ago",
+  "@sessionPanelTimeMinutes": {
+    "placeholders": { "minutes": {"type": "int"} }
+  },
+  "sessionPanelTimeHours": "{hours}h ago",
+  "@sessionPanelTimeHours": {
+    "placeholders": { "hours": {"type": "int"} }
+  },
+  "sessionPanelTimeYesterday": "yesterday",
+  "sessionPanelTimeOlder": "{days}d ago",
+  "@sessionPanelTimeOlder": {
+    "placeholders": { "days": {"type": "int"} }
+  },
+  "sessionPanelEndSessionCta": "End session",
+  "sessionPanelEndConfirmTitle": "End this session?",
+  "sessionPanelEndConfirmBody": "You'll go back to the home screen. You can start a new session anytime.",
+  "sessionPanelEndConfirmAction": "End session",
+  "sessionPanelEndConfirmCancel": "Keep practicing",
+  "replayTitle": "Replay #{order}",
+  "@replayTitle": {
+    "placeholders": { "order": {"type": "int"} }
+  },
+  "replayBannerText": "Replay mode — read only",
+  "replayLoading": "Loading replay…",
+  "replayLoadErrorTitle": "Could not load this scenario",
+  "replayLoadErrorBody": "The conversation may have been deleted or your connection dropped. Try again from the session panel.",
+  "replayLoadErrorBack": "Back to session",
+  "replayBranchSectionTitle": "BRANCH FROM THIS SCENARIO",
+  "replayBranchSectionSubtitle": "Pick a difficulty to start a new scenario in this session. The replayed one stays unchanged.",
+  "replayBranchEasier": "Easier",
+  "replayBranchSame": "Same",
+  "replayBranchHarder": "Harder",
+  "scenarioEmptyNoSessionTitle": "Start a practice session",
+  "scenarioEmptyNoSessionBody": "Translate scenarios, get AI feedback, and review every past attempt. A session keeps your scenarios grouped so you can branch from any one.",
+  "scenarioEmptyNoSessionCta": "Start session",
+  "scenarioEmptyHasSessionTitle": "Session in progress",
+  "scenarioEmptyHasSessionBody": "{count, plural, =1{You've completed 1 scenario in this session.} other{You've completed {count} scenarios in this session.}} Continue with a fresh scenario or end the session.",
+  "@scenarioEmptyHasSessionBody": {
+    "placeholders": { "count": {"type": "int"} }
+  },
+  "scenarioEmptyHasSessionContinueCta": "Continue practice",
+  "scenarioEmptyHasSessionEndCta": "End session",
+  "scenarioEmptyBackToHomeCta": "Back to home",
+  "assessmentDifficultyTitle": "NEXT SCENARIO DIFFICULTY",
+  "assessmentDifficultyEasier": "Easier",
+  "assessmentDifficultySame": "Same",
+  "assessmentDifficultyHarder": "Harder",
+  "assessmentDifficultyLoading": "Generating…"
 }

@@ -53,19 +53,35 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _initAndRedirect() async {
+    debugPrint('[splash] _initAndRedirect: started');
     final auth = context.read<AuthProvider>();
-    try {
-      await auth.initialize();
-    } catch (_) {
-      // Initialization failed (e.g. Firestore unavailable).
-      // Continue with whatever state we have from the local cache.
-    }
-    await Future.delayed(const Duration(seconds: 2));
-    if (!mounted) return;
 
-    if (auth.status == AuthStatus.unauthenticated) {
+    // Belt-and-suspenders hard fallback. Even if every other timeout in
+    // the auth init chain silently hangs, this guarantees the splash
+    // doesn't outlive its welcome — 8s after mount we forcibly redirect
+    // based on whatever auth state is currently in memory.
+    final hardTimeout = Future.delayed(const Duration(seconds: 8));
+
+    final initFuture = () async {
+      try {
+        await auth.initialize().timeout(const Duration(seconds: 6));
+        debugPrint('[splash] auth.initialize completed');
+      } catch (e) {
+        debugPrint('[splash] auth.initialize failed/timed out: $e');
+      }
+    }();
+
+    await Future.any([initFuture, hardTimeout]);
+
+    if (!mounted) return;
+    final status = auth.status;
+    final onboardingDone = auth.hasCompletedOnboarding;
+    debugPrint(
+        '[splash] redirecting — status: $status, onboarded: $onboardingDone');
+
+    if (status == AuthStatus.unauthenticated) {
       context.go('/auth');
-    } else if (!auth.hasCompletedOnboarding) {
+    } else if (!onboardingDone) {
       context.go('/onboarding');
     } else {
       context.go('/home');

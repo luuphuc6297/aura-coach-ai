@@ -71,10 +71,7 @@ class DefaultFirebaseOptions {
       case TargetPlatform.macOS:
         return macos;
       case TargetPlatform.windows:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for windows - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return windows;
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -105,24 +102,30 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyAQSy2gJV32M5ZHFU7cgjilVEpCkqfULd0',
-    appId: '1:1010679582317:ios:2250f6d7719ed3f00d7964',
-    messagingSenderId: '1010679582317',
-    projectId: 'emerald-green-1754237937',
-    storageBucket: 'emerald-green-1754237937.firebasestorage.app',
+    apiKey: 'AIzaSyBBWOR6cudVn-pi3fS60ZgP0qo8MNN9CJM',
+    appId: '1:649025183049:ios:4ee39c6c095eaa32f1ce98',
+    messagingSenderId: '649025183049',
+    projectId: 'aura-coach-ai',
+    storageBucket: 'aura-coach-ai.firebasestorage.app',
     iosBundleId: 'com.auracoach.auraCoachAi',
-    iosClientId:
-        '1010679582317-ct690bfhv6edojjcupoc12vmiub9cu30.apps.googleusercontent.com',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyAQSy2gJV32M5ZHFU7cgjilVEpCkqfULd0',
-    appId: '1:1010679582317:ios:2250f6d7719ed3f00d7964',
-    messagingSenderId: '1010679582317',
-    projectId: 'emerald-green-1754237937',
-    storageBucket: 'emerald-green-1754237937.firebasestorage.app',
+    apiKey: 'AIzaSyBBWOR6cudVn-pi3fS60ZgP0qo8MNN9CJM',
+    appId: '1:649025183049:ios:4ee39c6c095eaa32f1ce98',
+    messagingSenderId: '649025183049',
+    projectId: 'aura-coach-ai',
+    storageBucket: 'aura-coach-ai.firebasestorage.app',
     iosBundleId: 'com.auracoach.auraCoachAi',
-    iosClientId:
-        '1010679582317-ct690bfhv6edojjcupoc12vmiub9cu30.apps.googleusercontent.com',
   );
+
+  static const FirebaseOptions windows = FirebaseOptions(
+    apiKey: 'AIzaSyCcJDJ7sut_ZT_XMhanTyFFbUjcmMx985Q',
+    appId: '1:649025183049:web:5c442c15f36308dbf1ce98',
+    messagingSenderId: '649025183049',
+    projectId: 'aura-coach-ai',
+    authDomain: 'aura-coach-ai.firebaseapp.com',
+    storageBucket: 'aura-coach-ai.firebasestorage.app',
+  );
+
 }

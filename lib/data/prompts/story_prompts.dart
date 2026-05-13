@@ -117,6 +117,12 @@ Task:
 2. Assign scores (1-10).
 3. **Identify Specific Improvements**: Find exact substrings in the user's input that are wrong or unnatural. Provide corrections and explanations for each.
 4. Generate the Next Logical Reply for the Agent to continue the conversation naturally.
+5. **Grammar Breakdown** (Vietnamese learner deliverable):
+   Populate `grammarBreakdown` with TWO variants when applicable:
+   - `userVersion` — break down the user's exact sentence (as-is, errors included).
+   - `correctVersion` — break down the canonical correct version. Set to null when the user's reply is already grammatically correct AND natural.
+   Each variant must include: `tense` (English) + `tenseVi` (Vietnamese name like "Hiện tại đơn") + `tenseExplanation` (1-2 sentences Vietnamese, explain why this tense fits), `components[]` (Subject / Main Verb / Object / Adverbial — each with role + roleVi in Vietnamese), `auxiliaries[]` (be / have / do / modals / key prepositions / conjunctions — each with `function` in Vietnamese explaining its job in THIS sentence, flag VN learner pitfalls), optional `structureNote` formula.
+   If the user reply is a fragment / single word / non-sentence utterance, set `grammarBreakdown` to null.
 
 Respond with ONLY a JSON object:
 {
@@ -129,6 +135,23 @@ Respond with ONLY a JSON object:
   "improvements": [
     {"original": "exact substring", "correction": "better version", "type": "grammar | vocabulary", "explanation": "why"}
   ],
+  "grammarBreakdown": {
+    "userVersion": {
+      "sentence": "...",
+      "tense": "Present Simple",
+      "tenseVi": "Hiện tại đơn",
+      "tenseExplanation": "Vietnamese: why this tense fits here.",
+      "components": [
+        {"text": "I", "role": "Subject", "roleVi": "Chủ ngữ"},
+        {"text": "go", "role": "Main Verb", "roleVi": "Động từ chính"}
+      ],
+      "auxiliaries": [
+        {"text": "to", "type": "infinitive marker", "function": "Vietnamese explanation"}
+      ],
+      "structureNote": "S + V + O"
+    },
+    "correctVersion": null
+  },
   "nextAgentReply": "Agent's next line in English",
   "nextAgentReplyVietnamese": "Vietnamese translation of the agent's next line"
 }

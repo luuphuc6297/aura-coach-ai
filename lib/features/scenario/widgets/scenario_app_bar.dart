@@ -21,6 +21,11 @@ class ScenarioAppBar extends StatelessWidget {
   final VoidCallback? onHistory;
   final VoidCallback? onMyLearning;
 
+  /// Optional widget rendered between the title and the icon actions. Used
+  /// by the chat screen to surface the active practice session chip without
+  /// changing the action-button row layout.
+  final Widget? trailing;
+
   const ScenarioAppBar({
     super.key,
     required this.title,
@@ -32,6 +37,7 @@ class ScenarioAppBar extends StatelessWidget {
     this.onBack,
     this.onHistory,
     this.onMyLearning,
+    this.trailing,
   });
 
   @override
@@ -61,6 +67,10 @@ class ScenarioAppBar extends StatelessWidget {
                   softWrap: true,
                 ),
               ),
+              if (trailing != null) ...[
+                trailing!,
+                const SizedBox(width: AppSpacing.xs),
+              ],
               _actionButton(AppIcons.history, 18, onHistory),
               _actionButton(AppIcons.myLearning, 18, onMyLearning),
             ],

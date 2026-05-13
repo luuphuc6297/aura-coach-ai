@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/entities/user_profile.dart';
 import '../../features/my_library/models/saved_item.dart';
+import '../../features/scenario/models/session.dart';
 import '../../features/story/models/story.dart';
 
 class FirebaseDatasource {
@@ -169,6 +170,118 @@ class FirebaseDatasource {
     } catch (_) {
       return const {};
     }
+  }
+
+  // --- Session persistence (Scenario Coach + Story Mode) ---
+  //
+  // A session groups consecutive scenario attempts so the Session Panel can
+  // surface "what did I just practice?" without scanning the entire
+  // conversations subcollection. Each session doc lives at
+  // `users/{uid}/sessions/{sessionId}` and stores cached aggregates
+  // (scenarioCount, avgScore) updated on every scenario save.
+
+  /// Create a new session doc with a client-generated id. The id is the
+  /// caller's responsibility (UUID) so writes can be queued offline.
+  Future<void> createSession({
+    required String uid,
+    required String sessionId,
+    required String mode,
+  }) async {
+    await _db
+        .collection('users')
+        .doc(uid)
+        .collection('sessions')
+        .doc(sessionId)
+        .set({
+      'mode': mode,
+      'startedAt': FieldValue.serverTimestamp(),
+      'endedAt': null,
+      'scenarioCount': 0,
+      'avgScore': 0,
+    });
+  }
+
+  /// Stamp `endedAt` so the session no longer surfaces as active. Idempotent
+  /// — calling twice is a harmless overwrite of the same timestamp field.
+  Future<void> endSession({
+    required String uid,
+    required String sessionId,
+  }) async {
+    await _db
+        .collection('users')
+        .doc(uid)
+        .collection('sessions')
+        .doc(sessionId)
+        .update({
+      'endedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  /// Returns the most recently started active session for [mode], or null.
+  /// Used on app launch to ask the user "resume or start new?".
+  Future<PracticeSession?> loadActiveSession({
+    required String uid,
+    required String mode,
+  }) async {
+    final snapshot = await _db
+        .collection('users')
+        .doc(uid)
+        .collection('sessions')
+        .where('mode', isEqualTo: mode)
+        .where('endedAt', isNull: true)
+        .orderBy('startedAt', descending: true)
+        .limit(1)
+        .get();
+    if (snapshot.docs.isEmpty) return null;
+    return PracticeSession.fromFirestore(snapshot.docs.first);
+  }
+
+  /// Lazily-loaded list of metadata for every scenario in [sessionId].
+  /// Ordered by `createdAt ASC` so #1 is the oldest, #N is the newest —
+  /// matches the panel's "session timeline" presentation.
+  Future<List<SessionScenarioMeta>> listSessionScenarios({
+    required String uid,
+    required String sessionId,
+  }) async {
+    final snapshot = await _db
+        .collection('users')
+        .doc(uid)
+        .collection('conversations')
+        .where('sessionId', isEqualTo: sessionId)
+        .orderBy('createdAt')
+        .get();
+    return [
+      for (final (index, doc) in snapshot.docs.indexed)
+        SessionScenarioMeta.fromConversationDoc(doc, orderInSession: index + 1),
+    ];
+  }
+
+  /// Increment counter + recompute avg score atomically. Called right after
+  /// `saveConversation` finishes for a completed scenario so the chip stays
+  /// in sync without a second client read.
+  Future<void> updateSessionAggregates({
+    required String uid,
+    required String sessionId,
+    required int newScore,
+  }) async {
+    final ref = _db
+        .collection('users')
+        .doc(uid)
+        .collection('sessions')
+        .doc(sessionId);
+    await _db.runTransaction((tx) async {
+      final snap = await tx.get(ref);
+      if (!snap.exists) return;
+      final data = snap.data() ?? const {};
+      final prevCount = (data['scenarioCount'] as num?)?.toInt() ?? 0;
+      final prevAvg = (data['avgScore'] as num?)?.toDouble() ?? 0;
+      final nextCount = prevCount + 1;
+      final nextAvg = ((prevAvg * prevCount) + newScore) / nextCount;
+      tx.update(ref, {
+        'scenarioCount': nextCount,
+        'avgScore': nextAvg,
+      });
+    });
   }
 
   // --- Daily usage tracking ---

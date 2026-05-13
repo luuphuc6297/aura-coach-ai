@@ -23,6 +23,7 @@ class AssessmentResult {
   final AlternativeTones alternativeTones;
   final String? nextAgentReply;
   final String? nextAgentReplyVietnamese;
+  final GrammarBreakdown? grammarBreakdown;
 
   const AssessmentResult({
     required this.score,
@@ -41,6 +42,7 @@ class AssessmentResult {
     required this.alternativeTones,
     this.nextAgentReply,
     this.nextAgentReplyVietnamese,
+    this.grammarBreakdown,
   });
 
   factory AssessmentResult.fromJson(Map<String, dynamic> json) {
@@ -67,6 +69,10 @@ class AssessmentResult {
       alternativeTones: _readAlternativeTones(json['alternativeTones']),
       nextAgentReply: json['nextAgentReply'] as String?,
       nextAgentReplyVietnamese: json['nextAgentReplyVietnamese'] as String?,
+      grammarBreakdown: json['grammarBreakdown'] is Map
+          ? GrammarBreakdown.fromJson(
+              Map<String, dynamic>.from(json['grammarBreakdown'] as Map))
+          : null,
     );
   }
 
@@ -100,6 +106,151 @@ class AssessmentResult {
         'alternativeTones': alternativeTones.toJson(),
         'nextAgentReply': nextAgentReply,
         'nextAgentReplyVietnamese': nextAgentReplyVietnamese,
+        'grammarBreakdown': grammarBreakdown?.toJson(),
+      };
+}
+
+/// Detailed grammar breakdown surfaced inside the Assessment Card. Compares
+/// the user's submitted sentence with the canonical correct version so a
+/// Vietnamese learner can see WHY a correction is the right pattern. AI may
+/// return [correctVersion] = null when the user input is already correct.
+class GrammarBreakdown {
+  final GrammarBreakdownVariant userVersion;
+  final GrammarBreakdownVariant? correctVersion;
+
+  const GrammarBreakdown({
+    required this.userVersion,
+    this.correctVersion,
+  });
+
+  bool get hasComparison => correctVersion != null;
+
+  factory GrammarBreakdown.fromJson(Map<String, dynamic> json) {
+    return GrammarBreakdown(
+      userVersion: GrammarBreakdownVariant.fromJson(
+          Map<String, dynamic>.from(json['userVersion'] as Map? ?? const {})),
+      correctVersion: json['correctVersion'] is Map
+          ? GrammarBreakdownVariant.fromJson(
+              Map<String, dynamic>.from(json['correctVersion'] as Map))
+          : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'userVersion': userVersion.toJson(),
+        'correctVersion': correctVersion?.toJson(),
+      };
+}
+
+class GrammarBreakdownVariant {
+  final String sentence;
+  final String tense;
+  final String tenseVi;
+  final String tenseExplanation;
+  final List<GrammarComponent> components;
+  final List<GrammarAuxiliary> auxiliaries;
+  final String? structureNote;
+
+  const GrammarBreakdownVariant({
+    required this.sentence,
+    required this.tense,
+    required this.tenseVi,
+    required this.tenseExplanation,
+    required this.components,
+    required this.auxiliaries,
+    this.structureNote,
+  });
+
+  factory GrammarBreakdownVariant.fromJson(Map<String, dynamic> json) =>
+      GrammarBreakdownVariant(
+        sentence: (json['sentence'] as String?)?.trim() ?? '',
+        tense: (json['tense'] as String?)?.trim() ?? '',
+        tenseVi: (json['tenseVi'] as String?)?.trim() ?? '',
+        tenseExplanation: (json['tenseExplanation'] as String?)?.trim() ?? '',
+        components: (json['components'] as List<dynamic>?)
+                ?.map((e) =>
+                    GrammarComponent.fromJson(Map<String, dynamic>.from(e as Map)))
+                .toList() ??
+            const [],
+        auxiliaries: (json['auxiliaries'] as List<dynamic>?)
+                ?.map((e) =>
+                    GrammarAuxiliary.fromJson(Map<String, dynamic>.from(e as Map)))
+                .toList() ??
+            const [],
+        structureNote: (json['structureNote'] as String?)?.trim().isEmpty == true
+            ? null
+            : (json['structureNote'] as String?)?.trim(),
+      );
+
+  Map<String, dynamic> toJson() => {
+        'sentence': sentence,
+        'tense': tense,
+        'tenseVi': tenseVi,
+        'tenseExplanation': tenseExplanation,
+        'components': components.map((e) => e.toJson()).toList(),
+        'auxiliaries': auxiliaries.map((e) => e.toJson()).toList(),
+        if (structureNote != null) 'structureNote': structureNote,
+      };
+}
+
+/// Major sentence component (Subject / Main Verb / Object / Adverbial / etc.).
+class GrammarComponent {
+  final String text;
+  final String role;
+  final String roleVi;
+  final String? explanation;
+
+  const GrammarComponent({
+    required this.text,
+    required this.role,
+    required this.roleVi,
+    this.explanation,
+  });
+
+  factory GrammarComponent.fromJson(Map<String, dynamic> json) =>
+      GrammarComponent(
+        text: (json['text'] as String?)?.trim() ?? '',
+        role: (json['role'] as String?)?.trim() ?? '',
+        roleVi: (json['roleVi'] as String?)?.trim() ?? '',
+        explanation: (json['explanation'] as String?)?.trim().isEmpty == true
+            ? null
+            : (json['explanation'] as String?)?.trim(),
+      );
+
+  Map<String, dynamic> toJson() => {
+        'text': text,
+        'role': role,
+        'roleVi': roleVi,
+        if (explanation != null) 'explanation': explanation,
+      };
+}
+
+/// Function word (trợ từ): auxiliary, modal, particle, key preposition, or
+/// conjunction. [function] is a Vietnamese explanation of what the word does
+/// inside the analyzed sentence — flags Vietnamese learner pitfalls when AI
+/// surfaces them.
+class GrammarAuxiliary {
+  final String text;
+  final String type;
+  final String function;
+
+  const GrammarAuxiliary({
+    required this.text,
+    required this.type,
+    required this.function,
+  });
+
+  factory GrammarAuxiliary.fromJson(Map<String, dynamic> json) =>
+      GrammarAuxiliary(
+        text: (json['text'] as String?)?.trim() ?? '',
+        type: (json['type'] as String?)?.trim() ?? '',
+        function: (json['function'] as String?)?.trim() ?? '',
+      );
+
+  Map<String, dynamic> toJson() => {
+        'text': text,
+        'type': type,
+        'function': function,
       };
 }
 

@@ -1410,4 +1410,191 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get grammarSummaryBackToHub => 'Back to all topics';
+
+  @override
+  String get assessmentGrammarBreakdownHeader => 'GRAMMAR BREAKDOWN';
+
+  @override
+  String get assessmentGrammarBreakdownYourSentence => 'YOUR SENTENCE';
+
+  @override
+  String get assessmentGrammarBreakdownYourSentenceCorrect =>
+      'YOUR SENTENCE — Correct';
+
+  @override
+  String get assessmentGrammarBreakdownCorrectSentence => 'STANDARD SENTENCE';
+
+  @override
+  String get assessmentGrammarBreakdownComponents => 'SENTENCE COMPONENTS';
+
+  @override
+  String get assessmentGrammarBreakdownAuxiliaries => 'AUXILIARIES';
+
+  @override
+  String get assessmentGrammarBreakdownPatternPrefix => 'Pattern';
+
+  @override
+  String get sessionPanelTitle => 'SESSION';
+
+  @override
+  String sessionPanelCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'scenarios',
+      one: 'scenario',
+    );
+    return '$count $_temp0';
+  }
+
+  @override
+  String sessionPanelAvg(String avg) {
+    return 'Avg ⭐ $avg';
+  }
+
+  @override
+  String get sessionPanelFilterAll => 'All';
+
+  @override
+  String get sessionPanelFilterExcellent => '⭐ 9+';
+
+  @override
+  String get sessionPanelFilterGood => '⭐ 7-8';
+
+  @override
+  String get sessionPanelFilterNeedsWork => '⭐ <7';
+
+  @override
+  String get sessionPanelEmptyTitle => 'No scenarios yet';
+
+  @override
+  String get sessionPanelEmptyBody => 'Complete a scenario to see it here.';
+
+  @override
+  String get sessionPanelFilterEmpty => 'No scenarios match this filter.';
+
+  @override
+  String get sessionPanelActiveLabel => 'Active';
+
+  @override
+  String get sessionPanelTimeNow => 'now';
+
+  @override
+  String sessionPanelTimeMinutes(int minutes) {
+    return '${minutes}m ago';
+  }
+
+  @override
+  String sessionPanelTimeHours(int hours) {
+    return '${hours}h ago';
+  }
+
+  @override
+  String get sessionPanelTimeYesterday => 'yesterday';
+
+  @override
+  String sessionPanelTimeOlder(int days) {
+    return '${days}d ago';
+  }
+
+  @override
+  String get sessionPanelEndSessionCta => 'End session';
+
+  @override
+  String get sessionPanelEndConfirmTitle => 'End this session?';
+
+  @override
+  String get sessionPanelEndConfirmBody =>
+      'You\'ll go back to the home screen. You can start a new session anytime.';
+
+  @override
+  String get sessionPanelEndConfirmAction => 'End session';
+
+  @override
+  String get sessionPanelEndConfirmCancel => 'Keep practicing';
+
+  @override
+  String replayTitle(int order) {
+    return 'Replay #$order';
+  }
+
+  @override
+  String get replayBannerText => 'Replay mode — read only';
+
+  @override
+  String get replayLoading => 'Loading replay…';
+
+  @override
+  String get replayLoadErrorTitle => 'Could not load this scenario';
+
+  @override
+  String get replayLoadErrorBody =>
+      'The conversation may have been deleted or your connection dropped. Try again from the session panel.';
+
+  @override
+  String get replayLoadErrorBack => 'Back to session';
+
+  @override
+  String get replayBranchSectionTitle => 'BRANCH FROM THIS SCENARIO';
+
+  @override
+  String get replayBranchSectionSubtitle =>
+      'Pick a difficulty to start a new scenario in this session. The replayed one stays unchanged.';
+
+  @override
+  String get replayBranchEasier => 'Easier';
+
+  @override
+  String get replayBranchSame => 'Same';
+
+  @override
+  String get replayBranchHarder => 'Harder';
+
+  @override
+  String get scenarioEmptyNoSessionTitle => 'Start a practice session';
+
+  @override
+  String get scenarioEmptyNoSessionBody =>
+      'Translate scenarios, get AI feedback, and review every past attempt. A session keeps your scenarios grouped so you can branch from any one.';
+
+  @override
+  String get scenarioEmptyNoSessionCta => 'Start session';
+
+  @override
+  String get scenarioEmptyHasSessionTitle => 'Session in progress';
+
+  @override
+  String scenarioEmptyHasSessionBody(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'You\'ve completed $count scenarios in this session.',
+      one: 'You\'ve completed 1 scenario in this session.',
+    );
+    return '$_temp0 Continue with a fresh scenario or end the session.';
+  }
+
+  @override
+  String get scenarioEmptyHasSessionContinueCta => 'Continue practice';
+
+  @override
+  String get scenarioEmptyHasSessionEndCta => 'End session';
+
+  @override
+  String get scenarioEmptyBackToHomeCta => 'Back to home';
+
+  @override
+  String get assessmentDifficultyTitle => 'NEXT SCENARIO DIFFICULTY';
+
+  @override
+  String get assessmentDifficultyEasier => 'Easier';
+
+  @override
+  String get assessmentDifficultySame => 'Same';
+
+  @override
+  String get assessmentDifficultyHarder => 'Harder';
+
+  @override
+  String get assessmentDifficultyLoading => 'Generating…';
 }
